@@ -7,7 +7,7 @@ CollateX, which is packaged with the collation editor, requires Java Run Time En
 The collation editor has been tested with Firefox only but should also work on Chrome. It may not work on other browsers.
 
 
-2. Installation
+2. Installation and Start up 
 
 2.1 On Mac and Linux
 
