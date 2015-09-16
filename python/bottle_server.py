@@ -1,4 +1,4 @@
-from bottle import run, route, static_file, request, abort, get, post, response
+from bottle import run, route, static_file, request, abort, get, post, response, redirect
 from collation.store import Store
 import sys
 import os
@@ -7,8 +7,11 @@ import json
 import StringIO
 from collation.preprocessor import PreProcessor
 from collation.outputter import Outputter
-
-
+import bottle
+bottle.BaseRequest.MEMFILE_MAX = 1024 * 1024
+@route('/')
+def start_point():
+    redirect('/collation')
 
 @route('/<app>')
 @route('/<app>/')
