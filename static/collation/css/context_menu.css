@@ -1,0 +1,33 @@
+/* context menu */
+ul.SimpleContextMenu {
+    display: none;
+    position: absolute;
+    margin: 0px;
+    padding: 0px;
+    font-family: arial;
+    font-size: 12pt;
+    list-style-type: none;
+    border-top: 1px solid #000000;
+    border-left: 1px solid #000000;
+    border-right: 1px solid #000000;
+}
+ 
+ul.SimpleContextMenu li {
+    border-bottom: 1px solid #000000;
+}
+
+/*note: if you change width here it needs to be changed in js code for contextmenu in the function _show */ 
+ul.SimpleContextMenu li span {
+    display: block;
+    width: 110px;
+    padding: 2px 10px 3px 10px;
+    text-decoration: none;
+    color: #000000;
+    background: #eeeeee;
+}
+ 
+ul.SimpleContextMenu li span:hover {
+    text-decoration: none;
+    color: #000000;
+    background: #FFBB55;
+}

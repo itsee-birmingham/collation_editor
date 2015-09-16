@@ -1,0 +1,49 @@
+div#errors_overlay {
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    right: 20px;  
+    bottom: 80px;
+    border: 2px solid black;
+    background: white;
+    padding: 20px;
+    overflow: auto;
+}
+
+div.menu_section {
+    border-bottom: 1px solid silver;
+    padding-bottom: 15px;
+    padding-left: 10px;
+}
+
+.table_form td {
+    padding-right: 10px;
+}
+
+.table_form th {
+    padding-right: 20px;
+}
+
+.table_form th {
+     text-align: left;
+}
+
+.table_form td input, #search_form td input {
+    width: 100px;
+}
+
+#search_form table {
+    border-collapse: collapse;
+}
+
+#search_form table, #search_form th, #search_form td {
+    border: 1px solid black;
+}
+
+#search_form th, #search_form td {
+    padding: 5px;
+}
+
+#search_form th {
+     text-align: left;
+}

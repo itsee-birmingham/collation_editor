@@ -1,0 +1,24 @@
+{
+	"project":"ECM",
+	"V_for_supplied": true,
+	"collation_source": "WCE",
+	"book_name": "John",
+	"language": "grc",
+	"book":4,
+	"base_text":"NT_GRC_basetext_B04",
+	"_id":"default",
+	"managing_editor":"fred",
+	"editors":["fred", "4fec7b934a64b14976000001","4ff15e524a64b14976000006"],
+	"witnesses":["NT_GRC_basetext_B04", "NT_GRC_01_B04","NT_GRC_02_B04","NT_GRC_03_B04","NT_GRC_04_B04"],
+	"regularisation_classes":[
+		{"name":"None","linked_appendix":false,"keep_as_main_reading":false,"create_in_SV":false,"suffixed_label":false,"value":"none","suffixed_reading":false,"create_in_RG":true,"create_in_OR":true,"subreading":false,"suffixed_sigla":false},
+		{"name":"Reconstructed","linked_appendix":false,"keep_as_main_reading":false,"create_in_SV":true,"suffixed_label":false,"value":"reconstructed","suffixed_reading":false,"create_in_RG":false,"create_in_OR":true,"subreading":false,"identifier":"V","suffixed_sigla":true},
+		{"name":"Orthographic","linked_appendix":false,"keep_as_main_reading":false,"create_in_SV":true,"suffixed_label":true,"value":"orthographic","suffixed_reading":false,"create_in_RG":true,"create_in_OR":true,"subreading":true,"identifier":"o","suffixed_sigla":false},
+		{"name":"Regularised","linked_appendix":false,"keep_as_main_reading":false,"create_in_SV":true,"RG_default":true,"value":"regularised","suffixed_reading":false,"create_in_RG":true,"suffixed_label":false,"subreading":false,"create_in_OR":true,"identifier":"r","suffixed_sigla":true},
+		{"name":"Abbreviation","linked_appendix":false,"keep_as_main_reading":false,"create_in_SV":true,"suffixed_label":false,"value":"abbreviation","suffixed_reading":false,"create_in_RG":true,"create_in_OR":true,"subreading":false,"suffixed_sigla":false},
+		{"name":"Partly Lacunose","linked_appendix":false,"keep_as_main_reading":false,"create_in_SV":true,"suffixed_label":false,"value":"partly_lacunose","suffixed_reading":false,"create_in_RG":false,"create_in_OR":true,"subreading":false,"suffixed_sigla":false},
+		{"name":"Fix me Later","linked_appendix":false,"keep_as_main_reading":false,"create_in_SV":false,"suffixed_label":false,"value":"fix_me_later","suffixed_reading":false,"create_in_RG":true,"create_in_OR":false,"subreading":true,"identifier":"FML","suffixed_sigla":true},
+		{"name":"Lectionary Influence","linked_appendix":false,"keep_as_main_reading":true,"create_in_SV":false,"suffixed_label":false,"value":"lectionary_influence","suffixed_reading":true,"create_in_RG":false,"create_in_OR":true,"subreading":false,"identifier":"Λ","suffixed_sigla":false},
+		{"name":"Commentary Influence","linked_appendix":false,"keep_as_main_reading":true,"create_in_SV":false,"suffixed_label":false,"value":"commentary_influence","suffixed_reading":true,"create_in_RG":false,"create_in_OR":true,"subreading":false,"identifier":"CI","suffixed_sigla":false}
+	]
+}

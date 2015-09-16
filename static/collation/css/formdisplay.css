@@ -1,0 +1,132 @@
+/* towards a generic CSS for all forms in magpy */
+
+/* generally relavent to forms */
+
+body{
+	font-family: Arial;
+	font-size: 11pt;
+}
+
+h2.sectionheader {
+    font-size: 11pt;
+    color: gray;
+    margin: 0px;
+}
+
+fieldset{
+	border: none;
+	padding: 0px;
+}
+
+div.form_section{
+	border-bottom: 1px solid gray;
+	padding-bottom: 15px;
+	width: 100%;
+}
+
+div.disabled {
+    display: none;
+}
+
+label.top {
+	display: inline-block;
+	margin-top: .8em;
+	margin-right: .4em;
+}
+
+label.top input[type=checkbox] {
+	display: block;
+}
+
+input[readonly] {
+	background-color: lightgrey;
+}
+
+.checkbox_label { 
+	position: relative; 
+ 	top: -20px; 
+} 
+
+.width_half, .width_half input, .width_half select {
+	width: 15.8em;
+}
+
+.width_full, .width_full input {
+	width: 32.3em;
+}
+
+.width_quarter {
+	width: 8em;
+}
+
+input[type=text], textarea {
+	border:2px inset threeDface;
+    border-radius:4px;
+}
+
+.column {
+	float: left;
+}
+
+br {
+	clear: left;
+}
+
+option.obsolete {
+	color: silver;
+}
+
+/* submission related */
+
+#submit_section input {
+	width: 16em;
+	margin-top: 10px;
+	margin-right: .4em;
+}
+
+.error {
+    background-color: #F5A9A9 !important;
+}
+
+.missing {
+	/*border:2px inset #F78181 !important;*/
+    border-radius:4px;
+    color: red !important;
+}
+
+.error_message {
+	position:fixed;
+	top:0;
+ 	left:0;
+ 	width:700px;
+ 	padding: 5px;
+ 	background-color: #D8D8D8;
+ 	border: 2px solid red;
+}
+
+.error_message #error_title {
+	color: red;
+}
+
+#error_close {
+	float: right;
+	color: blue;
+	text-decoration: underline;
+	cursor: pointer;	
+}
+
+input[type=button] {
+	border:2px outset threeDface;
+	border-radius:5px;
+}
+
+input.delete_button {
+	background-color: #F5A9A9;
+	border:2px outset #F5A9A9;
+}
+
+input.delete_button:hover {
+	background-color: #F8E0E0;
+	border:2px outset #F8E0E0;
+}
+

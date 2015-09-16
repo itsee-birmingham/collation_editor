@@ -1,0 +1,120 @@
+#version_form_div {
+     position: absolute;
+     left: 20px;
+     top: 20px;
+     width:720px;
+     z-index: 1000;
+     background-color: white;
+     border:2px solid #000;
+     padding-top: 0px;
+     font-family: arial, helvetica, sans-serif;
+}
+
+.missing {
+    color: red !important;
+}
+
+#version_form_div div#parent_readings_div, #version_form_div div#version_witnesses {
+    background-color: lightgrey;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+#version_form_div fieldset {
+    padding: 0 0 0 0;
+    margin: 0 0 0 0;
+    border: none;
+}
+
+#version_form_div img.add_logo {
+    vertical-align: middle;
+}
+
+#version_form_div img.delete_logo {
+    padding-left: 10px;
+    vertical-align: middle;
+}
+
+#version_form_div label.fixed_width {
+    display: inline-block;
+    width: 150px;
+}
+
+#version_form_div input.version_text {
+    width: 400px;
+}
+
+#version_form_div #editor_comment, #version_form_div #printed_comment {
+    width: 95%
+}
+
+div.version_selected, tr.version_selected {
+    border: 3px solid green;
+}
+
+div#witness_form_header {
+    /*width: 100%;*/
+    background-color: steelblue;
+    color: snow;
+    height: 40px;
+    padding-top: 10px;
+    padding-left: 10px;
+}
+
+div#witness_form_header h1 {
+    font-size: 12pt;
+    margin-top: 0px;
+}
+
+div.form_section {
+    border-bottom: 1px solid silver;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
+div.submit_section {
+    padding-top: 10px;
+}
+
+tr.version_parent {
+    color: green;
+}
+
+tr.highlighted_version {
+    background-color: skyblue;
+}
+
+tr.highlighted.highlighted_version {
+    background-color: paleturquoise;
+}
+
+label.disabled {
+    color: lightgrey;
+}
+
+div.form_column_left {
+    width: 200px;
+    float: left;
+    border-right: 1px solid silver;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+div.form_column_right {
+    padding-left: 10px;
+    padding-right: 10px;
+    float: left;
+}
+
+div.form_column_left h2, div.form_column_right h2 {
+    font-size: 12pt;
+    margin-top: 0px;
+}
+
+br.clear {
+    clear: both;
+}
+
+#modifiers {
+    width: 50px;
+}

@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=8" />
+
+  <title>Collation Editor</title>
+  <meta name="description" content="Collation and Apparatus Editor" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <script type="text/javascript" src="/sitedomain.js"></script>
+  <script type="text/javascript" src="/shared/js/utils.js"></script>
+  <script type="text/javascript" src="/collation/js/default_settings.js"></script>
+  <script type="text/javascript" src="/collation/js/collation.js"></script>
+  <script type="text/javascript" src="/collation/js/regularise.js"></script>
+  <script type="text/javascript" src="/collation/js/set-variants.js"></script>
+  <script type="text/javascript" src="/collation/js/order-readings.js"></script>
+  <script type="text/javascript" src="/collation/js/redips-drag-source.js"></script>
+  <script type="text/javascript" src="/collation/js/divdrag.js"></script>
+  <script type="text/javascript" src="/collation/js/contextmenu.js"></script>
+  <script type="text/javascript" src="/collation/js/md5.js"></script>
+  <script type="text/javascript" src="/collation/js/spin-min.js"></script>
+  <script type="text/javascript" src="/collation/js/spinner_controller.js"></script>
+  <script type="text/javascript" src="/collation/js/jquery.min.js"></script>
+
+<!--
+  <script type="text/javascript" src="/collation/js/services_magpy.js"></script>
+-->
+
+  <script type="text/javascript" src="/collation/js/services_local.js"></script>
+
+<!--
+  <script type="text/javascript" src="/collation/js/services_vmr.js"></script>
+
+-->
+  
+
+  <!--<script src="http://ajax.googleapis.com/ajax/libs/dojo/1.7.0/dojo/dojo.js"
+    type="text/javascript"></script>
+  <script type="text/javascript" src="/collation/js/validator.js"></script>-->
+
+  <link rel=stylesheet href="/collation/css/spinner.css" type="text/css"/>
+  <link rel=stylesheet href="/collation/css/structure.css" type="text/css"/>
+  <link rel=stylesheet href="/collation/css/collation.css" type="text/css"/>
+</head>
+<body onload="CL.initialise_editor()" oncontextmenu="return false;">
+	<div id="header" class="collation_header"><h1 id="stage_id">Collation</h1><h1 id="project_name"></h1><div id="login_status"></div></div>
+	<div id="container">
+	<p>Please login using the link in the top right corner to use the editing interface</p>
+	
+	<br/>
+	<br/>
+	</div>
+	
+  	<div id="footer">
+	
+	</div>
+	<div id="tool_tip" class="tooltip">
+
+	</div>
+</body>
+</html>

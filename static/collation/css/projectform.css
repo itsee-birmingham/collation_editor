@@ -1,0 +1,76 @@
+/*div#reg_class_summary, div#witness_summary {
+    border: 1px solid #E6E68A;
+    background: #FFFFEB;
+    display: table;
+    padding: 5px;
+    margin-top: 10px;
+}*/
+
+div#reg_class_summary {
+    border: 2px solid #666699;
+    padding: 5px;
+    float: left;
+    margin: 10px;
+}
+
+div#reg_class_summary img {
+    float: right;
+    padding-left: 5px;
+}
+
+div.subform {
+    margin-top: 10px;
+    border: 1px solid gray;
+    padding: 10px;
+    display: table;
+}
+
+div.row {
+    width: 20px;
+    border: 1px solid #FFFFEB;
+}
+
+.hidden {
+    display: none;
+}
+
+div.hidden {
+    display: none;
+}
+
+input[disabled] {
+    background-color: lightgrey;
+}
+
+#witnesses {
+    margin-top: 10px;
+    border: 1px solid #666699;
+}
+
+.subsection_header {
+    width: 100%;
+    background: #666699;
+    color: white;
+    padding: 1px;
+    border-bottom: 1px solid white;
+}
+
+.subsection_header h2 {
+    font-size: 12pt;
+}
+
+.subsection_content {
+    border-left: 1px solid #666699;
+    border-right: 1px solid #666699;
+    padding-left: 5px;
+    padding-bottom: 15px;
+}
+
+#save .subsection_content {
+    border-bottom: 1px solid #666699;
+    padding-bottom: 10px;
+}
+
+#witness_summary p {
+    font-size: 14pt;
+}

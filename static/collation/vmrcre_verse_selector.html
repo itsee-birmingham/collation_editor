@@ -1,0 +1,31 @@
+<script type="text/javascript">
+
+
+
+</script>
+<div id="verse_selection">
+    <form id="collation_form">
+        <label>Select: </label> 
+        
+        <input type="hidden" id="language" value="{language}" /> 
+        <input type="hidden" id="base_text" value="{base_text}" />
+        <input type="hidden" id="base_text_siglum" value="{base_text_siglum}" />
+        <input type="hidden" id="collation_source" value="{collation_source}" /> 
+        <input type="hidden" id="project" value="{project1}" />
+        <table style="font-size:small;border:none 0px;margin:0px;padding: 0px;">
+        <tbody>
+        <tr style="border:none 0px;margin:0px;padding: 0px;">
+        <td style="border:none 0px;margin:0px;padding: 0px;"><select name="bookselect" id="bookselect" onchange="VMRCRE.bookSelectChanged();"><option></option></select></td>
+        <td style="border:none 0px;margin:0px;padding: 0px;"><select name='chapterselect' id='chapterselect' onchange="VMRCRE.chapterSelectChanged();"><option></option></select></td>
+        <td style="border:none 0px;margin:0px;padding: 0px;"><select name='verseselect' id='verseselect'><option></option></select></td>
+        <td style="border:none 0px;margin:0px;padding: 0px;width:100%">&nbsp;</td>
+        </tr>
+        </tbody>
+        </table>
+        <input type="hidden" id="preselected_witnesses" value="{witnesses}" /> 
+        <input type="button" id="collate" value="Collate Project Witnesses" /> 
+        <input type="button" id="load_saved" value="Load Saved Collation" /> 
+        <div id="witnesses"></div>
+    </form>
+    <div id="saved_collations_div"></div>
+</div>
