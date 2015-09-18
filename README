@@ -1,38 +1,35 @@
 1. Requirements
 
-The collation editor requires python 2.7+ but does not yet support Python3. 
+The collation editor requires python 2.7+ but does not yet support Python3. I will add support for this as soon as possible and hopefully have a single version of the code that will run in both python versions.
 
 CollateX, which is packaged with the collation editor, requires Java Run Time Environment (JRE) 7 or higher. The version of CollateX included with the collation editor is 1.5, it will be upgraded to 1.6 as soon as possible, other versions of collatex may not work with the collation editor. 
 
-The collation editor has been tested with Firefox only but should also work on Chrome. It may not work on other browsers.
+The collation editor only works in Firefox but should also work in Chrome soon. It may not work on other browsers.
+
 
 
 2. Installation and Start up 
 
 2.1 On Mac and Linux
 
-To start the collation editor download the code from github  and navigate to the collation_editor directory. From here run the start up script start.sh. This script should start both collateX and the server that runs the collation editor.
-
-If the script has been successful you should be able to see the collation editor when you visit:
-localhost:8080/collation
-
-2.2 On Windows (these instructions are untested)
-
-To start the collation editor download the code from github and in a terminal navigate to the collation_editor directory.
-
-Start CollateX by typing 
-
-java -classpath collatex/lib/\* -Dapp.name="collatex-server" -Dapp.repo="collatex/lib" -Dapp.home="collatex" -Dbasedir="collatex" eu.interedition.collatex.http.Server
+To start the collation editor download the code from github  and navigate to the collation_editor directory. From here run the start up script startup.sh. This script should start both collateX and the server that runs the collation editor.
 
 If collate has started sucessfully you should be able to see it at:
 localhost:7369
 
-In a second terminal start the collation editor by typing
-
-python python/bottle_server.py /path/to/colation_editor
-
 If the script has been successful you should be able to see the collation editor when you visit:
 localhost:8080/collation
+
+2.2 On Windows 
+
+To start the collation editor download the code from github  and navigate to the collation_editor directory. From here run the start up script startup.bat. This script should start both collateX and the server that runs the collation editor.
+
+If collate has started sucessfully you should be able to see it at:
+localhost:7369
+
+If the collation editor has started successfully you should be able to see the collation editor when you visit:
+localhost:8080/collation
+
 
 
 3. Collating the examples
@@ -45,6 +42,7 @@ In the text box type 'B04K6V23' and hit run collation.
 This should provide a collation of all Greek minuscule manuscripts of John 6:23.
 
 
+
 4. Collating your own texts (with local services)
 
 First prepare your data (see section 7.1.1)
@@ -52,6 +50,7 @@ First prepare your data (see section 7.1.1)
 Next configure a project (see section 7.1.2)
 
 Then when you type a unit in the box on the index page of the collation editor you should be able to collate your own data.
+
 
 
 6. Customisation
