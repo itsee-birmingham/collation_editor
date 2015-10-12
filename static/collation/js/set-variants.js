@@ -182,73 +182,46 @@ var SV = (function () {
             }
         },
         
-        check_om_overlap_problems: function () {
-            var i, unit, j, witnesses, key, ol_unit;
-            //check to see if any readings labelled 'overlapped' don't have any text in the overlapped reading
-            //if they do then that needs fixing.
-            for (i = 0; i < CL._data.apparatus.length; i += 1) {
-        	unit = CL._data.apparatus[i];
-        	if ('overlap_units' in unit) {
-        	    witnesses = [];
-        	    for (j = 0; j < unit.readings.length; j += 1) {
-        		if ('overlap_status' in unit.readings[j] 
-        			&& unit.readings[j].overlap_status === 'overlapped') {
-        		    witnesses.push.apply(witnesses, unit.readings[j].witnesses);
-        		}
-        	    }
-        	    //for each witness we've collected
-        	    for (j = 0; j < witnesses.length; j += 1) {
-        		for (key in unit.overlap_units) {
-        		    if (unit.overlap_units[key].indexOf(witnesses[j]) != -1) {
-        			ol_unit = CL.find_overlap_unit_by_id(key);
-        			if (ol_unit.readings[1].text.length > 0) {//hard coded 1 is fine as at this stage there is only one reading and its always here
-        			    return true;
-        			}
-        		    }
-        		}
-        	    }
-        	}
-            }
-            return false;
-        },
-        
         move_to_reorder: function () {
-            var i, no_duplicates, all_complete, all_in_order, standoff_problems, om_overlapped_problems;
+            var i, all_complete, all_in_order, standoff_problems, extra_results;
             //we are keeping any empty units from the last state of SV
             //we need to combined overlaps with identical index points
             SPN.show_loading_overlay();
-            
-            SV._lose_subreadings(); //prep = needed
-            no_duplicates = SV.are_no_duplicate_statuses();
+            SV._lose_subreadings(); //for preparation and is needed
             all_complete = SV.are_all_units_complete();
             all_in_order = SV.check_all_witnesses_integrity();
             standoff_problems = SV.check_standoff_reading_problems();
-            om_overlapped_problems = SV.check_om_overlap_problems();
-            if (no_duplicates && all_complete && all_in_order && !standoff_problems[0] && !om_overlapped_problems) {
-        	//we have some legacy data which has not had all of the matching readings in each unit combined
-        	//so to ensure they are fixed now we need to call the following 3 functions
-        	//would be nicer to just change the data on the database but it would mean rewriting in python
-        	CL._show_subreadings = false;
-        	SV.prepare_for_operation();
-        	SV.remove_splits();
-        	SV.unprepare_for_operation();
-        	SV._lose_subreadings(); //prep = needed
-        	OR.remove_splits(); //ensure all the units are unsplit (readings wise) - still needed
-        	OR.merge_shared_extent_overlaps(); //do this before adding labels so the labels are correct))
-        	OR.make_was_gap_words_gaps()
-        	//merge lacs into a single unit
-        	//we used to do this with OM as well but om verse should never be merged with OM so I don't run it anymore as there
-        	//should be no more that one OM and om verse in any given unit.
-        	OR.merge_all_lacs()
-        	OR.add_labels(true); //this adds the reading labels to the datastructure itself - still required so they can be edited
-        	SV._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])}); //only show the subreadings when there class is labelled as subreading in the project)))
-        	OR.show_reorder_readings({'container': container});
-            } else if (!no_duplicates) {
-        	if (CL._show_subreadings === true) {
-        	    SV._find_subreadings()
-        	}
-        	alert('You cannot move to order readings while there are duplicate overlapped readings');
-        	SPN.remove_loading_overlay();
+
+            if (all_complete && all_in_order && !standoff_problems[0]) {       	
+        	extra_results = CL.apply_pre_stage_checks('order_readings');
+        	if (extra_results[0] === true) {
+        	    CL._show_subreadings = false;
+        	    //we have some legacy data which has not had all of the matching readings in each unit combined
+        	    //so to ensure they are fixed now we need to call the following 3 functions
+        	    //would be nicer to just change the data on the database but it would mean rewriting in python 
+        	    SV.prepare_for_operation();
+        	    SV.remove_splits();
+        	    SV.unprepare_for_operation();
+        	    SV._lose_subreadings(); //for preparation and is needed
+        	    OR.remove_splits(); //ensure all the units are unsplit (readings wise) - still needed
+        	    OR.merge_shared_extent_overlaps(); //do this before adding labels so the labels are correct))
+        	    OR.make_was_gap_words_gaps()
+        	    //merge lacs into a single unit
+        	    //we used to do this with OM as well but om verse should never be merged with OM so I don't run it anymore as there
+        	    //should be no more that one OM and om verse in any given unit.
+        	    //TODO: this one should perhaps be configurable
+        	    //could just be a flag for this and oms
+        	    OR.merge_all_lacs()
+        	    OR.add_labels(true); //this adds the reading labels to the datastructure itself - still required so they can be edited
+        	    SV._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])}); //only show the subreadings when there class is labelled as subreading in the project)))
+        	    OR.show_reorder_readings({'container': container});
+        	} else {
+        	    if (CL._show_subreadings === true) {
+        		SV._find_subreadings()
+        	    }
+        	    alert(extra_results[1]);
+        	    SPN.remove_loading_overlay();
+        	}        	
             } else if (!all_complete) {
         	if (CL._show_subreadings === true) {
         	    SV._find_subreadings()
@@ -268,29 +241,9 @@ var SV = (function () {
         	}
         	alert('You cannot move to order readings because ' + standoff_problems[1]);
         	SPN.remove_loading_overlay();
-            } else if (om_overlapped_problems) {
-        	if (CL._show_subreadings === true) {
-        	    SV._find_subreadings()
-        	}
-        	alert('You cannot move to order readings because there is a overlapped reading with the status \'overlapped\' that has text in the overlapped unit');
-        	SPN.remove_loading_overlay();
             }
-            
         },
 
-        //used before moving to order readings to make sure that a decision has been made on all top line overlapped readings
-        are_no_duplicate_statuses: function () {
-            var i, j;
-            for (i = 0; i < CL._data.apparatus.length; i += 1) {
-        	for (j = 0; j < CL._data.apparatus[i].readings.length; j += 1) {
-        	    if (CL._data.apparatus[i].readings[j].hasOwnProperty('overlap_status') 
-        		    && CL._data.apparatus[i].readings[j].overlap_status === 'duplicate') {
-        		return false;
-        	    }
-        	}
-            }
-            return true;
-        },
 
         //
         calculate_unit_lengths: function (app_id, options) {
@@ -440,6 +393,8 @@ var SV = (function () {
          * 		col_length - int - the expected column width based on other table rows
          * 		highlighted_wit - the witness to highlight
          * 		highlighted_unit - the unit to highlight
+         * 		created - boolean (is this a specially created gap element)
+         * 		overlapping_ids - a list of ids for any overlapping readings realted to this top line reading
          * 		td_id - the id for the cell (used in overlap rows to allow readings to be moved between rows))*/
         get_unit_data: function (data, id, start, end, options) {
             var i, j, html, decisions, rows, cells, row_list, temp, events, colspan, row_id, text, split_class,
@@ -477,11 +432,9 @@ var SV = (function () {
                 }
         	//what is the reading text?
         	text = CL.extract_display_text(data[i], i, data.length, options.unit_id, options.app_id);
-                if (text === 'system_gen_deleted') {
-        	    	text = 'deleted';
-                } else if (text === 'system_gen_overlapped') {
-        	    	text = 'overlapped';
-                }
+        	if (text.indexOf('system_gen_') !== -1) {
+        	    text = text.replace('system_gen_', '');
+        	}
         	//what labels need to be used?
                 reading_label = CL.get_reading_label(i, data[i], SV_rules);
                 reading_suffix = CL.get_reading_suffix(data[i], SV_rules);
@@ -514,7 +467,7 @@ var SV = (function () {
                     } else {
                 	html.push('<li id="' + row_id + '" >');
                     }
-                    html.push('<span>' + reading_label + ' ' + text + reading_suffix + '  </span>');
+                    html.push('<div class="spanlike">' + reading_label + ' ' + text + reading_suffix + '  </div>');
                     temp = SV.show_subreadings(data[i], id, i, hand);
                     html.push.apply(html, temp[0]);
                     row_list.push.apply(row_list, temp[1]);
@@ -525,8 +478,8 @@ var SV = (function () {
                     if (i === 0) {
                 	if (options.hasOwnProperty('overlap') && options.overlap === true) {
                             html.push('<div id="' + 'drag_unit_' + id + '" class="drag overlap_unit' + highlighted + '">');
-                        } else if (options.hasOwnProperty('gap_unit') && options.gap_unit === true) {
-                            html.push('<div id="' + 'drag_unit_' + id + '" class="drag gap_unit' + highlighted + '">');
+                        } else if (options.hasOwnProperty('gap_unit') && options.gap_unit === true) {	
+                            html.push('<div id="' + 'drag_unit_' + id + '" class="drag gap_unit' + highlighted + '">');         
                         } else {
                             html.push('<div id="' + 'drag_unit_' + id + '" class="drag unit' + highlighted + '">');
                         }
@@ -550,8 +503,8 @@ var SV = (function () {
                 	    html.push('<li id="' + row_id + '" >');
                 	}
                     }
-                    html.push('<span>' + reading_label  + ' ' + text + reading_suffix + '  </span>');
-                    temp = SV.show_subreadings(data[i], id, i);
+                    html.push('<div class="spanlike">' + reading_label  + ' ' + text + reading_suffix + '  </div>');
+                    temp = SV.show_subreadings(data[i], id, i, hand);
                     html.push.apply(html, temp[0]);
                     row_list.push.apply(row_list, temp[1]);
                     html.push('</li>');
@@ -598,9 +551,6 @@ var SV = (function () {
             SV.show_set_variants({'container': CL._container, 'highlighted_wit' :witness});
             document.getElementById('scroller').scrollLeft = scroll_offset[0];
             document.getElementById('scroller').scrollTop = scroll_offset[1];
-            if (witness !== 'none') {
-        	CL.get_highlighted_text(witness);
-            }
         },
         
         get_hands_and_sigla: function () {
@@ -645,7 +595,6 @@ var SV = (function () {
             var html, j, subrow_id, row_list, type, suffixed, suffix, highlighted, text_string;
             html = [];
             row_list = [];
-            highlighted = '';
             text_string = ''
             if (reading.hasOwnProperty('subreadings')) {
                 html.push('<ul class="subreading_unit" id="subreading_unit_' + id + '_row_' + i + '">');
@@ -653,6 +602,7 @@ var SV = (function () {
                     if (reading.subreadings.hasOwnProperty(type)) {
                 	suffix = reading.subreadings[type][0].suffix;
                         for (j = 0; j < reading.subreadings[type].length; j += 1) {
+                            highlighted = '';
                             subrow_id = 'subreading_unit_' + id + '_row_' + i + '_type_' + type + '_subrow_' + j;
                             row_list.push(subrow_id);
                             if (reading.subreadings[type][j].witnesses.indexOf(hand) !== -1) {
@@ -663,9 +613,9 @@ var SV = (function () {
                             } else {
                         	text_string = reading.subreadings[type][j].text_string;
                             }
-                            html.push('<li class="subreading' + highlighted + '" id="' + subrow_id + '"><span><span>' 
+                            html.push('<li class="subreading' + highlighted + '" id="' + subrow_id + '"><div class="spanlike"><div class="spanlike">' 
                         	    + CL.get_alpha_id(i) + suffix 
-                        	    + '. ' + text_string + '</span></span></li>');
+                        	    + '. ' + text_string + '</div></div></li>');
                         }
                     }
                 }
@@ -1351,7 +1301,6 @@ var SV = (function () {
 
         separate_overlap_witnesses: function (unit_num, gap_location) {
             var overlapped_witnesses, to_add, unit, i , j, to_split, new_reading_id, new_reading, to_add;
-            console.log('separating overlap witnesses')
             //get the overlapped witnesses for this point
             if (typeof gap_location !== 'undefined') {
         	overlapped_witnesses = SV.get_overlapped_witnesses_for_gap(gap_location);
@@ -1512,6 +1461,30 @@ var SV = (function () {
             return true;
         },
         
+        neighbours_share_overlaps: function (index_point) {
+            var i, before, after;
+            for (i = 0; i < CL._data.apparatus.length; i += 1) {
+        	if (CL._data.apparatus[i].end === index_point - 1) {
+        	    before = CL._data.apparatus[i];
+        	}
+        	if (CL._data.apparatus[i].start === index_point + 1) {
+        	    after = CL._data.apparatus[i];
+        	}
+            }
+            if (!after || !before) {
+        	return false;
+            }
+            if (!before.hasOwnProperty('overlap_units') && !after.hasOwnProperty('overlap_units')) {
+        	return false;
+            }
+            if (before.hasOwnProperty('overlap_units') && after.hasOwnProperty('overlap_units')) {
+        	if (JSON.stringify(before.overlap_units) === JSON.stringify(after.overlap_units)) {
+        	    return true;
+        	}
+            }
+            return false;
+        },
+        
         /** reposition an single reading to a different index point (this only works to odd numbered index point)*/
         //TODO: need to prevent this happening when overlaps are present below
         do_move_single_reading: function (target_location, original_location, unit_num, rd) {
@@ -1546,9 +1519,10 @@ var SV = (function () {
         	    readings = [];
         	    readings.push(reading);
         	    //if unit2 has overlap_units key then copy this to new unit
-        	    //this should not happen if it is not in the overlap unit anymore
+        	    //TODO: this should not happen if it is not in the overlap unit anymore
         	    //only add this if the target_gap is part of the overlapping unit
-        	    if (unit2.hasOwnProperty('overlap_units')) {
+        	    
+        	    if (unit2.hasOwnProperty('overlap_units') && SV.neighbours_share_overlaps(target_location)) {
         		newunit.overlap_units = unit2.overlap_units;
         	    }
         	    for (i = 0; i < reading.witnesses.length; i += 1) {
@@ -1594,11 +1568,19 @@ var SV = (function () {
         	    //reindex the moved unit - this works because target location actually becomes start index in the function
         	    SV.reindex_unit(target_location);
         	    newunit_pos = CL.find_unit_pos_by_id('apparatus', newunit_id);
-        	    
+        	    CL._data.apparatus = CL.remove_null_items(CL._data.apparatus);
         	    if (SV.get_overlapped_witnesses_for_gap(target_location).length > 0) {
         		CL._data.apparatus[newunit_pos].overlap_units = SV.get_overlap_details_for_gap(target_location);
         		SV.separate_overlap_witnesses(newunit_pos, target_location);
         	    }
+        	    //see if the unit that things were moved out of needs deleting or not
+        	    //
+        	    if (!CL.unit_has_text(unit2)) {
+        		if (!unit2.hasOwnProperty('overlap_units')) {
+        		    CL._data.apparatus[unit_num] = null;
+        		}
+        	    }
+        	    CL._data.apparatus = CL.remove_null_items(CL._data.apparatus);
         	    //sort the apparatus again - it is important to do this twice (before and after reindexing) but the reason eludes me just now
         	    CL._data.apparatus.sort(CL.compare_first_word_indexes);
         	    SV.unprepare_for_operation();
@@ -2418,7 +2400,6 @@ var SV = (function () {
         		CL.add_reading_id(replacement_readings[i], unit2.start, unit2.end);
         		unit2.readings.push(replacement_readings[i]);
         	    }
-        	    console.log(unit2)
         	    
         	    SV.unsplit_unit_witnesses(units[1][0], app_id);
         	    //merge reading into target unit 
@@ -2432,6 +2413,15 @@ var SV = (function () {
         	    SV.separate_overlap_witnesses(units[0][0]);
         	    problems = SV.check_word_order_integrity(unit2.start, unit1.start, reading[0].witnesses);
         	    CL.add_reading_ids(unit1);
+        	    //now see if the remaining unit has any text left and if not check to see if it has overlapping readings
+        	    //if it doesn't have overlapping readings we can delete it. 
+        	    //if it does its safer to leave it here for the editor to decide what to do.
+        	    if (!CL.unit_has_text(CL._data[app_id][units[1][0]])) {
+        		if (!unit2.hasOwnProperty('overlap_units')) {
+        		    CL._data[app_id][units[1][0]] = null;
+        		}
+        	    }
+        	    CL._data.apparatus = CL.remove_null_items(CL._data[app_id]);
         	    //I added this for tidyness' sake in response to a bug logged by David, In the end I decided to fix it in a different way by allowing 
         	    //any units left with no readings to be combined with neighbouring ones by only using special combine units
         	    //when dealing with a unit I specifically say is created I think that it will be a 'safer' solution. But I like this logic so leaving here for now in case it is useful
@@ -2607,11 +2597,13 @@ var SV = (function () {
                 		    new_rdg.overlap_status = readings1[read1].overlap_status;
                 		} else if (readings1[read1].overlap_status === 'duplicate' || readings2[read2].overlap_status === 'duplicate') {
                 		    new_rdg.overlap_status = 'duplicate';
-                		} else if (readings1[read1].overlap_status === 'overlapped' || readings2[read2].overlap_status === 'overlapped') {
-                		    new_rdg.overlap_status = 'overlapped';
-                		} else if (readings1[read1].overlap_status === 'deleted' || readings2[read2].overlap_status === 'deleted') {
-                		    new_rdg.overlap_status = 'deleted';
-                		}
+                		} else {
+                		    for (k = 0; k < CL._overlapped_options.length; k += 1) {
+                			if (CL._overlapped_options[k].reading_flag === readings1[read1].overlap_status || CL._overlapped_options[k].reading_flag === readings2[read2].overlap_status) {
+                			    new_rdg.overlap_status = CL._overlapped_options[k].reading_flag;
+                			}
+                		    }
+                		}                		
                 	    } else if (readings1[read1].hasOwnProperty('overlap_status') || readings2[read2].hasOwnProperty('overlap_status')) {
                 		new_rdg.overlap_status = 'duplicate'; //make it duplicate because its the safest.
                 	    }
@@ -3461,7 +3453,7 @@ var SV = (function () {
         
         //check a single witness in the whole verse
           check_witness_integrity: function (witness) {
-              var i, j, k, index, unit, id, key, ol_unit;
+              var i, j, k, l, index, unit, id, key, ol_unit, type;
               index = 0;
               for (i = 0; i < CL._data.apparatus.length; i += 1) { //step through the top line apparatus
         	  unit = CL._data.apparatus[i]; //get the current unit
@@ -3471,16 +3463,40 @@ var SV = (function () {
         		      id = key; //set id to the id of the overlapped unit (anything above this unit will now be ignored)      		   
         		      ol_unit = CL.find_overlap_unit_by_id(key);
         		      for (j = 0; j < ol_unit.readings.length; j += 1) {
-                		  if (ol_unit.readings[j].witnesses.indexOf(witness) !== -1) {
-                		      for (k = 0; k < ol_unit.readings[j].text.length; k += 1) {
-                			  if (ol_unit.readings[j].text[k][witness]['index'] - index === 2) {
-                			      index = ol_unit.readings[j].text[k][witness]['index'];
-                			  } else {
-                			      return false;
-                			  }
-                		      }    
-                		  }
-                	      }
+        			  if (ol_unit.readings[j].witnesses.indexOf(witness) !== -1) {
+        			      if (ol_unit.readings[j].hasOwnProperty('standoff_subreadings') && ol_unit.readings[j].standoff_subreadings.indexOf(witness) !== -1) { 
+        				  for (type in ol_unit.readings[j].subreadings) {
+        				      for (k = 0; k < ol_unit.readings[j][type].length; k += 1) {
+        					  if (ol_unit.readings[j][type][k].indexOf(witness) !== -1) {
+        					      for (l = 0; l < ol_unit.readings[j][type][k].text.length; l += 1) {
+        						  if (ol_unit.readings[j][type][k].text[l][witness]['index'] - index === 2) {
+        						      index = ol_unit.readings[j].text[k][witness]['index'];
+        						  } else {
+        						      return false;
+        						  }
+        					      }
+        					  }
+        				      }
+        				  }
+        			      } else if (ol_unit.readings[j].hasOwnProperty('SR_text') && ol_unit.readings[j].SR_text.hasOwnProperty(witness)) {
+        				  for (k = 0; k < ol_unit.readings[j].SR_text[witness].text.length; k += 1) {
+        				      if (ol_unit.readings[j].SR_text[witness].text[k][witness]['index'] - index === 2) {
+        					  index = ol_unit.readings[j].SR_text[witness].text[k][witness]['index'];
+        				      } else {
+        					  return false;
+        				      }
+        				  }
+        			      } else {
+        				  for (k = 0; k < ol_unit.readings[j].text.length; k += 1) {
+        				      if (ol_unit.readings[j].text[k][witness]['index'] - index === 2) {
+        					  index = ol_unit.readings[j].text[k][witness]['index'];
+        				      } else {
+        					  return false;
+        				      }
+        				  }
+        			      }   
+        			  }
+        		      }
         		  }
         	      }
         	  } 
@@ -4540,7 +4556,6 @@ var SV = (function () {
             scroll_offset = [document.getElementById('scroller').scrollLeft, 
                              document.getElementById('scroller').scrollTop];
             SV.add_to_undo_stack(CL._data);
-            //now add the flag and set to true
             delete CL._data[reading_details[1]][reading_details[0]].readings[reading_details[2]].overlap_status;
             SV.unsplit_unit_witnesses(reading_details[0], reading_details[1]);
             SV.show_set_variants({'container': CL._container});
@@ -4591,7 +4606,7 @@ var SV = (function () {
          * the others are determined from project configuration
          *  */
         make_menu: function (menu_name) {
-            var menu, key, subreadings, SV_rules;           
+            var menu, i, key, subreadings, SV_rules;           
             //menus for full units
             if (menu_name === 'unit') {
         	document.getElementById('context_menu').innerHTML = '<li id="split_words"><span>Split words</span></li><li id="split_readings"><span>Split readings</span></li>';
@@ -4600,7 +4615,11 @@ var SV = (function () {
             } else if (menu_name === 'subreading') {
         	document.getElementById('context_menu').innerHTML = '<li id="make_main_reading"><span>Make main reading</span></li>';
             } else if (menu_name === 'split_duplicate_unit') {
-        	document.getElementById('context_menu').innerHTML = '<li id ="treat_as_main"><span>Make main reading</span></li><li id ="show_as_overlapped"><span>Show as overlapped</span></li><li id ="delete_reading"><span>Delete reading</span></li>';
+        	menu = ['<li id="treat_as_main"><span>Make main reading</span></li>'];
+        	for (i = 0; i < CL._overlapped_options.length; i += 1) {
+        	    menu.push('<li id="' + CL._overlapped_options[i].id + '"><span>' + CL._overlapped_options[i].label + '</span></li>')
+        	}        	
+        	document.getElementById('context_menu').innerHTML = menu.join('');
             } else {
         	menu = [];
         	menu.push('<li id="recombine_readings"><span>Recombine</span></li>');
@@ -4642,14 +4661,14 @@ var SV = (function () {
         
         /**adds events for context menu */
         _add_CM_Handlers: function () {
-            var SV_errors, SV_rules, key;
+            var i, SV_errors, SV_rules, key;
             if (document.getElementById('split_words')) {
         	$('#split_words').off('click.swd_c');
         	$('#split_words').off('mouseover.swd_mo');
         	$('#split_words').on('click.swd_c', function(event) {
         	    var element, div, unit_number;
                     element = SimpleContextMenu._target_element;
-                    div = CL._get_specified_ancestor(element, 'DIV');
+                    div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
                     unit_number = div.id.replace('drag_unit_', '');
                     SV.split_unit(unit_number);
         	});
@@ -4661,7 +4680,8 @@ var SV = (function () {
         	$('#split_readings').on('click.sr_c', function(event) {
         	    var element, div, rdg_details;
                     element = SimpleContextMenu._target_element;
-                    div = CL._get_specified_ancestor(element, 'DIV');
+                    console.log(element)
+                    div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
                     rdg_details = CL.get_unit_app_reading(div.id);
                     SV.split_readings(rdg_details);
             	});
@@ -4685,7 +4705,7 @@ var SV = (function () {
         	$('#recombine_readings').on('click.rr_c', function(event) {
                     var element, div, rdg_details;
                     element = SimpleContextMenu._target_element;
-                    div = CL._get_specified_ancestor(element, 'DIV');
+                    div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
                     rdg_details = CL.get_unit_app_reading(div.id)
                     SV.unsplit_readings(rdg_details);	
         	});
@@ -4697,7 +4717,8 @@ var SV = (function () {
         	$('#overlap').on('click.or_c', function(event) {
                     var element, div, reading_details;
                     element = SimpleContextMenu._target_element;
-                    div = CL._get_specified_ancestor(element, 'DIV');
+                    console.log(element)
+                    div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
                     reading_details = CL.get_unit_app_reading(div.id);                           
                     SV.overlap_reading(reading_details[0], reading_details[2], {'top': SimpleContextMenu._menuElement.style.top, 'left': SimpleContextMenu._menuElement.style.left});
         	});
@@ -4709,48 +4730,29 @@ var SV = (function () {
         	$('#split_witnesses').on('click.sw_c', function(event) {
                     var element, div, reading_details;
                     element = SimpleContextMenu._target_element;
-                    div = CL._get_specified_ancestor(element, 'DIV');
+                    div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
                     reading_details = CL.get_unit_app_reading(div.id);
                     SV.split_reading_witnesses(reading_details, 'set_variants', {'top': SimpleContextMenu._menuElement.style.top, 'left': SimpleContextMenu._menuElement.style.left});
         	});
         	$('#split_witnesses').on('mouseover.sw_mo', function(event) {CL.hide_tooltip();});
             }
-            // next three change status on overlapped readings (in top line)
+            // next if and for deal with overlapped options
             if (document.getElementById('treat_as_main')) {
         	$('#treat_as_main').off('click.tam_c');
         	$('#treat_as_main').off('mouseover.tam_mo');
         	$('#treat_as_main').on('click.tam_c', function(event) {
         	    var element, div, reading_details;
         	    element = SimpleContextMenu._target_element;
-        	    div = CL._get_specified_ancestor(element, 'DIV');
+        	    div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
         	    reading_details = CL.get_unit_app_reading(div.id);
         	    SV.remove_reading_flag(reading_details);               		
             	});
         	$('#treat_as_main').on('mouseover.tam_mo', function(event) {CL.hide_tooltip();});        	
             }
-            if (document.getElementById('show_as_overlapped')) {
-        	$('#show_as_overlapped').off('click.sao_c');
-        	$('#show_as_overlapped').off('mouseover.sao_mo');
-        	$('#show_as_overlapped').on('click.sao_c', function(event) {
-        	    var element, div, reading_details;
-        	    element = SimpleContextMenu._target_element;
-        	    div = CL._get_specified_ancestor(element, 'DIV');
-        	    reading_details = CL.get_unit_app_reading(div.id);
-        	    SV.add_reading_flag(reading_details, 'overlapped');
-            	});
-        	$('#show_as_overlapped').on('mouseover.sao_mo', function(event) {CL.hide_tooltip();});      	
-            }
-            if (document.getElementById('delete_reading')) {
-        	$('#delete_reading').off('click.dr_c');
-        	$('#delete_reading').off('mouseover.dr_mo');
-        	$('#delete_reading').on('click.dr_c', function(event) {
-        	    var element, div, reading_details;
-        	    element = SimpleContextMenu._target_element;
-        	    div = CL._get_specified_ancestor(element, 'DIV');
-        	    reading_details = CL.get_unit_app_reading(div.id);
-        	    SV.add_reading_flag(reading_details, 'deleted');
-            	});
-        	$('#delete_reading').on('mouseover.dr_mo', function(event) {CL.hide_tooltip();});
+            for (i = 0; i < CL._overlapped_options.length; i += 1) {
+        	if (document.getElementById(CL._overlapped_options[i].id)) {
+        	    SV.add_overlapped_event(CL._overlapped_options[i].id, CL._overlapped_options[i].reading_flag);
+        	}
             }
             //special added for SV
             SV_rules = CL._get_rule_classes('create_in_SV', true, 'name', ['subreading', 'value', 'identifier', 'keep_as_main_reading']);
@@ -4769,13 +4771,13 @@ var SV = (function () {
             if (document.getElementById('mark_as_SVsubreading')) {
         	//make menu for mark_as_SVsubreading
         	key = 'SVsubreading';
-        	SV.add_event(SV_rules, key);
-        	$('mark_as_' + key).off('click.' + key + '_c');
-        	$('mark_as_' + key).off('mouseover.' + key + '_mo');
-        	$('mark_as_' + key).on('click.' + key + '_c', function(event) {                   
-        	    var element, div, unit, unit_pos, rdg_details, reading_pos, reading, reading_details;
+        	//SV.add_event(SV_rules, key); this used to be activated but I can't see that it ever worked. It is fine without it
+        	$('#mark_as_' + key).off('click.' + key + '_c');
+        	$('#mark_as_' + key).off('mouseover.' + key + '_mo');
+        	$('#mark_as_' + key).on('click.' + key + '_c', function(event) {
+        	    var element, div, unit,  app_id, unit_pos, rdg_details, reading_pos, reading, reading_details;
         	    element = SimpleContextMenu._target_element;
-        	    div = CL._get_specified_ancestor(element, 'DIV');
+        	    div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
         	    rdg_details = CL.get_unit_app_reading(div.id);
         	    unit_pos = rdg_details[0];
         	    app_id = rdg_details[1];
@@ -4785,7 +4787,7 @@ var SV = (function () {
                     reading_details = {'app_id': app_id, 'unit_id': unit._id, 'unit_pos': unit_pos, 'reading_pos': reading_pos, 'reading_id': reading._id};
                     CL.mark_standoff_reading(key, 'Subreading', reading_details, 'set_variants', {'top': SimpleContextMenu._menuElement.style.top, 'left': SimpleContextMenu._menuElement.style.left});
         	});
-        	$('mark_as_' + key).on('mouseover.' + key + '_mo', function(event) {CL.hide_tooltip();});      	
+        	$('#mark_as_' + key).on('mouseover.' + key + '_mo', function(event) {CL.hide_tooltip();});      	
             } else {
                 for (key in SV_rules) {
                     if (SV_rules.hasOwnProperty(key)) {
@@ -4799,6 +4801,18 @@ var SV = (function () {
             }
         },
         
+        add_overlapped_event: function (id, flag) {
+            $('#' + id).off('click.' + id + '_c');
+	    $('#' + id).off('mouseover.' + id + '_mo');
+	    $('#' + id).on('click.' + id + '_c', function(event) {
+    	    	var element, div, reading_details;
+    	    	element = SimpleContextMenu._target_element;
+    	    	div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
+    	    	reading_details = CL.get_unit_app_reading(div.id);
+    	    	SV.add_reading_flag(reading_details, flag);
+        	});
+	    $('#' + id).on('mouseover.' + id + '_mo', function(event) {CL.hide_tooltip();}); 
+        },
         
         /**adds the correct handler depending on subreading and keep_as_main_reading settings in the project rule configurations */
         add_event: function (SV_rules, key) {
@@ -4809,7 +4823,7 @@ var SV = (function () {
         	$('#mark_as_' + SV_rules[key][1]).on('click.' + key + '_c', function(event) {
         	    var element, div, rdg_details, unit, unit_pos, reading_pos, reading, reading_details, app_id;
         	    element = SimpleContextMenu._target_element;
-        	    div = CL._get_specified_ancestor(element, 'DIV');
+        	    div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
         	    rdg_details = CL.get_unit_app_reading(div.id);
         	    unit_pos = rdg_details[0];
         	    app_id = rdg_details[1];
@@ -4827,7 +4841,7 @@ var SV = (function () {
         	$('#mark_as_' + SV_rules[key][1]).on('click.' + key + '_c', function(event) {
         	    var element, div, rdg_details, reading_pos, reading, app_id, unit_pos;
         	    element = SimpleContextMenu._target_element;
-        	    div = CL._get_specified_ancestor(element, 'DIV');
+        	    div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
         	    rdg_details = CL.get_unit_app_reading(div.id);
         	    unit_pos = rdg_details[0];
         	    app_id = rdg_details[1];

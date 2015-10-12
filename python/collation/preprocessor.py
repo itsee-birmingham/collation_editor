@@ -22,6 +22,7 @@ class PreProcessor(Regulariser):
         witnesses = {}
         hand_to_transcript_map = {}
         verse = None
+        basetext_siglum = None
         # Add all the witness texts and keep record of witnesses omitting the verse and lacunose witnesses
         for transcription_verse in data:
             #try to remove witness from lac_witnesses (if successful its not lac)
@@ -75,7 +76,7 @@ class PreProcessor(Regulariser):
         
         witnesses['hand_id_map'] = hand_to_transcript_map
         if verse == None:
-            if basetext_siglum in witnesses['lac']:
+            if not basetext_siglum or basetext_siglum in witnesses['lac']:
                 missing_reason = 'lac'
             elif basetext_siglum in witnesses['om']:
                 missing_reason = 'om'
@@ -83,9 +84,8 @@ class PreProcessor(Regulariser):
                 missing_reason = 'unknown'
             verse = {'siglum': basetext_siglum, 
                      'missing_reason': missing_reason,
-                     'book_number': int(context[1:context.find('K')]),
-                     'chapter_number': int(context[context.find('K') + 1:context.find('V')]),
-                     'verse_number': int(context[context.find('V') + 1:])} 
+                     'index': 1
+                     } 
         return self.regularise(rules, witnesses, verse, settings, collation_settings, project, accept)
     
     

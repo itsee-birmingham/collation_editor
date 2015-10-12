@@ -20,6 +20,21 @@ var CL = (function () {
 	_display_settings_details: [],
 	_local_python_functions: {},
 	_rule_conditions: [],
+	_overlapped_options: [],
+	_default_rule_classes: [{
+            "value": "regularised",
+            "name": "Regularised",
+            "identifier": "r",
+            "create_in_RG": true,
+            "create_in_SV": true,
+            "create_in_OR": true,
+            "subreading": false,
+            "suffixed_sigla": true,
+            "suffixed_label": false,
+            "suffixed_reading": false,
+            "linked_appendix": false,
+            "keep_as_main_reading": false
+        }],
 	//these need to come from the services if they are not present in the project
 	_algorithm_settings: {'algorithm': 'auto', 'fuzzy_match': true, 'distance': 2},
 	_context_input: null,
@@ -44,7 +59,7 @@ var CL = (function () {
 	 * set our service provider layer,
 	 * allowing re-implementation of core services */
 	set_service_provider: function (service_provider) {
-	    CL._services = service_provider;
+	    CL._services = service_provider;    
 	},
 	
 	initialise_editor: function () {
@@ -66,9 +81,12 @@ var CL = (function () {
 	    }	    
 	},
 
+	//recursive function to load a list of js files and then once done run the supplied callback
 	include_javascript: function (js, callback, i) {
 	    if (js.length === 0) {
-		callback();
+		if (typeof callback !== 'undefined') {
+		    callback();
+		}	
 		return;
 	    }
 	    if (typeof i === 'undefined') {
@@ -86,21 +104,25 @@ var CL = (function () {
 	 * general layout stuff */
 	//TODO: see if you really need to return j and then remove if you can
 	get_collation_header: function (data, col_spans, number_spaces) {
-	    var html, words, cols, i, j, colspan;
+	    var html, word, words, cols, i, j, colspan;
 	    html = [];
 	    words = [];
 	    //extract all the words from the data you get back
 	    if ($.isArray(data.overtext)) {
 		for (i = 0; i <  data.overtext[0].tokens.length; i += 1) {
-		    if (data.overtext[0].tokens[i].hasOwnProperty('pc_before') && data.overtext[0].tokens[i].hasOwnProperty('pc_after')) {
-			words.push(data.overtext[0].tokens[i].pc_before + data.overtext[0].tokens[i].original + data.overtext[0].tokens[i].pc_after);
-		    } else if (data.overtext[0].tokens[i].hasOwnProperty('pc_before')) {
-			words.push(data.overtext[0].tokens[i].pc_before + data.overtext[0].tokens[i].original);
-		    } else if (data.overtext[0].tokens[i].hasOwnProperty('pc_after')) {
-			words.push(data.overtext[0].tokens[i].original + data.overtext[0].tokens[i].pc_after);
-		    } else {
-			words.push(data.overtext[0].tokens[i].original);
+		    word = [];
+		    if (data.overtext[0].tokens[i].hasOwnProperty('pc_before')) {
+			word.push(data.overtext[0].tokens[i].pc_before);
 		    }
+		    if (data.overtext[0].tokens[i].hasOwnProperty('original')) {
+			word.push(data.overtext[0].tokens[i].original);
+		    } else {
+			word.push(data.overtext[0].tokens[i].t);
+		    }
+		    if (data.overtext[0].tokens[i].hasOwnProperty('pc_after')) {
+			word.push(data.overtext[0].tokens[i].pc_after);
+		    }
+		    words.push(word.join(''));
 		}
 	    }
 	    //columns is based on number of words*2 (to include spaces) + 1 (to add space at the end)
@@ -214,9 +236,10 @@ var CL = (function () {
 		    }
 		    i += 1;
 		} else if (i === unit_index) { //we do have a variant for this word
-		    if (unit.readings.length > 1 ||
-			    (format === 'set_variants' && SV._show_shared_units === true) ||
-			    (format === 'regularise' && CL._display_settings.view_original_forms === true)
+		    if (unit.readings.length > 1 
+			    || (format === 'set_variants' && SV._show_shared_units === true) 
+			    || (format === 'regularise' && CL._display_settings.view_original_forms === true)
+			    || (format === 'regularise' && RG._show_regularisations === true)
 			    || format === 'version_additions') {
 			//check to see if we need any gaps at this index point before the unit (to account for combined gap before in another reading)
 			if (options.overlap_details[unit._id].hasOwnProperty('gap_before') 
@@ -249,9 +272,12 @@ var CL = (function () {
 			if (unit.hasOwnProperty('split_readings') && unit.split_readings === true) {
 			    unit_data_options.split = true;
 			} 
+			if (unit.hasOwnProperty('created') && unit.created === true) {
+			    unit_data_options.created = true;
+			}
 			if (format === 'regularise') {
 			    unit_data = RG.get_unit_data(unit.readings, id_string, unit.start, unit.end, unit_data_options);
-			} else if (format === 'set_variants') {
+		} else if (format === 'set_variants') {
 			    unit_data_options.td_id = td_id;
 			    unit_data = SV.get_unit_data(unit.readings, id_string, unit.start, unit.end, unit_data_options);
 			    spacer_rows.push(SV.get_spacer_unit_data(id_string, unit.start, unit.end));
@@ -371,7 +397,7 @@ var CL = (function () {
 	 * 			highlighted_unit - a unit to mark as having an error*/
 	get_unit_layout: function (apparatus, app, format, options) {
 	    var j, i, k, rows, unit, col_len_dict, row_list, extra_rows, new_row, unit_data_options,
-	    previous_index, id_string, events, unit_data, unit_index, split, spacer_rows;
+	    previous_index, id_string, events, unit_data, unit_index, split, spacer_rows, key;
 	    if (typeof options === 'undefined') {
 		options = {};
 	    }
@@ -403,8 +429,10 @@ var CL = (function () {
 		    }
 		    i += 1;
 		} else if (i === unit_index) { //we do have a variant for this word
-		    if (unit.readings.length > 1 || 
-			    (format === 'set_variants' && SV._show_shared_units === true)) {
+		    if (unit.readings.length > 1 
+			    || (format === 'set_variants' && SV._show_shared_units === true) 
+			    || (format === 'regularise' && RG._show_regularisations === true)
+			    || format === 'version_additions') {
 			if (options.hasOwnProperty('sort') && options.sort === true) {
 			    unit.readings = CL.sort_readings(unit.readings);
 			}
@@ -431,6 +459,14 @@ var CL = (function () {
 			if (unit.hasOwnProperty('split_readings') && unit.split_readings === true) {
 			    unit_data_options.split = true;
 			} 
+			if (unit.hasOwnProperty('overlap_units')) {
+			    unit_data_options.overlapping_ids = [];
+			    for (key in unit.overlap_units) {
+				if (unit.overlap_units.hasOwnProperty(key)) {
+				    unit_data_options.overlapping_ids.push(key);
+				}
+			    }
+			}
 			if (!CL.unit_has_text(unit)) {
 			    unit_data_options.gap_unit = true;
 			}
@@ -525,6 +561,16 @@ var CL = (function () {
 	    }
 	    return cell;
 	},
+	
+	processes_hand_id: function (hand) {
+	    var display_hand;
+	    if (CL._remove_private_for.indexOf(hand.replace('_private', ' (private)')) !== -1) {
+		display_hand = hand.replace('_private', '');
+            } else {
+		display_hand = hand.replace('_private', ' (private)');
+            }
+	    return display_hand;
+	},
 
 	//TODO: might be nicer if this went back to the XML just as an extra check
 	get_highlighted_text: function (witness) {
@@ -533,30 +579,14 @@ var CL = (function () {
             transcription_id = temp[0];
             hand = temp[1];
             text = [];
-
-
-			// see if we can abstract private / public logic to services interface
-            if (CL._remove_private_for.indexOf(hand.replace('_private', ' (private)')) !== -1) {
-				display_hand = hand.replace('_private', '');
-            } else {
-				display_hand = hand.replace('_private', ' (private)');
-            }
-
-
+            display_hand = CL.processes_hand_id(hand);
             document.getElementById('single_witness_reading').innerHTML = '<span class="highlighted_reading"><b>' + display_hand + ':</b><img id="loadingbar" src="/collation/images/loadingbar.gif"/></span>';
-
-
-
             if (hand.search('_private') === -1) {
-				is_private = false;
+		is_private = false;
             } else {
-				is_private = true;
+		is_private = true;
             }
-
-
-
-			CL._services.get_verse_data(CL._context, [transcription_id], is_private, function(transcriptions) {
-
+            CL._services.get_verse_data(CL._context, [transcription_id], is_private, function(transcriptions) {
         	if (transcriptions.length > 0) {
         	    for (i = 0; i < transcriptions.length; i += 1) {
         		verse = transcriptions[i];
@@ -567,10 +597,10 @@ var CL = (function () {
         				if (verse.witnesses[j].tokens[k].hasOwnProperty('gap_before')) {
         				    text.push('&lt;' + verse.witnesses[j].tokens[k].gap_before_details + '&gt;');
         				}
-        				if (verse.witnesses[j].tokens[k].hasOwnProperty('expanded')) {
-        				    text.push(verse.witnesses[j].tokens[k].expanded);
-        				} else {
+        				if (verse.witnesses[j].tokens[k].hasOwnProperty('original')) {
         				    text.push(verse.witnesses[j].tokens[k].original);
+        				} else {
+        				    text.push(verse.witnesses[j].tokens[k].t);
         				}
         				if (verse.witnesses[j].tokens[k].hasOwnProperty('gap_after')) {
         				    text.push('&lt;' + verse.witnesses[j].tokens[k].gap_details + '&gt;');
@@ -589,12 +619,12 @@ var CL = (function () {
         	    //lac verse
         	    document.getElementById('single_witness_reading').innerHTML = '<span class="highlighted_reading"><b>' + display_hand + ':</b> no text</span>';
         	}
-			});
+            });
 	},
 	
 	get_unit_data: function (data, id, format, start, end, options) {
 	    var i, html, j, decisions, rows, cells, row_list, temp, events, max_length, row_id, 
-	    type, subrow_id, colspan, hand, text, label;
+	    type, subrow_id, colspan, hand, text, label, rules, key, reading_label, reading_suffix;
 	    html = [];
 	    row_list = [];
             if (options.hasOwnProperty('highlighted_wit')) {
@@ -602,6 +632,12 @@ var CL = (function () {
             } else {
                 hand = null;
             }    
+            rules = CL._get_rule_classes(undefined, undefined, 'value', ['identifier', 'keep_as_main_reading', 'suffixed_label', 'suffixed_reading']);
+            for (key in rules) {
+        	if (rules.hasOwnProperty(key) && rules[key][1] === false) {
+        	    delete rules[key];
+        	}
+            }
             html.push('<td class="mark start_' + start + ' " colspan="' + (end - start + 1) + '">');
             html.push('<table class="variant_unit" id="variant_unit_' + id + '">');
             for (i = 0; i < data.length; i += 1) {
@@ -622,23 +658,20 @@ var CL = (function () {
         	    }
         	}
         	text = CL.extract_display_text(data[i], i, data.length, options.unit_id, options.app_id);
-        	if (text === 'system_gen_deleted') {
-        	    text = 'deleted';
-        	} else if (text === 'system_gen_overlapped') {
-        	    text = 'overlapped';
+        	if (text.indexOf('system_gen_') !== -1) {
+        	    text = text.replace('system_gen_', '');
         	}
-        	label = data[i].label;
-        	//should never happen since we are squelching these but no harm in leaving it for now
-        	if (label === 'zz') {
-        	    label = '—';
-        	} else if (label === 'zu') {
-        	    label = '↓';
-        	}
+        	reading_label = CL.get_reading_label(i, data[i], rules);
+                reading_suffix = CL.get_reading_suffix(data[i], rules);
+        	
         	html.push('<td></td>');
-        	html.push('<td id="' + row_id + '_label">' + label);
-        	html.push('.</td>');
+        	html.push('<td id="' + row_id + '_label">' + reading_label);
+        	html.push('</td>');
         	html.push('<td class="main_reading">');
-        	html.push(text);           
+        	html.push(text);
+        	if (reading_suffix !== '') {
+                    html.push(' ' + reading_suffix);
+                }
         	html.push('</td>');
         	html.push('</tr>');
             }
@@ -719,67 +752,6 @@ var CL = (function () {
 		if (document.getElementById(CL._display_settings_details.configs[i].id)) {
 		    document.getElementById(CL._display_settings_details.configs[i].id).checked = CL._display_settings[CL._display_settings_details.configs[i].id];
 		}
-	    }
-	    
-	    $('#save_settings').on('click', function (event) {
-		var setting, data;
-		data = U.FORMS.serialize_form('settings_form');
-		for (setting in CL._display_settings) {
-		    if (CL._display_settings.hasOwnProperty(setting)) {
-			if (data.hasOwnProperty(setting)) {
-			    CL._display_settings[setting] = data[setting];
-			} else {
-			    CL._display_settings[setting] = false;
-			}
-		    }
-		}
-		RG.recollate();
-		document.getElementsByTagName('body')[0].removeChild(document.getElementById('settings'));
-	    });
-	    $('#close_settings').on('click', function (event) {
-		document.getElementsByTagName('body')[0].removeChild(document.getElementById('settings'));
-	    });
-	},
-	
-	show_settings_old: function () {
-	    var settings_div;
-	    if (document.getElementById('settings') !== null) {
-		document.getElementsByTagName('body')[0].removeChild(document.getElementById('settings'));
-	    }
-	    settings_div = document.createElement('div');
-	    settings_div.setAttribute('id', 'settings');
-	    settings_div.setAttribute('class', 'settings_dialogue');
-	    settings_div.innerHTML = '<span id="settings_title"><b>Settings</b></span><form id="settings_form">' +
-	    '<label for="view_supplied">view supplied text</label><input class="boolean" name="view_supplied" id="view_supplied" type="checkbox"/><br/>' +
-	    '<label for="view_unclear">view unclear text</label><input class="boolean" name="view_unclear" id="view_unclear" type="checkbox"/><br/>' +
-	    '<label for="view_punctuation">view punctuation</label><input class="boolean" name="view_punctuation" id="view_punctuation" type="checkbox"/><br/>' +
-	    '<label for="view_capitalisation">view capitalisation</label><input class="boolean" name="view_capitalisation" id="view_capitalisation" type="checkbox"/><br/>' +
-	    '<label for="view_diaeresis">view diaeresis</label><input class="boolean" name="view_diaeresis" id="view_diaeresis" type="checkbox"/><br/>' +
-	    '<label for="view_apostrophes">view apostrophes</label><input class="boolean" name="view_apostrophes" id="view_apostrophes" type="checkbox"/><br/>' +
-	    '<label for="expand_abbreviations">expand abbreviations</label><input class="boolean" name="expand_abbreviations" id="expand_abbreviations" type="checkbox"/><br/>' +
-	    '<input type="button" id="save_settings" value="save and recollate"/>' +
-	    '<input type="button" id="close_settings" value="cancel"/></form>';
-	    document.getElementsByTagName('body')[0].appendChild(settings_div);
-	    if (document.getElementById('view_supplied')) {
-		document.getElementById('view_supplied').checked = CL._display_settings.view_supplied;
-	    }
-	    if (document.getElementById('view_unclear')) {
-		document.getElementById('view_unclear').checked = CL._display_settings.view_unclear;
-	    }
-	    if (document.getElementById('view_punctuation')) {
-		document.getElementById('view_punctuation').checked = CL._display_settings.view_punctuation;
-	    }
-	    if (document.getElementById('view_capitalisation')) {
-		document.getElementById('view_capitalisation').checked = CL._display_settings.view_capitalisation;
-	    }
-	    if (document.getElementById('view_diaeresis')) {
-		document.getElementById('view_diaeresis').checked = CL._display_settings.view_diaeresis;
-	    }
-	    if (document.getElementById('view_apostrophes')) {
-		document.getElementById('view_apostrophes').checked = CL._display_settings.view_apostrophes;
-	    }
-	    if (document.getElementById('expand_abbreviations')) {
-		document.getElementById('expand_abbreviations').checked = CL._display_settings.expand_abbreviations;
 	    }
 	    $('#save_settings').on('click', function (event) {
 		var setting, data;
@@ -990,7 +962,7 @@ var CL = (function () {
 	    var i, witnesses;
 	    witnesses = [];
 	    for (i = 0; i < unit.readings.length; i += 1) {
-		witnesses.push.apply(witnesses, CL.get_all_reading_witnesses(unit.readings[i]))
+		witnesses.push.apply(witnesses, CL.get_all_reading_witnesses(unit.readings[i]));
 	    }
 	    return witnesses;
 	},
@@ -1071,8 +1043,6 @@ var CL = (function () {
 	 *  */
 	lac_om_fix: function () {
 	    var i, j, k, apparatus, witnesses, empty_witnesses, token, extra_readings, overlap, key, subreading_data, text, overlap_status;
-//	    console.log('DATA IN TO LAC_OM_FIX')
-//	    console.log(JSON.parse(JSON.stringify(CL._data)));
 	    //first strip all the empty units displaying gaps and then recreate the ones we still need
 	    CL.clean_extra_gaps();
 	    CL.create_extra_gaps();
@@ -1139,8 +1109,6 @@ var CL = (function () {
 		    apparatus[i].readings.push(extra_readings[j]);
 		}
 	    }
-//	    console.log('DATA OUT OF LAC_OM_FIX')
-//	    console.log(JSON.parse(JSON.stringify(CL._data)))
 	},
 	
 	delete_reading_by_id: function (unit, reading_id) {
@@ -1159,7 +1127,6 @@ var CL = (function () {
 		for (j = 0; j < text[i].reading.length; j += 1) {
 		    if (text[i].reading[j] !== witness) {
 			delete text[i][text[i].reading[j]];
-			//text[i].siglum[j] = null;
 			text[i].reading[j] = null;
 		    }
 		}		
@@ -1186,7 +1153,7 @@ var CL = (function () {
 	},
 	
 	/**
-	 * Tests whether the given unit has a reading that contains text or not (included as text are overlapped readings which are labelled as deleted or overlapped)
+	 * Tests whether the given unit has a reading that contains text or not 
 	 * 
 	 * @method unit_has_text
 	 * @param {Object} unit The unit to be tested
@@ -1196,9 +1163,6 @@ var CL = (function () {
 	    var i, j, key;
 	    for (i = 0; i < unit.readings.length; i += 1) {
 		if (unit.readings[i].text.length > 0 ){
-//			|| (unit.readings[i].hasOwnProperty('overlap_status') 
-//				&& (unit.readings[i].overlap_status === 'overlapped' 
-//				    || unit.readings[i].overlap_status === 'deleted'))) {
 		    return true;
 		} 
 		if (unit.readings[i].hasOwnProperty('subreadings')) {
@@ -1444,10 +1408,23 @@ var CL = (function () {
 	    } else {
 		details.type = 'om';
 	    }
-	    return details;
-	    
+	    return details;	    
 	},
 	
+	//if all of the provided overlap_unit ids have empty readings
+	overlaps_are_all_empty_readings: function (overlap_units) {
+	    var i, ol_unit;
+	    for (i = 0; i < overlap_units.length; i += 1) {
+		ol_unit = CL.find_overlap_unit_by_id(overlap_units[i]);
+		if (ol_unit.readings[1].text.length > 0) {
+		    return false;
+		}
+	    }
+	    return true;
+	},
+	
+	
+	//if any of the provided ovlerap_units object have an empty reading
 	overlap_has_empty_reading: function (overlap_units) {
 	    var empty_reading, key, ol_unit;
 	    for (key in overlap_units) {
@@ -1463,7 +1440,6 @@ var CL = (function () {
 	    return false;
 	},
 	
-
 	add_extra_gap_readings: function (adjacent_unit, all_witnesses, new_unit, check_overlaps, inclusive_overlaps) {
 	    var lac_wits, om_wits, other_wits, key, ol_unit, i, j, k, new_rdg;
 	    //the rest of this section is really just adding the readings (and witnesses) to this unit
@@ -1756,7 +1732,6 @@ var CL = (function () {
 			    }
 			}
 			if (latest === null || latest.status === 'regularised') {
-			    alert('I am setting the details')
 			    //then get the data from the repository and replace the exiting stuff (in case we need to recollate from the interface)
 			    RG.get_collation_data(CL._data_settings.collation_source, 'units', 0, function() {CL.load_latest_stage_verse(latest, approved);});
 			} else {
@@ -1779,26 +1754,28 @@ var CL = (function () {
 		}
 		RG.recollate(true);
 	    } else {
-		CL._data = latest.structure;
-		if (latest.status === 'regularised') {
-		    RG.show_verse_collation(latest.structure, CL._context, CL._container);
-		    document.getElementById('scroller').scrollLeft = 0;
-	            document.getElementById('scroller').scrollTop = 0;
-		} else if (latest.status === 'set') {
-		    //if anything that should have an _id attribute doesn't have one then 
-		    //add them
-		    if (SV.check_ids()[0]) {
-			CL.add_unit_and_reading_ids();
+		CL._services.load_saved_collation(latest._id, function (response) {
+		    CL._data = response.structure;
+		    if (latest.status === 'regularised') {
+			RG.show_verse_collation(response.structure, CL._context, CL._container);
+			document.getElementById('scroller').scrollLeft = 0;
+			document.getElementById('scroller').scrollTop = 0;
+		    } else if (latest.status === 'set') {
+			//if anything that should have an _id attribute doesn't have one then 
+			//add them
+			if (SV.check_ids()[0]) {
+			    CL.add_unit_and_reading_ids();
+			}
+			SV.check_bug_status('loaded', 'saved version');
+			SV.show_set_variants({'container': CL._container});
+			document.getElementById('scroller').scrollLeft = 0;
+			document.getElementById('scroller').scrollTop = 0;
+		    } else if (latest.status === 'ordered') {
+			OR.show_reorder_readings({'container': CL._container});
+			document.getElementById('scroller').scrollLeft = 0;
+			document.getElementById('scroller').scrollTop = 0;
 		    }
-		    SV.check_bug_status('loaded', 'saved version');
-		    SV.show_set_variants({'container': CL._container});
-		    document.getElementById('scroller').scrollLeft = 0;
-	            document.getElementById('scroller').scrollTop = 0;
-		} else if (latest.status === 'ordered') {
-		    OR.show_reorder_readings({'container': CL._container});
-		    document.getElementById('scroller').scrollLeft = 0;
-	            document.getElementById('scroller').scrollTop = 0;
-		}
+		});
 	    }
 	},
 
@@ -1863,18 +1840,12 @@ var CL = (function () {
 	    text = [];
 	    witness_text = [];
 	    //first fix the display of overlapped statuses
-	    if (reading.hasOwnProperty('overlap_status') && reading.overlap_status === 'deleted') {
+	    if (reading.hasOwnProperty('overlap_status') && reading.overlap_status !== 'duplicate') {
 		if (test === true) {
-		    console.log('I have been overlapped and deleted');
+		    console.log('I have been overlapped and ' + reading.overlap_status);
 		}
-		return 'system_gen_deleted';
-	    }
-	    if (reading.hasOwnProperty('overlap_status') && reading.overlap_status === 'overlapped') {
-		if (test === true) {
-		    console.log('I have been overlapped and marked as overlapped');
-		}
-		return 'system_gen_overlapped';
-	    }
+		return 'system_gen_' + reading.overlap_status;
+	    }	    
 	    //now look at options and set flag accordingly
 	    if (typeof options !== 'undefined') {
 		if (options.hasOwnProperty('witness')) {
@@ -2195,21 +2166,6 @@ var CL = (function () {
 	    var token;
 	    token = CL._data.apparatus[unit].readings[reading].text[word];
 	    return token['interface'];
-	},
-
-	get_context_dict: function (witness, verse) {
-	    var context;
-		if (typeof verse === 'undefined') {
-			verse = CL._context;
-		}
-	    context = {'book' : parseInt(verse.substring(verse.indexOf('B') + 1, verse.indexOf('K')), 10),
-		    'chapter' :  parseInt(verse.substring(verse.indexOf('K') + 1, verse.indexOf('V')), 10),
-		    'verse' :  parseInt(verse.substring(verse.indexOf('V') + 1), 10)
-	    };
-	    if (typeof witness !== 'undefined') {
-		context.witness = witness;
-	    }
-	    return context;
 	},
 
 	get_unit_app_reading: function (id) {
@@ -2547,7 +2503,7 @@ var CL = (function () {
 		    }
 		    //now check offset marked readings (i.e created in SV or OR)
 		    //this needs to check the id of the unit (which we don't have at this point) is the same as the marked reading unit_id property
-		    if (typeof start !== 'undefined' && typeof end !== 'undefined' && typeof unit_id !== 'undefined') {
+		    if (typeof start !== 'undefined' && typeof end !== 'undefined' && typeof app_id !== 'undefined') {
 			for (key in CL._data.marked_readings) {
 			    for (j = 0; j < CL._data.marked_readings[key].length; j += 1) {
 				if (CL._data.marked_readings[key][j].start === start 
@@ -2586,14 +2542,8 @@ var CL = (function () {
 			}
 		    }
 		}
+		witness = CL.processes_hand_id(witness);
 		witnesses.push(witness + suffix);
-	    }
-	    for (i = 0; i < witnesses.length; i += 1) {
-		if (CL._remove_private_for.indexOf(witnesses[i].replace('_private', ' (private)')) != -1) {
-		    witnesses[i] = witnesses[i].replace('_private', '');
-		} else {
-		    witnesses[i] = witnesses[i].replace('_private', '&nbsp;(private)');
-		}
 	    }
 	    witnesses = CL.sort_witnesses(witnesses);
 	    try {
@@ -2617,7 +2567,6 @@ var CL = (function () {
 		return 1;
 	    }
 	    //if one is overlapped put it at the bottom
-	    //TODO: might need to make this more specific for different 
 	    if (a.hasOwnProperty('overlap_status') && b.hasOwnProperty('overlap_status')) {
 		return 0;
 	    }
@@ -2666,16 +2615,31 @@ var CL = (function () {
 	    readings.sort(CL.compare_readings);
 	    return readings;
 	},
+	
+	run_function: function (function_ref, args) {
+	    var fn;
+	    if (typeof args === 'undefined') {
+		args = [];
+	    }
+	    if (typeof function_ref === 'string') {
+		if (function_ref.indexOf('(') === -1 && function_ref.indexOf('{') === -1) {
+		    fn = eval(function_ref);
+		    return fn.apply(this, args);
+		} else {
+		    alert('there may be a security problem on this page');
+		}	
+	    } else {
+		return function_ref.apply(this, args)
+	    }
+	},
 
 	sort_witnesses: function (witnesses) {
-	    var fn;
-	    //use a project function if there is one
 	    if (CL._project.hasOwnProperty('witness_sort')) {
-		fn = eval(CL._project.witness_sort);
-		fn(witnesses)
+		//use a project function if there is one
+		CL.run_function(CL._project.witness_sort, [witnesses])
 	    } else if (CL._services.hasOwnProperty('witness_sort')) {
 		//or use the default for the services if there is one
-		CL._services.witness_sort(witnesses);		
+		CL.run_function(CL._services.witness_sort, [witnesses])
 	    } else {
 		//or just use regular sort
 		witnesses.sort();
@@ -2687,11 +2651,14 @@ var CL = (function () {
 	    document.getElementById('header_row').innerHTML = ref;
 	},
 	
-	_get_specified_ancestor: function (element, ancestor) {
-            if (element.tagName === ancestor) {
+	_get_specified_ancestor: function (element, ancestor, condition_test) {
+	    if (typeof condition_test === 'undefined') {
+		condition_test = function (e) {return true}
+	    }
+            if (element.tagName === ancestor && condition_test(element)) {
                 return element;
             } else {
-                while (element.tagName !== ancestor && element.tagName !== 'BODY') {
+                while (element.tagName !== 'BODY' && (element.tagName !== ancestor || (element.tagName === ancestor && condition_test(element) === false))) {
                     element = element.parentNode;
                 }
                 return element;                
@@ -2813,21 +2780,27 @@ var CL = (function () {
 	    if (reading.hasOwnProperty('label') && typeof reading.label !== 'undefined') {
 		if (reading.label === 'zz') {
 		    reading_label = '—';
-		} else if (reading.label === 'zu') {
+		}
+	    }
+	    if (reading.hasOwnProperty('overlap_status')) {
+		reading_label = ''; //this will be the default if it doesn't get replaced
+		if (reading.overlap_status === 'duplicate') {
 		    reading_label = '↓';
-		} else {
+		} else {  
+		    for (i = 0; i < CL._overlapped_options.length; i += 1) {
+			if (CL._overlapped_options[i].reading_flag === reading.overlap_status 
+				&& CL._overlapped_options[i].hasOwnProperty('reading_label_display')) {
+			    reading_label = CL._overlapped_options[i].reading_label_display;
+			}
+		    }
+		}
+	    } else if (reading.label !== 'zz') {
+		if (reading.hasOwnProperty('label')) {
 		    reading_label = reading.label + label_suffix + '.';
-		}
-	    } else if (reading.hasOwnProperty('overlap_status')) {
-		if (reading.overlap_status === 'overlapped') {
-		    reading_label = '↑';
-		} else if (reading.overlap_status === 'deleted') {
-		    reading_label = '';
 		} else {
-		    reading_label = '↓';
+		    reading_label = alpha_id + label_suffix + '.';
 		}
-	    } else {
-		reading_label = alpha_id + label_suffix + '.';
+		
 	    }
 	    return reading_label;
 	},
@@ -2867,11 +2840,7 @@ var CL = (function () {
 	get_context_from_input_form: function() {
             var context
             if (CL._context_input && CL._context_input.hasOwnProperty('result_provider')) {
-        	if (typeof CL._context_input.result_provider === 'string') {
-        	    context = eval(CL._context_input.result_provider + '()');
-        	} else {
-        	    context = CL._context_input.result_provider();
-        	}
+        	context = CL.run_function(CL._context_input.result_provider);
             } else {
         	context = document.getElementById('context').value;
             }
@@ -3369,18 +3338,25 @@ var CL = (function () {
 	},
 	
         _get_rule_classes: function (test_key, test_value, key, data) {
-            var i, j, classes, list;
+            var i, j, classes, list, rule_classes;
             classes = {};
-            for (i = 0; i < CL._project.rule_classes.length; i += 1) {
-        	if (CL._project.rule_classes[i][test_key] === test_value || typeof test_key === 'undefined') {
+            if (CL._project.hasOwnProperty('rule_classes')) {
+        	rule_classes = CL._project.rule_classes;
+            } else if (CL._services.hasOwnProperty('rule_classes')) {
+        	rule_classes = CL._services.rule_classes;
+            } else {
+        	rule_classes = CL._default_rule_classes;
+            }
+            for (i = 0; i < rule_classes.length; i += 1) {
+        	if (rule_classes[i][test_key] === test_value || typeof test_key === 'undefined') {
         	    if ($.type(data) === 'string') {
-        		classes[CL._project.rule_classes[i][key]] = CL._project.rule_classes[i][data];
+        		classes[rule_classes[i][key]] = rule_classes[i][data];
         	    } else {
         		list = [];
         		for (j = 0; j < data.length; j += 1) {
-        		    list.push(CL._project.rule_classes[i][data[j]]);
+        		    list.push(rule_classes[i][data[j]]);
             	    	}
-        		classes[CL._project.rule_classes[i][key]] = list;
+        		classes[rule_classes[i][key]] = list;
         	    }
         	}
             }
@@ -3421,7 +3397,7 @@ var CL = (function () {
         	witness_html.push('<div id="wit_scroller"><input type="checkbox" id="wit_select_all">Select All</input><br/>');
         	for (i = 0; i < witnesses.length; i += 1) {
                     if (witnesses[i] !== CL._data_settings.base_text_siglum) {
-                        witness_html.push('<input type="checkbox" id="' + witnesses[i] + '" name="' + witnesses[i] + '" value="' + witnesses[i] + '">' + witnesses[i] + '</input><br/>');
+                        witness_html.push('<input type="checkbox" id="' + witnesses[i] + '" name="' + witnesses[i] + '" value="' + witnesses[i] + '">' + CL.processes_hand_id(witnesses[i]) + '</input><br/>');
                     }
                 }
         	witness_html.push('</div>');
@@ -3643,7 +3619,29 @@ var CL = (function () {
 	    return token[witness].index;
 	},
 	
-        //TODO: need a way of finding/losing subreadings in a single reading to speed this up.
+	//I considered making these cumulative but decided against so that projects can always override services if they have different editorial practices
+	get_pre_stage_checks: function (stage) {
+	    if (CL._project.hasOwnProperty('pre_stage_checks') && CL._project.pre_stage_checks.hasOwnProperty(stage))  {
+		return CL._project.pre_stage_checks[stage];
+	    }
+	    if (CL._services.hasOwnProperty('pre_stage_checks') && CL._services.pre_stage_checks.hasOwnProperty(stage)) {
+		return CL._services.pre_stage_checks[stage];
+	    }	    
+	    return [];
+	},
+	
+	apply_pre_stage_checks: function (stage) {
+	    var pre_stage_checks, i, result;
+	    pre_stage_checks = CL.get_pre_stage_checks(stage);
+	    for (i = 0; i < pre_stage_checks.length; i += 1) {
+		result = CL.run_function(pre_stage_checks[i]['function']);
+		if (result !== pre_stage_checks[i].pass_condition) {
+		    return [false, pre_stage_checks[i].fail_message];
+		}
+	    }
+	    return [true];
+	},
+	
 	make_standoff_reading: function (type, reading_details, parent_id) {
 	    var apparatus, unit, reading, parent, key, i, id, new_reading;
 	    apparatus = reading_details.app_id;
@@ -3652,20 +3650,15 @@ var CL = (function () {
             parent = CL.find_reading_by_id(unit, parent_id);
             SV._lose_subreadings(); //must always lose subreadings first or find subreadings doesn't find them all!
             SV._find_subreadings({'unit_id': unit._id}); //we need this to see if we have any!
-            console.log(JSON.parse(JSON.stringify(reading)))
+            console.log(type)
+            console.log(reading_details)
             if (reading.hasOwnProperty('subreadings')) {
         	for (key in reading.subreadings) {
         	    if (reading.subreadings.hasOwnProperty(key)) {
         		for (i = reading.subreadings[key].length-1; i >= 0; i -= 1) {
-        		    //these two calls should not be needed because every path 
-        		    //that leads here has already called them
-//        		    SV._lose_subreadings();
-//        	            SV._find_subreadings();//{'unit_id': unit._id});
         		    id = CL.make_main_reading(unit, reading, key, i);
         		    new_reading = CL.find_reading_by_id(unit, id);
-        		    console.log(JSON.parse(JSON.stringify(new_reading)))
         		    CL.do_make_standoff_reading(type, apparatus, unit, new_reading, parent);
-        		    console.log(JSON.parse(JSON.stringify(CL._data['marked_readings'])))
         		    SV._lose_subreadings();
         	            SV._find_subreadings({'unit_id': unit._id});
         		}
@@ -3674,12 +3667,11 @@ var CL = (function () {
             }
             //then do the parent reading itself
             CL.do_make_standoff_reading(type, apparatus, unit, reading, parent); //this includes call to lose_subreadings
-            
+//    	    console.log('++++++++++++++++++++++++ about to find subreadings')            
             /*
     	     * NB: running SV._find_subreadings actually makes the standoff marked reading a real subreading in 
     	     * the display and is a required step even if it is to be hidden again immediately afterwards 
     	    */
-//    	    console.log('++++++++++++++++++++++++ about to find subreadings')
     	    SV._find_subreadings({'unit_id': unit._id});
 //    	    console.log('RESULT OF _FIND_SUBREADINGS BELOW')
 //    	    console.log(JSON.parse(JSON.stringify(CL._data)))
@@ -3976,8 +3968,6 @@ var CL = (function () {
             return parent_id;
         },
         
-
-        
         get_ordered_app_lines: function () {
             var key, numbers, i, app_ids;
             numbers = [];
@@ -4003,7 +3993,7 @@ var CL = (function () {
             if (typeof application === 'undefined') {
         	application = 'collation';
             }
-            //load any locally specified js files 
+            //load any project specified js files 
             local_js = [];
             if (project.hasOwnProperty('local_js_file')) {
         	for (i = 0; i < project.local_js_file.length; i += 1) {
@@ -4035,20 +4025,20 @@ var CL = (function () {
 		//set all the details we need in memory
 		CL._project = {'name' : project.project, 
         		'_id' : project._id,
-        		'rule_classes' : project.regularisation_classes,
-        		'display_settings': project.display_settings,
+        		'rule_classes' : project.regularisation_classes,       		
         		'book_name' : project.book_name,
         	};
 		
-        	if (project.hasOwnProperty('context_input')) {
-        	    CL._project.context_input = project.context_input;	
-        	}
         	if (project.hasOwnProperty('witness_sort')) {
         	    CL._project.project_witness_sort = project.witness_sort;
+        	}
+        	if (project.hasOwnProperty('pre_stage_checks')) {
+        	    CL._project.pre_stage_checks = project.pre_stage_checks;
         	}
         	CL.set_display_settings(project);
         	CL.set_local_python_functions(project);
         	CL.set_rule_conditions(project);
+        	CL.set_overlapped_options(project);
         	if (project.hasOwnProperty('V_for_supplied')) {
         	    CL._project.V_for_supplied = project.V_for_supplied;
         	}
@@ -4057,13 +4047,6 @@ var CL = (function () {
         	} else if (CL._services.hasOwnProperty('context_input')) {
         	    CL._context_input = CL._services.context_input;
         	}
-        	
-        	
-        	
-        	
-      
-        	
-        	
         	url = 'http://' + SITE_DOMAIN + '/collation/';
         	if (CL._context_input) {
         	    url += CL._context_input.form;
@@ -4071,32 +4054,31 @@ var CL = (function () {
         	    url += 'default_index_input.html';
         	}
         	$.get(url, function (html) {
-        	    var fn
         	    CL._container.innerHTML = html;
         	    document.getElementById('project_name').innerHTML = project.project;
         	    if (CL._context_input && CL._context_input.hasOwnProperty('onload_function')) {
-        		if (typeof CL._context_input.onload_function === 'string') {
-        		    fn = eval(CL._context_input.onload_function);
-        		    fn(project);
-        		} else {
-        		    CL._context_input.onload_function(project);
-        		}
+        		CL.run_function(CL._context_input.onload_function, [project]);
         	    } else {
         		//default onload function
         		CL.context_input_onload(project);
         	    }
-        	    $('#collate').off('click.run_collation');
-        	    $('#collate').on('click.run_collation', function () {
-        		RG.prepare_collation(CL._display_mode);	
-        	    });
-        	    $('#load_saved').off('click.find_saved');
-        	    $('#load_saved').on('click.find_saved', CL.find_saved);
+        	    if (document.getElementById('collate')) {
+        		$('#collate').off('click.run_collation');
+                	$('#collate').on('click.run_collation', function () {
+                	    RG.prepare_collation(CL._display_mode);	
+                	});
+        	    }
+        	    if (document.getElementById('load_saved')) {
+        		$('#load_saved').off('click.find_saved');
+            	    	$('#load_saved').on('click.find_saved', CL.find_saved);
+        	    }
         	    SPN.remove_loading_overlay();
         	});
             });
         },
         
         context_input_onload: function (project) {
+            //TODO: check we need language - I think it is optional
             document.getElementById('language').value = project.language;
             document.getElementById('base_text').value = project.base_text;
             document.getElementById('project').value = project._id;
@@ -4111,6 +4093,15 @@ var CL = (function () {
             } else {
         	CL._rule_conditions = DEF.rule_conditions;
             }
+        },
+        
+        set_overlapped_options: function (project) {
+            if (project.hasOwnProperty('overlapped_options')) {
+        	CL._overlapped_options = project.overlapped_options;
+            } else if (CL._services.hasOwnProperty('overlapped_options')) {
+        	CL._overlapped_options = CL._services.overlapped_options;
+            }
+            //there doesn't need to be any so no defaults required
         },
         
         set_local_python_functions: function (project) {
@@ -4129,7 +4120,7 @@ var CL = (function () {
             CL._default_display_settings = {};
             CL._display_settings = {};
             //use project settings if there are some
-            if (project.hasOwnProperty('display_settings')) {
+            if (project && project.hasOwnProperty('display_settings')) {
         	CL._display_settings_details = JSON.parse(JSON.stringify(project.display_settings));
         	for (i = 0; i < project.display_settings.configs.length; i += 1) {
         	    CL._default_display_settings[project.display_settings.configs[i].id] = project.display_settings.configs[i].check_by_default;
@@ -4175,6 +4166,26 @@ var CL = (function () {
         	
             });
         },
+        
+        
+        
+        
+        
+        //only used in Magpy specific stuff - move somewhere else
+	get_context_dict: function (witness, verse) {
+	    var context;
+		if (typeof verse === 'undefined') {
+			verse = CL._context;
+		}
+	    context = {'book' : parseInt(verse.substring(verse.indexOf('B') + 1, verse.indexOf('K')), 10),
+		    'chapter' :  parseInt(verse.substring(verse.indexOf('K') + 1, verse.indexOf('V')), 10),
+		    'verse' :  parseInt(verse.substring(verse.indexOf('V') + 1), 10)
+	    };
+	    if (typeof witness !== 'undefined') {
+		context.witness = witness;
+	    }
+	    return context;
+	},
     }
 }());
 

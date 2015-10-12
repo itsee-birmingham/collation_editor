@@ -10,8 +10,9 @@ var RG = (function () {
 
         _rules: [],
         _for_deletion: [],
+        _for_global_exceptions: [],
         _show_regularisations: false,
-        
+        _rule_words_summary: {},
                
         
         /** collation running **/
@@ -87,6 +88,17 @@ var RG = (function () {
             });
         },
 
+        has_rule_applied: function (word) {
+            var i, j;
+            for (i = 0; i < word.reading.length; i += 1) {
+        	if (RG._rule_words_summary.hasOwnProperty(word.reading[i])) {
+        	    if (RG._rule_words_summary[word.reading[i]].hasOwnProperty('index') && RG._rule_words_summary[word.reading[i]].index.indexOf(word[word.reading[i]].index) !== -1) {
+        		return true;
+        	    }
+        	}
+            }           
+            return false;
+        },
 
         /** get the data for the unit of this type 
          * 	data - the readings for that unit
@@ -98,7 +110,8 @@ var RG = (function () {
          * */
         get_unit_data: function (data, id, start, end, options) {
             var i, html, j, k, l, decisions, rows, cells, row_list, temp, events, max_length, row_id, type,
-                subrow_id, colspan, hand, class_string, div_class_string, witness, id_dict, key, words, reg_class;
+                subrow_id, colspan, hand, class_string, div_class_string, witness, id_dict, key, words, reg_class,
+                highlighted, cells_dict, rule_cells, keys_to_sort;
             if (typeof options === 'undefined') {
         	options = {};
             }
@@ -129,41 +142,45 @@ var RG = (function () {
                     class_string = ' class="top" ';
                 }
                 cells.push('<tr id="' + row_id + '"' + class_string + '>');
-                cells.push('<td class="mark">' + CL.get_alpha_id(i) + '.</td>');
+                cells.push('<td class="mark"><div class="spanlike">' + CL.get_alpha_id(i) + '. </div></td>');
                 if (data[i].text.length === 0) {
                     if (i === 0) {
-                        cells.push('<td class="mark" colspan="MX_LN"></td>');
+                        cells.push('<td class="mark" colspan="MX_LN"><div class="spanlike">&nbsp;</div></td>');
                     } else {
                         if (data[i].type === 'om') {
-                            cells.push('<td class="mark gap" colspan="MX_LN">om.</td>');
+                            cells.push('<td class="mark gap" colspan="MX_LN"><div class="spanlike">om.</div></td>');
                         } else {
-                            cells.push('<td class="mark gap" colspan="MX_LN">&lt;' + data[i].details + '&gt;</td>');
+                            cells.push('<td class="mark gap" colspan="MX_LN"><div class="spanlike">&lt;' + data[i].details + '&gt;</div></td>');
                         }
                     }
                 } else {
                     if (data[i].text.length > max_length) {
                         max_length = data[i].text.length;
                     }
-                    div_class_string = '';
-                    if (i > 0) {
-                	div_class_string = ' class="drag clone reg_word" ';
-                    }
                     for (j = 0; j < data[i].text.length; j += 1) {
+                	div_class_string = '';
+                	if (i > 0) {
+                	    if (RG.has_rule_applied(data[i].text[j])) {
+                		div_class_string = ' class="drag clone reg_word regularised" ';
+                	    } else {
+                		div_class_string = ' class="drag clone reg_word" ';
+                	    }
+                        }
                 	cells.push('<td>')
                 	words = data[i].text;
                 	if (words[j][words[j]['reading'][0]].hasOwnProperty('gap_before') && words[j].hasOwnProperty('combined_gap_before')) {
-                	    cells.push('<span class="gap"> &lt;' + words[j][words[j]['reading'][0]].gap_details + '&gt; </span>')
+                	    cells.push('<div class="gap spanlike"> &lt;' + words[j][words[j]['reading'][0]].gap_details + '&gt; </div>')
                 	}
                 	cells.push('<div ' + div_class_string + 'id="variant_unit_' + id + '_r' + i + '_w' + j + '">' + CL.get_token(words[j]) + '</div>');
                 	if (words[j][words[j]['reading'][0]].hasOwnProperty('gap_after') && (j < words.length-1 || words[j].hasOwnProperty('combined_gap_after'))) {
-                	    cells.push('<span class="gap"> &lt;' + words[j][words[j]['reading'][0]].gap_details + '&gt; </span>');
+                	    cells.push('<div class="gap spanlike"> &lt;' + words[j][words[j]['reading'][0]].gap_details + '&gt; </div>');
     		    	}
-                	if (data[i].text[j].hasOwnProperty('regularised') && RG._show_regularisations) {
+                	if (RG._show_regularisations) {
                 	    id_dict = {};
                 	    cells.push('<table><tbody>');
                 	    for (k = 0; k < data[i].witnesses.length; k += 1) {
                 		witness = data[i].witnesses[k];
-                		if (data[i].text[j][witness].hasOwnProperty('decision_details')) {
+                		if (data[i].text[j].hasOwnProperty(witness) && data[i].text[j][witness].hasOwnProperty('decision_details')) {
                 		    for (l = 0; l < data[i].text[j][witness].decision_details.length; l += 1) {
                 			if (id_dict.hasOwnProperty(data[i].text[j][witness].decision_details[l]._id)) {
                 			    id_dict[data[i].text[j][witness].decision_details[l]._id].witnesses.push(witness);
@@ -177,20 +194,53 @@ var RG = (function () {
                 		    }
                 		}
                 	    }
+                	    keys_to_sort = [];
+                	    cells_dict = {};
                 	    for (key in id_dict) {
                 		if (id_dict.hasOwnProperty(key)) {
+                		    rule_cells = [];
                 		    if (id_dict[key].scope === 'always') {
-                			reg_class = 'regularised_global';
+                			reg_class = 'regularised_global ';
                 		    } else {
-                			reg_class = 'regularised';
+                			reg_class = 'regularised ';
+                		    }
+                		    if (RG.has_deletion_scheduled(key)) {
+                			reg_class += 'deleted ';
+                		    }
+                		    highlighted = '';
+                		    if (id_dict[key].witnesses.length > 1) {
+                			id_dict[key].witnesses = CL.sort_witnesses(id_dict[key].witnesses);
+                		    }
+                		    if (keys_to_sort.indexOf(id_dict[key].witnesses[0]) === -1) {
+                			keys_to_sort.push(id_dict[key].witnesses[0]);
+                		    } 
+                		    if (id_dict[key].witnesses.indexOf(hand) !== -1) {
+                			highlighted = 'highlighted ';
                 		    }
                 		    subrow_id = row_id + '_word_' + j + '_rule_' + key;
-                		    cells.push('<tr class="' + reg_class + '" id="' + subrow_id + '"><td>');
-                		    cells.push(id_dict[key].t.replace(/_/g, '&#803;'));
-                		    cells.push(' &gt; ')
-                		    cells.push(id_dict[key].n.replace(/_/g, '&#803;'));
-                		    cells.push('</td></tr>');
-                		    events[subrow_id] = id_dict[key].scope + ': ' + id_dict[key].witnesses.join(', ');
+                		    rule_cells.push('<tr class="' + reg_class + highlighted + '" id="' + subrow_id + '"><td>');
+                		    if (id_dict[key].witnesses.indexOf(hand) !== -1) {
+                			rule_cells.push('<div class="spanlike">');
+                		    }
+                		    rule_cells.push(id_dict[key].t.replace(/_/g, '&#803;'));
+                		    rule_cells.push(' &gt; ')
+                		    rule_cells.push(id_dict[key].n.replace(/_/g, '&#803;'));
+                		    if (id_dict[key].witnesses.indexOf(hand) !== -1) {
+                			rule_cells.push('</div>');
+                		    }
+                		    rule_cells.push('</td></tr>');
+                		    if (cells_dict.hasOwnProperty(id_dict[key].witnesses[0])) {
+                			cells_dict[id_dict[key].witnesses[0]].push(rule_cells.join(' '));
+                		    } else {
+                			cells_dict[id_dict[key].witnesses[0]] = [rule_cells.join(' ')];
+                		    }               		    
+                		    events[subrow_id] = id_dict[key].scope + ': ' + RG.get_reg_wits_as_string(id_dict[key].witnesses);
+                		}
+                	    }
+                	    keys_to_sort = CL.sort_witnesses(keys_to_sort);
+                	    for (k = 0; k < keys_to_sort.length; k += 1) {
+                		if (cells_dict.hasOwnProperty(keys_to_sort[k])) {
+                		    cells.push(cells_dict[keys_to_sort[k]].join(' '));
                 		}
                 	    }
                 	    cells.push('</tbody></table>');
@@ -201,15 +251,37 @@ var RG = (function () {
                 cells.push('</tr>');
                 rows.push(cells.join(''));
             }
-            if (rows.length > 1) {
-        	html.push('<td class="start_' + start + '" colspan="' + (end - start + 1) + '"><div class="drag_div" id="drag' + id + '">');
-        	html.push('<table class="variant_unit" id="variant_unit_' + id + '">');
-        	html.push(U.TEMPLATE.replace_all(rows.join(''), 'MX_LN', String(max_length + 1)));
-        	html.push('<tr><td class="mark" colspan="' + (max_length + 1) + '"><span id="add_reading_' + id + '">+</span></td></tr>');
-        	html.push('</table>');
-        	html.push('</div></td>');
-            }
+            html.push('<td class="start_' + start + '" colspan="' + (end - start + 1) + '"><div class="drag_div" id="drag' + id + '">');
+            html.push('<table class="variant_unit" id="variant_unit_' + id + '">');
+            html.push(U.TEMPLATE.replace_all(rows.join(''), 'MX_LN', String(max_length + 1)));
+            html.push('<tr><td class="mark" colspan="' + (max_length + 1) + '"><span id="add_reading_' + id + '">+</span></td></tr>');
+            html.push('</table>');
+            html.push('</div></td>');
             return [html, row_list, events];
+        },
+        
+        has_deletion_scheduled: function (rule_id) {
+            var i;
+            for (i = 0; i < RG._for_deletion.length; i += 1) {
+        	if (RG._for_deletion[i]._id === rule_id) {
+        	    return true;
+        	}
+            }
+            for (i = 0; i < RG._for_global_exceptions.length; i += 1) {
+        	if (RG._for_global_exceptions[i]._id === rule_id) {
+        	    return true;
+        	}
+            }
+            return false;
+        },
+        
+        get_reg_wits_as_string: function (wit_list) {
+            var i, new_wits;
+            new_wits = [];
+            for (i = 0; i < wit_list.length; i += 1) {
+        	new_wits.push(CL.processes_hand_id(wit_list[i]));
+            }
+            return new_wits.join(', ');
         },
 
         recollate: function (reset_scroll) {
@@ -223,6 +295,7 @@ var RG = (function () {
                 scroll_offset = [document.getElementById('scroller').scrollLeft,
                                  document.getElementById('scroller').scrollTop];
             }
+            RG._rule_words_summary = {};
             if ($.isEmptyObject(CL._collate_data)) {
         	RG.get_collation_data(CL._data_settings.collation_source, 'units', scroll_offset, function () {RG.run_collation(CL._collate_data, 'units', scroll_offset);}); //collation_source, output, scroll_offset, callback
             } else {
@@ -231,8 +304,9 @@ var RG = (function () {
         },
         
         run_collation: function (collation_data, output, scroll_offset) {
-            CL._services.update_ruleset(RG._for_deletion, RG._rules, CL._context, function() {
+            CL._services.update_ruleset(RG._for_deletion, RG._for_global_exceptions, RG._rules, CL._context, function() {
         	RG._for_deletion = [];
+        	RG._for_global_exceptions = [];
         	RG._rules = [];
         	RG.fetch_rules(collation_data, function (rules) {
         	    RG.do_run_collation(collation_data, rules, output, scroll_offset);
@@ -269,7 +343,6 @@ var RG = (function () {
         	}
             }
             options.display_settings = display_settings;
-            
             options.display_settings_config = CL._display_settings_details;
             
             options.rule_conditions_config = CL._rule_conditions;
@@ -379,15 +452,25 @@ var RG = (function () {
             CL.add_stage_links();
             $('#go_to_sv_button').on('click',
                     function (event) {
+        		var extra_results;
         		SPN.show_loading_overlay();
-        		//TODO: add in a check for all witnesses and maybe even all data
+        		//TODO: add in a check of all data? we did have problems with David's but seems to have been specific to that 
         		if (SV.are_all_units_complete()) {
-        		    RG.remove_unrequired_data() //remove the key-value pairs we don't need anymore
-        		    CL._data.marked_readings = {}; //added for SV
-        		    CL.add_unit_and_reading_ids(); //added for SV
-        		    SV.show_set_variants({'container': container});
-                            document.getElementById('scroller').scrollLeft = 0;
-                            document.getElementById('scroller').scrollTop = 0;
+        		    extra_results = CL.apply_pre_stage_checks('set_variants');
+        		    if (extra_results[0] === true) {
+        			RG.remove_unrequired_data() //remove the key-value pairs we don't need anymore
+        			CL._data.marked_readings = {}; //added for SV
+        			CL.add_unit_and_reading_ids(); //added for SV
+        			SV.show_set_variants({'container': container});
+        			document.getElementById('scroller').scrollLeft = 0;
+        			document.getElementById('scroller').scrollTop = 0;
+        		    } else {
+        			if (CL._show_subreadings === true) {
+        			    SV._find_subreadings()
+        			}
+        			alert(extra_results[1]);
+        			SPN.remove_loading_overlay();
+        		    }
         		} else {
         		    alert('You cannot move to set variants because one of the units does not have all of its required witnesses');
         	            SPN.remove_loading_overlay();
@@ -444,9 +527,6 @@ var RG = (function () {
         	    for (k = 0; k < CL._data.apparatus[i].readings[j].text.length; k += 1) {
         		if (CL._data.apparatus[i].readings[j].text[k].hasOwnProperty('rule_string')) {
         		    delete CL._data.apparatus[i].readings[j].text[k].rule_string;
-        		}
-        		if (CL._data.apparatus[i].readings[j].text[k].hasOwnProperty('regularised')) {
-        		    delete CL._data.apparatus[i].readings[j].text[k].regularised;
         		}
         	    }
         	}
@@ -510,6 +590,19 @@ var RG = (function () {
 
         create_rule: function (data, user, original_text, normalised_text, unit, reading, word, witnesses) {
             var rule, rules, witness, context, i, j, reconstructed_readings;
+          //first we work out which tokens we have regularised so we can keep them greyed out if the page has to be redrawn for any reason
+            for (i = 0; i < witnesses.length; i += 1) {
+        	if (!RG._rule_words_summary.hasOwnProperty(witnesses[i])) {
+                    RG._rule_words_summary[witnesses[i]] = {};         
+                } 
+                if (RG._rule_words_summary[witnesses[i]].hasOwnProperty('index')) {
+                    RG._rule_words_summary[witnesses[i]].index.push(CL.get_word_index_for_witness(unit, reading, word, witnesses[i]));
+                } else {                        
+                    RG._rule_words_summary[witnesses[i]].index = [CL.get_word_index_for_witness(unit, reading, word, witnesses[i])];
+                }
+            }
+            
+            //now make the rules
             if (data.scope === 'always' || data.scope === 'verse') {
                 rule = {'_model' : 'decision', 'type' : 'regularisation', 'scope' : data.scope,  'class' : data['class'] || 'none', 'active' : true, 't' : original_text, 'n' : normalised_text};
                 if (data.hasOwnProperty('comments')) {
@@ -773,61 +866,7 @@ var RG = (function () {
             return suffix;
         },
 
-        get_decision_data: function (data, variant_unit) {
-            var html, new_readings, visible, k, j, i, rows, cells, events, reading_string, reading, witness,
-                tokenised;
-            html = [];
-            new_readings = {};
-            events = {};
-            cells = [];
-            for (k = 0; k < data.length; k += 1) {
-                for (i = 0; i < data[k].witnesses.length; i += 1) {
-                    visible = true;
-                    witness = data[k].witnesses[i];
-                    reading = [];
-                    for (j = 0; j < data[k].text.length; j += 1) {
-                        if (data[k].text[j][witness].original !== data[k].text[j]['interface']) {
-                            visible = false;
-                        }
-                        reading.push(data[k].text[j][witness].original);
-                    }
-                    if (!visible) {
-                        reading_string = reading.join(' ');
-                        if (new_readings.hasOwnProperty(reading_string)) {
-                            new_readings[reading_string].push(witness);
-                        } else {
-                            new_readings[reading_string] = [witness];
-                        }
-                    }
-                }
-            }
-            if (!$.isEmptyObject(new_readings)) {
-                j = 1;
-                for (reading in new_readings) {
-                    if (new_readings.hasOwnProperty(reading)) {
-                        rows = [];
-                        tokenised = reading.split(' ');
-                        cells = [];
-                        for (i = 0; i < tokenised.length; i += 1) {
-                            if (!(new_readings[reading].length === 1 && new_readings[reading][0] === CL._data_settings.base_text_siglum)) {
-                                cells.push('<td class="mark regularised">' + tokenised[i] + '</td>');
-                            }
-                        }
-                        if (cells.length > 0) {
-                            rows.push('<tr id="unit_' + variant_unit + '_original_' + j + '"><td class="mark"></td>');
-                            rows.push(cells.join(''));
-                            rows.push('</tr>');
-                            events['unit_' + variant_unit + '_original_' + j] = new_readings[reading].join(', ');
-                        }
-                        if (rows.length > 0) {
-                            html.push(rows.join(''));
-                        }
-                        j += 1;
-                    }
-                }
-            }
-            return [html, events];
-        },
+
         
         make_menu: function (menu_name) {
             if (menu_name === 'regularised') {
@@ -913,6 +952,7 @@ var RG = (function () {
         		}
         	    }
         	    //resave the rules
+        	    console.log(rules)
         	    CL._services.update_rules(rules, CL._context, function() {
         		RG.recollate(false);
         	    });
@@ -920,34 +960,13 @@ var RG = (function () {
             }
         },
         
-        add_global_exception: function () {
-            var element, row, rule_id, ok;
+        schedule_add_global_exception: function () {
+            var element, row, rule_id;
             element = SimpleContextMenu._target_element;
             row = RG._get_ancestor_row(element);
-            rule_id = row.id.substring(row.id.indexOf('_rule_') + 6);
-            ok = confirm('You are about to add an exception so this global rule is no longer applied to this verse.\nThis change will be made in the database immediately but will not be refelected in the collation until you recollate\nAre you sure you want to add an exception?');
-            if (ok) {
-        	SPN.show_loading_overlay();
-
-        	CL._services.get_rules_by_ids([rule_id], function(rules) {
-        	    if (rules.length) {
-        		if (rules[0].hasOwnProperty('exceptions')) {
-        		    if (rules[0].exceptions.indexOf(CL._context) === -1) {//this should never happen but worth checking
-        			rules[0].exceptions.push(CL._context);
-        		    }	
-        		} else {
-        		    rules[0].exceptions = [CL._context];
-        		}
-
-        		CL._services.update_rules(rules, CL._context, function() {
-        		    $(row).addClass('deleted');
-        		    SPN.remove_loading_overlay();
-        		});
-        	    }
-        	});
-            } else {
-        	return;
-            }
+            rule_id = row.id.substring(row.id.indexOf('_rule_') + 6);          
+            RG._for_global_exceptions.push({'_id': rule_id});
+            $(row).addClass('deleted');
         },
         
         schedule_rule_deletion: function() {
@@ -999,7 +1018,7 @@ var RG = (function () {
             if (document.getElementById('add_exception')) {
         	$('#add_exception').off('click.ae_c');
         	$('#add_exception').off('mouseover.ae_mo');
-        	$('#add_exception').on('click.ae_c', function(event) {RG.add_global_exception();});
+        	$('#add_exception').on('click.ae_c', function(event) {RG.schedule_add_global_exception();});
         	$('#add_exception').on('mouseover.ae_mo', function(event) {CL.hide_tooltip();});
             }
         },
@@ -1009,7 +1028,7 @@ var RG = (function () {
             console.log(data);
             html = [];
             html.push('<tr>');
-            //sigils for collateX 1.3 witnesses for 1.5
+            //sigils for collateX 1.3 witnesses for 1.5+
             if (data.hasOwnProperty('sigils')) {
         	witnesses = data.sigils;
             } else {

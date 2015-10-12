@@ -8,6 +8,20 @@ var CAD = (function () {
             console.log('collation admin');
         },
         
+        initialise_admin: function (mode) {
+            SPN.show_loading_overlay();
+            if (CL._services.local_javascript && CL._services.local_javascript.length > 0) {
+		//load service specific javascript
+		CL.include_javascript(CL._services.local_javascript, function () {
+		    CAD.check_login_status(mode);
+		    SPN.remove_loading_overlay();
+		}); 
+	    } else {
+		CAD.check_login_status(mode);
+		SPN.remove_loading_overlay();
+	    }
+        },
+        
         check_login_status: function (mode) {
             var remembered;
             CAD.show_login_status();
@@ -51,6 +65,35 @@ var CAD = (function () {
         	}
             }});
         },
+        
+        upload_project_config: function () {
+            var options;
+            console.log('got here')
+            console.log(JSON.parse(document.getElementById('src').value))
+            options = MAG.FORMS.serialize_form('project_config_upload_form');
+            console.log(options)
+            alert(options.src)
+        },
+        
+	uploadFile: function () {
+	    var hidden, file, reader;
+	    hidden = document.querySelector('input[id=src]');
+	    file = document.querySelector('input[id=index_file]').files[0];
+	    reader  = new FileReader();
+      
+	    reader.onloadend = function () {
+		alert(reader.result)
+		hidden.value = reader.result;
+		document.getElementById('upload_project_config_button').disabled = false;
+		MAG.EVENT.addEventListener(document.getElementById('upload_project_config_button'), 'click', function(event) {
+		    CAD.upload_project_config();
+		});
+	    }
+	    if (file) {
+		reader.readAsText
+		hidden.value = "";
+	    }
+	},
         
         do_configure_project_page: function (project_id) {
             MAG._REQUEST.request('http://' + SITE_DOMAIN + '/collation/htmlfragments/project_edit.html', {
@@ -379,7 +422,7 @@ var CAD = (function () {
 		    window.location = '/apparatus/?project=' + project_id + '&format=negative_plain';
 		});
 	    }
-	    MAG.REST.apply_to_resource('editing_project', project_id, {'success' : function (response) {
+	    MAG.REST.apply_to_resource('editing_project', project_id, {'success' : function (response) {		
 		if (response.book > 9) {
 		    book = response.book;
 		} else {
@@ -401,18 +444,18 @@ var CAD = (function () {
 		    details.chapters = work.chapters;
 		    criteria = {'project': project_id};
 		    if (scope !== 'book') {
-			criteria['context.chapter'] = parseInt(scope, 10);
+			criteria['chapter'] = parseInt(scope, 10);
 		    }
 		    details.scope = scope;
-		    MAG.REST.apply_to_list_of_resources('collation', {'criteria' : criteria, 'fields': ['context', 'status'], 'success' : function (collations) {
+		    MAG.REST.apply_to_list_of_resources('collation', {'criteria' : criteria, 'fields': ['context', 'status', 'book_number', 'chapter', 'verse'], 'success' : function (collations) {
 			details.regularised = [];
 			details.set = [];
 			details.ordered = [];
 			details.approved = [];
 			for (i = 0; i < collations.results.length; i += 1) {
-			    context_summary = collations.results[i].context.book
-			    + '_' + collations.results[i].context.chapter
-			    + '_' + collations.results[i].context.verse;
+			    context_summary = collations.results[i].book_number
+			    + '_' + collations.results[i].chapter
+			    + '_' + collations.results[i].verse;
 			    if (collations.results[i].status === 'regularised') {
 				if (details.regularised.indexOf(context_summary) === -1) {
 				    details.regularised.push(context_summary);
@@ -465,16 +508,16 @@ var CAD = (function () {
 		CAD.get_project_summary(data.project, document.getElementById('summary_selection').value);
 	    });
 	    MAG.EVENT.addEventListener(document.getElementById('project_select'), 'change', function (event) {
-		CAD.configure_project_page(event.target.value);
+		CAD.configure_project_summary_page(event.target.value);
 	    });
 	},
 
 	get_collation_details: function (data) {
 	    var selection, search;
 	    selection = U.FORMS.serialize_form('progress_details_form');
-	    search = {'context.book': parseInt(data.book), 'project': data.project, '_sort': [['context.verse', 1], ['_meta._last_modified_by_display', 1]]};  
-	    if (selection.hasOwnProperty('context.chapter') && selection['context.chapter'] !== 'none') {
-		search['context.chapter'] = parseInt(selection['context.chapter']);
+	    search = {'book_number': parseInt(data.book), 'project': data.project, '_sort': [['verse', 1], ['_meta._last_modified_by_display', 1]]};  
+	    if (selection.hasOwnProperty('chapter') && selection['chapter'] !== 'none') {
+		search['chapter'] = parseInt(selection['chapter']);
 		if (selection.hasOwnProperty('status') && selection.status !== 'none') {
 		    search.status = selection.status;
 		}
@@ -483,10 +526,10 @@ var CAD = (function () {
 			search.user = user._id;
 		    }
 		    MAG.REST.apply_to_list_of_resources('work', {'criteria': {'corpus': 'NT', 'book_number': parseInt(data.book)}, 'success': function (work_details) {
-			MAG.REST.apply_to_list_of_resources('collation', {'criteria': search, 'fields': ['status', '_meta', 'context'], 'success': function (response) {
+			MAG.REST.apply_to_list_of_resources('collation', {'criteria': search, 'fields': ['status', '_meta', 'context', 'book_number', 'chapter', 'verse'], 'success': function (response) {
 			    var chap_length;
-			    chap_length = work_details.results[0].verses_per_chapter[selection['context.chapter']];
-			    CAD.show_progress_details(response.results, selection['context.chapter'], chap_length);
+			    chap_length = work_details.results[0].verses_per_chapter[selection['chapter']];
+			    CAD.show_progress_details(response.results, selection['chapter'], chap_length);
 			}});
 		    }});		
 		}}); 
@@ -504,13 +547,13 @@ var CAD = (function () {
 		first = true;
 		count = 0;
 		rows = [];
-		if ((j < data.length && data[j].context.verse !== i) || j >= data.length) { //second condition makes sure we catch the last verse if there is no saved collation
+		if ((j < data.length && data[j].verse !== i) || j >= data.length) { //second condition makes sure we catch the last verse if there is no saved collation
 		    html.push('<tr>');
 		    html.push('<td rowspan="1">V. ' + i + '</td>');
 		    html.push('<td colspan="3"></td>');
 		    html.push('</tr>');
 		}
-		while (j < data.length && data[j].context.verse === i) {
+		while (j < data.length && data[j].verse === i) {
 		    rows.push('<tr>');
 		    if (first === true) {
 			rows.push('<td rowspan="">V. ' + i + '</td>');
@@ -586,14 +629,28 @@ var CAD = (function () {
                     } 
                     if (projects.length === 1) {
         		//then pre-select the project
-        		U.FORMS.populate_select(projects, document.getElementById('project'), '_id', '_id', projects[0]._id);
-        		U.FORMS.populate_select(projects, document.getElementById('project_for_rules'), '_id', '_id', projects[0]._id);		
+                	if (document.getElementById('project')) {
+                	    U.FORMS.populate_select(projects, document.getElementById('project'), '_id', '_id', projects[0]._id);
+                	}
+        		if (document.getElementById('project_for_rules')) {
+        		    U.FORMS.populate_select(projects, document.getElementById('project_for_rules'), '_id', '_id', projects[0]._id);	
+        		}
+        			
         	    } else {
-        		U.FORMS.populate_select(projects, document.getElementById('project'), '_id', '_id');
-        		U.FORMS.populate_select(projects, document.getElementById('project_for_rules'), '_id', '_id');
+        		if (document.getElementById('project')) {
+        		    U.FORMS.populate_select(projects, document.getElementById('project'), '_id', '_id');
+        		}
+        		if (document.getElementById('project_for_rules')) {
+        		    U.FORMS.populate_select(projects, document.getElementById('project_for_rules'), '_id', '_id');
+        		}        		
         	    }
-        	    MAG.EVENT.addEventListener(document.getElementById('upload_button'), 'click', function () {CAD.go_to_upload()});
-        	    MAG.EVENT.addEventListener(document.getElementById('new_project_button'), 'click', function () {CAD.go_to_project()});
+                    if (document.getElementById('upload_button')) {
+                	MAG.EVENT.addEventListener(document.getElementById('upload_button'), 'click', function () {CAD.go_to_upload()});
+                    }
+        	    if (document.getElementById('new_project_button')) {
+        		MAG.EVENT.addEventListener(document.getElementById('new_project_button'), 'click', function () {CAD.go_to_project()});
+        	    }
+        	    
         	    if (document.getElementById('edit_project_button')) {
         		MAG.EVENT.addEventListener(document.getElementById('edit_project_button'), 'click', function () {
         		    CAD.go_to_project(document.getElementById('project').value);

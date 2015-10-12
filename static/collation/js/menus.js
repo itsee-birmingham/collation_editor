@@ -72,8 +72,22 @@ var MENU = (function () {
         load_collation_no_project_menu: function () {
             var html, callback;
             //TODO: need to add default display settings here and also set  CL._default_display_settings and CL._display_settings
-            //TODO: should try services before going back to defaults
-            CL._project = {'rule_classes' : DEF.rules};
+            //TODO: should this really be stored in CL._project???
+            if (CL._services.hasOwnProperty('regularisation_classes')) {
+        	CL._project = {'rule_classes' : CL._services.regularisation_classes};
+            } else {
+        	CL._project = {'rule_classes' : DEF.regularisation_classes};
+            }
+            if (CL._services.hasOwnProperty('rule_conditions')) {
+        	CL._rule_conditions = CL._services.rule_conditions;
+            } else {
+        	CL._rule_conditions = DEF.rule_conditions;
+            }
+            CL.set_display_settings();
+            if (CL._services.hasOwnProperty('context_input')) {
+        	CL._context_input = CL._services.context_input;
+            }
+            CL.set_overlapped_options({});
             html = [];
             html.push('<div id="verse_selection"><form id="collation_form"><label>Select verse: </label>');
             html.push('<select id="book"><option value="B02">Mark</option><option value="B04">John</option><option value="B09">Galatians</option><option value="B14">2 Thessalonians</option></select>');

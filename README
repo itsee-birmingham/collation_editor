@@ -55,10 +55,47 @@ Then when you type a unit in the box on the index page of the collation editor y
 
 6. Customisation
 
-The collation editor can be customised in many ways to support different languages and different editorial models. 
+The collation editor can be customised in many ways to support different languages and different editorial models. Many of these customisations can be made at either the installation (services) level or at the project level. They also all have defaults. Project level configurations will override service level configurations and these will in turn override the default implementations.
+
+6.1 The index page
+
+You can customise the page that users see when they visit the home page (default localhost:8080/collation). This customisation can be made at the project or services level. You must add an html file to the static folder. This html file must contain the following html - this is kind of nasty can you make this better??
+
+<div id="verse_selection">
+    <form id="collation_form">
+        <label>Select: </label> 
+        
+        <input type="hidden" id="base_text" value="{base_text}" />
+        <input type="hidden" id="project" value="{project._id}" />
+        
+        <input type="hidden" id="preselected_witnesses" value="{witnesses}" /> 
+	<input type="text" id="context" />
+        <input type="button" id="collate" value="Collate Project Witnesses" /> 
+        <input type="button" id="load_saved" value="Load Saved Collation" /> 
+    </form>
+    <div id="saved_collations_div"></div>
+</div>
 
 
 
+To implement the configuration, in the Javascript for either the project or the service add the key "context_input". The value of this key should be an object. The object must contain the following keys:
+
+"form": this must be the filename of your html file
+"result_provider": this must be a javascript function (or a string identifying a javascript function) **check** it must take the data from your form and create the string that identifies the collation unit. 
+
+There is also an optional key:
+
+"onload_function": this should be either a javascript function or a string identifying a javascript function which will be run once the form is loaded. It can be used to initialise things on the form such as dynamically populating select boxes or adding other functions to elements on the form.
+
+6.2 The display settings
+
+6.3 Regularisation classes
+
+6.4 Rule conditions
+
+6.5 Local Python implementations
+
+6.6 Witness sort order
 
 
 7. Services
@@ -159,7 +196,7 @@ If you have a gap before the very first extant word in the given unit for a witn
 
 7.1.1.4 lacunose and omitted context units 
 
-It can also be the case that an entire context unit is absent in a witness. If the unit is missing due to being lacunose (e.g. the page it would be on is missing) then the witness simply does not need a json file for this unit in the witness folder. If the unit is omitted because a scribe just left it out then a json file must be created but there should be no "witnesses" key.
+It can also be the case that an entire context unit is absent in a witness. If the unit is missing due to being lacunose (e.g. the page it would be on is missing) then the witness simply does not need a json file for this unit in the witness folder. If the unit is omitted because a scribe just left it out then a json file must be created for the unit but there should be no "witnesses" key.
 
 
 7.1.2 The project data
@@ -177,7 +214,7 @@ Required keys with explanations:
 "witnesses": a list of IDs of all the witnesses to be collated. Each must have an entry in your textrepo.
 "base_text": the id of the witness you want to use as the base text. Must be one of the the ids in your "witnesses" key
 "editors": a list of ids of users that have permissions to edit this project (must at least contain your own user id (default is "default")
-"managing_editor": the id of the user who is in overall control of this project (should be you!)
+"managing_editor": the id of the user who is in overall control of this project (should be you if you are working on a local project!)
 
 }
 

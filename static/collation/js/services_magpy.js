@@ -29,6 +29,29 @@ var magpy_services = {
 	witness_sort : function (witnesses) {
 	    return witnesses.sort(LOCAL.compare_witness_types);
 	},
+	pre_stage_checks: {"order_readings": [{
+	        "function": "LOCAL.are_no_duplicate_statuses",
+	        "pass_condition": true,
+	        "fail_message": "You cannot move to order readings while there are duplicate overlapped readings"
+	    },
+	    {
+	        "function": "LOCAL.check_om_overlap_problems",
+	        "pass_condition": false,
+	        "fail_message": "You cannot move to order readings because there is a overlapped reading with the status 'overlapped' that has text in the overlapped unit"
+	    }]},
+	overlapped_options : [{
+	    "id": "show_as_overlapped", 
+	    "label": "Show as overlapped",  
+	    "reading_flag": "overlapped",
+	    "reading_label": "zu", 
+	    "reading_label_display": "↑"
+	}, 
+	{
+	    "id": "delete_reading", 
+	    "label": "Delete reading", 
+	    "reading_flag": "deleted",
+	    "reading_label": "zu", 
+	}],
 	display_settings : {
             "python_file": "collation.greek_implementations",
             "class_name": "ApplySettings",
@@ -141,6 +164,7 @@ var magpy_services = {
             }
         ] 
     },
+    
     context_input : {
 		form: 'editor_index_details.html',
 		result_provider : function () {
@@ -153,6 +177,7 @@ var magpy_services = {
 	    }
 	    return ref;
 	},
+	
 	onload_function : function (project) {
 	    bk = project.book;
 	    if (!isNaN(bk)) {
@@ -169,28 +194,29 @@ var magpy_services = {
             document.getElementById('project').value = project._id;
             document.getElementById('preselected_witnesses').value = project.witnesses.join();
 	}
-},
+    },
 	
 
-switch_project : function () {	    
-    $('#switch_project_button').off('click.switch_project');
-    $('#switch_project_button').on('click.switch_project', function () {
-	CL._services.get_user_info(function (user) {
-	    if (user) {
-		criteria = {'editors' : {'$in' : [user._id]}};
-		MENU.load_project_select_menu(user, criteria, 'collation', true);
-	    }
-	});
-    });
-},
+        switch_project : function () {	    
+            $('#switch_project_button').off('click.switch_project');
+            $('#switch_project_button').on('click.switch_project', function () {
+        	CL._services.get_user_info(function (user) {
+        	    if (user) {
+        		criteria = {'editors' : {'$in' : [user._id]}};
+        		MENU.load_project_select_menu(user, criteria, 'collation', true);
+        	    }
+        	});
+            });
+        },
 
-view_project_summary : function () {
-    $('#project_summary').off('click.project_summary');
-    $('#project_summary').on('click.project_summary', function () {
-	//TODO: put project id on here when we have one and pick up in admin.js
-	window.location = 'project/';
-    });
-},
+        view_project_summary : function () {
+            $('#project_summary').off('click.project_summary');
+            $('#project_summary').on('click.project_summary', function () {
+        	//TODO: put project id on here when we have one and pick up in admin.js
+        	window.location = 'project/';
+            });
+        },
+        
     	//compulsory service functions
 	initialise_editor : function () {
 	    var criteria;
@@ -218,6 +244,7 @@ view_project_summary : function () {
 	get_user_info : function (success_callback) {
 	    MAG.AUTH.get_user_info({'success': success_callback, 'error': function () { success_callback(null); }});
 	},
+	
 	get_user_info_by_ids : function (ids, success_callback) {
 	    MAG.AUTH.resolve_user_ids(ids, {'force_reload': true,
 		'success' : function (response) {
@@ -250,13 +277,13 @@ view_project_summary : function () {
 		});
 	    }
 	},
-
+	
 	get_editing_projects : function (criteria, success_callback) {
 	    MAG.REST.apply_to_list_of_resources('editing_project', {'criteria': criteria, 'success': function (response) {
 		success_callback(response.results);
 	    }});
 	},
-
+	
 	get_adjoining_verse : function (verse, is_previous, result_callback) {
 	    var context, bk, ch, v, nextCh, nextV;
 	    context = verse
@@ -292,10 +319,10 @@ view_project_summary : function () {
 
 	    }});
 	},
-
+	//WARNING: this returns only the specified fields which are fine for current uses but if extra uses are added extra fields may be needed.
 	get_verse_data : function (verse, witness_list, private_witnesses, success_callback) {
 	    var search = {'context': verse, 'transcription_id' : {'$in': witness_list}};	
-	    MAG.REST.apply_to_list_of_resources((private_witnesses?'private_':'')+'verse', {'criteria': search, 'force_reload': true, 'success': function (response) {
+	    MAG.REST.apply_to_list_of_resources((private_witnesses?'private_':'')+'verse', {'criteria': search, 'fields': ['transcription_id', 'siglum', 'duplicate_position', 'witnesses'], 'force_reload': true, 'success': function (response) {
 		success_callback(response.results);
 	    }});
 	},
@@ -325,7 +352,7 @@ view_project_summary : function () {
 	    }});
 	},
 
-	//get all rules that could be applied to the given verse and are of the given subtype
+	//get all rules that could be applied to the given verse
 	get_rules : function (verse, result_callback) {	    
 	    CL._services.get_user_info(function(current_user) {
 		var shared, search_list, always, verse_once, ms, criteria;
@@ -370,22 +397,38 @@ view_project_summary : function () {
 	    }});
 	},
 
-	update_ruleset : function (for_deletion, for_addition, verse, success_callback) {
-	    var for_d = [];
-	    for (var i = 0; i < for_deletion.length; ++i) { for_d.push(for_deletion[i]._id); }
-	    if (for_deletion.length > 0 && for_addition.length > 0) {
+	update_ruleset : function (for_deletion, for_global_exceptions, for_addition, verse, success_callback) {
+	    var for_d, for_ge, i;
+	    if (for_deletion.length > 0) {
+		for_d = [];
+		for (i = 0; i < for_deletion.length; ++i) { 
+		    for_d.push(for_deletion[i]._id); 
+		}
 		MAG.REST.delete_resources('decision', for_d, {'success': function (deleted) {
-		    MAG.REST.create_resource('decision', for_addition, {'success': function (response) {
-			if (success_callback) success_callback();
+		    return magpy_services.update_ruleset([], for_global_exceptions, for_addition, verse, success_callback);
+		}});
+	    } else if (for_global_exceptions.length > 0) {
+		for_ge = [];
+		for (i = 0; i < for_global_exceptions.length; i += 1) {
+		    for_ge.push(for_global_exceptions[i]._id);
+		}
+		MAG.REST.apply_to_list_of_resources('decision', {'criteria': {'_id': {'$in': for_ge}}, 'success': function (response) {
+		    for (i = 0; i < response.results.length; i += 1) {
+			if (response.results[i].hasOwnProperty('exceptions')) {
+			    if (response.results[i].exceptions.indexOf(verse) === -1 && verse) {
+				response.results[i].exceptions.push(verse);
+			    }
+			} else {
+			    response.results[i].exceptions = [verse];
+			}
+		    }
+		    MAG.REST.update_resources('decision', response.results, {'success': function () {
+			return magpy_services.update_ruleset(for_deletion, [], for_addition, verse, success_callback);
 		    }});
-		}}); 
-	    } else if (for_deletion.length > 0) {
-		MAG.REST.delete_resources('decision', for_d, {'success': function (deleted) {
-		    if (success_callback) success_callback();
-		}}); 
+		}});
 	    } else if (for_addition.length > 0) {
 		MAG.REST.create_resource('decision', for_addition, {'success': function (response) {
-		    if (success_callback) success_callback();
+		    return magpy_services.update_ruleset(for_deletion, for_global_exceptions, [], verse, success_callback);
 		}});
 	    } else {
 		if (success_callback) success_callback();
@@ -395,6 +438,9 @@ view_project_summary : function () {
 	// save a collation
 	// result: true if saved and successful, false otherwise
 	save_collation : function (verse, collation, confirm_message, to_apparatus_editor, result_callback) {
+	    collation.verse = parseInt(verse.substring(verse.indexOf('V') + 1))
+	    collation.chapter = parseInt(verse.substring(verse.indexOf('K') + 1, verse.indexOf('V')))
+	    collation.book_number = parseInt(verse.substring(verse.indexOf('B') + 1, verse.indexOf('K')))
 	    MAG.REST.create_resource((to_apparatus_editor ? 'main_apparatus' : 'collation'), collation, {'error' : function () {
 		var confirmed = confirm(confirm_message);
 		if (confirmed === true) {
@@ -421,7 +467,6 @@ view_project_summary : function () {
 		    a = null;
 		    user_id = user._id;
 		    criteria = {};
-//		    criteria.context = CL.get_context_dict();
 		    criteria.context = verse
 		    criteria.user = user_id;
 		    if (CL._project.hasOwnProperty('_id')) {
@@ -458,7 +503,6 @@ view_project_summary : function () {
 	get_saved_collations : function (verse, user_id, result_callback) {
 	    var criteria;
 	    criteria = {};
-//	    criteria.context = CL.get_context_dict(undefined, verse);
 	    criteria.context = verse;
 	    CL._services.get_user_info(function (current_user) {
 		if (current_user) {
@@ -470,7 +514,7 @@ view_project_summary : function () {
 		    if (user_id) {
 			criteria.user = user_id;
 		    }
-		    MAG.REST.apply_to_list_of_resources('collation', {'criteria' : criteria, 'success' : function (results) {
+		    MAG.REST.apply_to_list_of_resources('collation', {'criteria' : criteria, 'fields': ['user', '_meta', 'status'], 'success' : function (results) {
 			result_callback(results.results);
 		    }});
 		}

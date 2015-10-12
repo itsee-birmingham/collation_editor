@@ -9,6 +9,50 @@ var LOCAL = (function () {
 	project_witness_sort : function (witnesses) {
 	    return witnesses.sort(LOCAL.compare_witness_types);
 	},
+	
+	//used before moving to order readings to make sure that a decision has been made on all top line overlapped readings
+        are_no_duplicate_statuses: function () {
+            var i, j;
+            for (i = 0; i < CL._data.apparatus.length; i += 1) {
+        	for (j = 0; j < CL._data.apparatus[i].readings.length; j += 1) {
+        	    if (CL._data.apparatus[i].readings[j].hasOwnProperty('overlap_status') 
+        		    && CL._data.apparatus[i].readings[j].overlap_status === 'duplicate') {
+        		return false;
+        	    }
+        	}
+            }
+            return true;
+        },
+        
+        check_om_overlap_problems: function () {
+            var i, unit, j, witnesses, key, ol_unit;
+            //check to see if any readings labelled 'overlapped' don't have any text in the overlapped reading
+            //if they do then that needs fixing.
+            for (i = 0; i < CL._data.apparatus.length; i += 1) {
+        	unit = CL._data.apparatus[i];
+        	if ('overlap_units' in unit) {
+        	    witnesses = [];
+        	    for (j = 0; j < unit.readings.length; j += 1) {
+        		if ('overlap_status' in unit.readings[j] 
+        			&& unit.readings[j].overlap_status === 'overlapped') {
+        		    witnesses.push.apply(witnesses, unit.readings[j].witnesses);
+        		}
+        	    }
+        	    //for each witness we've collected
+        	    for (j = 0; j < witnesses.length; j += 1) {
+        		for (key in unit.overlap_units) {
+        		    if (unit.overlap_units[key].indexOf(witnesses[j]) != -1) {
+        			ol_unit = CL.find_overlap_unit_by_id(key);
+        			if (ol_unit.readings[1].text.length > 0) {//hard coded 1 is fine as at this stage there is only one reading and its always here
+        			    return true;
+        			}
+        		    }
+        		}
+        	    }
+        	}
+            }
+            return false;
+        },
 
 	get_context_from_input_form: function () {
             var book, chapter, verse, ref

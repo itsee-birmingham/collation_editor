@@ -37,59 +37,65 @@ class PostProcessor(Regulariser):
         self.decisions = decisions
         self.display_settings_config = display_settings_config
         self.display_settings_config['configs'].sort(key=lambda k: k['execution_pos'])
-        self.local_python_functions=local_python_functions
+        if local_python_functions:
+            self.local_python_functions = local_python_functions
+            module_name = local_python_functions['set_rule_string']['python_file']
+            class_name = local_python_functions['set_rule_string']['class_name']
+            MyClass = getattr(importlib.import_module(module_name), class_name)
+            self.set_rule_string_instance = MyClass()
+        else:
+            self.local_python_functions = None
         Regulariser.__init__(self, rule_conditions_config, local_python_functions)
         module_name = self.display_settings_config['python_file']
         class_name = self.display_settings_config['class_name']
         MyClass = getattr(importlib.import_module(module_name), class_name)
-        self.apply_settings_instance = MyClass()     
+        self.apply_settings_instance = MyClass()  
+ 
 
         
     ###########################################################
     #this is starting function
     def produce_variant_units(self):
         """Produce variant units for display and editing."""
-        variant_readings = self.create_readings_sets()
-        variant_readings = self.identify_regularised_readings(variant_readings)
-        
+        variant_readings = self.create_readings_sets()       
         return self.format_output(self.anchor_readings(variant_readings))
 
     
-    #the plan was to get rid of this but js needs to follow suite
-    def identify_regularised_readings(self, variant_readings):
-        """find all the regularised readings (basically anything that has a rule applied
-        and identify them at token level)"""
-        for unit in variant_readings:
-            extras = {}
-            for i, reading in enumerate(unit):
-                for witness in reading['witnesses']:
-                    for j, token in enumerate(reading['text']):
-                        if 'decision_class' in token[witness].keys():
-                            token['regularised'] = True
-                        if len(reading['witnesses']) > 0 and len(reading['text']) > 0: #we only care if there is more than one witness to the reading and it has multiple words
-                            if j > 0 and j < len(reading['text'])-1: #we don't care about the first or last words of the unit
-                                if 'gap_after' in token[witness].keys():
-                                    #make a new reading
-                                    gapped_text = self.extract_text_with_gaps(reading['text'], witness)
-                                    if gapped_text in extras:
-                                        extras[gapped_text] = self.merge_extra_reading(reading['text'], witness, extras[gapped_text])
-                                    else:
-                                        extras[gapped_text] = self.create_extra_reading(reading['text'], witness)
-                  
-            if len(extras.keys()) > 0:
-                #add in the new readings - can all go on the end no issue with position
-                for rdg in extras.keys():
-                    for wit in extras[rdg]['witnesses']:                            
-                        for j, reading in enumerate(unit):
-                            if wit in reading['witnesses']:
-                                reading['witnesses'].remove(wit)
-                                if len(reading['witnesses']) == 0:
-                                    unit.remove(reading)
-                                else:
-                                    for token in reading['text']:
-                                        del token[wit]
-                    unit.append(extras[rdg])
-        return variant_readings 
+#     #the plan was to get rid of this but js needs to follow suite as it currently expects this marking (SV does not use it)
+#     def identify_regularised_readings(self, variant_readings):
+#         """find all the regularised readings (basically anything that has a rule applied
+#         and identify them at token level)"""
+#         for unit in variant_readings:
+#             extras = {}
+#             for i, reading in enumerate(unit):
+#                 for witness in reading['witnesses']:
+#                     for j, token in enumerate(reading['text']):
+#                         if 'decision_class' in token[witness].keys():
+#                             token['regularised'] = True
+#                         if len(reading['witnesses']) > 0 and len(reading['text']) > 0: #we only care if there is more than one witness to the reading and it has multiple words
+#                             if j > 0 and j < len(reading['text'])-1: #we don't care about the first or last words of the unit
+#                                 if 'gap_after' in token[witness].keys():
+#                                     #make a new reading
+#                                     gapped_text = self.extract_text_with_gaps(reading['text'], witness)
+#                                     if gapped_text in extras:
+#                                         extras[gapped_text] = self.merge_extra_reading(reading['text'], witness, extras[gapped_text])
+#                                     else:
+#                                         extras[gapped_text] = self.create_extra_reading(reading['text'], witness)
+#                    
+#             if len(extras.keys()) > 0:
+#                 #add in the new readings - can all go on the end no issue with position
+#                 for rdg in extras.keys():
+#                     for wit in extras[rdg]['witnesses']:                            
+#                         for j, reading in enumerate(unit):
+#                             if wit in reading['witnesses']:
+#                                 reading['witnesses'].remove(wit)
+#                                 if len(reading['witnesses']) == 0:
+#                                     unit.remove(reading)
+#                                 else:
+#                                     for token in reading['text']:
+#                                         del token[wit]
+#                     unit.append(extras[rdg])
+#         return variant_readings 
  
     def create_extra_reading(self, text_list, witness):
         new = {'witnesses': [witness], 'text': []}
@@ -452,8 +458,10 @@ class PostProcessor(Regulariser):
         #set up a base string for interface (this may change later with the settings)
         if 'n' in token:
             token['interface'] = token['n']
-        else:
+        elif 'original' in token:
             token['interface'] = token['original']
+        else:
+            token['interface'] = token['t']
             
         #display_settings_config is already in execution order
         for setting in self.display_settings_config['configs']:
@@ -494,11 +502,7 @@ class PostProcessor(Regulariser):
                           
     def set_rule_string(self, token):    
         if self.local_python_functions and 'set_rule_string' in self.local_python_functions:
-            module_name = self.local_python_functions['set_rule_string']['python_file']
-            class_name = self.local_python_functions['set_rule_string']['class_name']
-            MyClass = getattr(importlib.import_module(module_name), class_name)
-            instance = MyClass()
-            return getattr(instance, self.local_python_functions['set_rule_string']['function'])(token, self.settings, self.display_settings_config) 
+            return getattr(self.set_rule_string_instance, self.local_python_functions['set_rule_string']['function'])(token, self.settings, self.display_settings_config) 
         else:
             if 'n' in token:
                 token['rule_string'] = token['n']
