@@ -253,12 +253,7 @@ var local_services = {
 	},
 
 	// save a collation to local datastore
-	save_collation : function (verse, collation, confirm_message, to_apparatus_editor, result_callback) {
-
-	    if (to_apparatus_editor) {
-		return result_callback(false);
-	    }
-
+	save_collation : function (verse, collation, confirm_message, overwrite_allowed, no_overwrite_message, result_callback) {
 	    CL._services.get_user_info(function (user) {
 		var resource_type;
 		resource_type = 'project/' + CL._project._id + '/user/'+user._id+'/collation/'+collation.status+'/'+verse+'.json';
@@ -267,16 +262,20 @@ var local_services = {
 		local_services._get_resource(resource_type, function(result, status) {
 		    // if exists
 		    if (status === 200) {
-			var confirmed = confirm(confirm_message);
-			if (confirmed === true) {
-			    local_services._put_resource(resource_type, collation, function(result) {
-				return result_callback(true);
-			    });
+			if (overwrite_allowed) {
+			    var confirmed = confirm(confirm_message);
+			    if (confirmed === true) {
+				local_services._put_resource(resource_type, collation, function(result) {
+				    return result_callback(true);
+				});
+			    } else {
+				return result_callback(false);
+			    }
 			} else {
+			    alert(no_overwrite_message);
 			    return result_callback(false);
 			}
-		    }
-		    else {
+		    } else {
 			// if doesn't already exist
 			local_services._put_resource(resource_type, collation, function(result) {
 			    return result_callback(true);

@@ -2419,31 +2419,60 @@ var CL = (function () {
 		    }
 	    });
 	},
+	
+	get_approval_settings: function () {
+	    var defaults;
+	    defaults = [true, ''];
+	    if (CL._project.hasOwnProperty('approval_settings')) {
+		if (CL._project.approval_settings.hasOwnProperty('allow_approval_overwrite')) {
+		    if (CL._project.approval_settings.allow_approval_overwrite === true) {
+			return [true, ''];
+		    } 
+		    if (CL._project.approval_settings.hasOwnProperty('no_overwrite_message')) {
+			    return [false, CL._project.approval_settings.no_overwrite_message];
+		    } 
+		    return [false, 'You are not allowed to overwrite a previously approved version in this project.'];
+		} 
+		return defaults;
+	    } 
+	    if (CL._services.hasOwnProperty('approval_settings')) {
+		if (CL._services.approval_settings.hasOwnProperty('allow_approval_overwrite')) {
+		    if (CL._services.approval_settings.allow_approval_overwrite === true) {
+			return [true];
+		    } 
+		    if (CL._services.approval_settings.hasOwnProperty('no_overwrite_message')) {
+			    return [false, CL._services.approval_settings.no_overwrite_message];
+		    } 
+		    return [false, 'You are not allowed to overwrite a previously approved version.'];
+		} 
+		return defaults;
+	    } 
+	    return defaults;
+	},
 
 	save_collation: function (status, success_callback) {
-	    var collation, confirmed, confirm_message, success_message;
+	    var collation, confirmed, confirm_message, success_message, approval_settings;
 	    SPN.show_loading_overlay();
 	    CL._services.get_user_info(function (user) {
 		if (user) {
 		    //approved has different rules than others.
-
 		    collation = {'_model' : 'collation',
 			    'structure' : CL._data,
 			    'status' : status, 'context' : CL._context,
 			    'user' : user._id, 'data_settings' : CL._data_settings,
 			    'algorithm_settings' : CL._algorithm_settings,
 			    'display_settings' : CL._display_settings};
-
 		    if (status === 'approved') {
+			approval_settings = CL.get_approval_settings();
 			collation._id = CL._context + '_' + status;
-			confirm_message = "This project already has an approved version of this verse.\nAre you sure you want to overwrite the currently saved version with this one?\nOverwriting may mean versional data needs to be checked and edited in the apparatus editor.";
+			confirm_message = "This project already has an approved version of this verse.\nAre you sure you want to overwrite the currently saved version with this one?";
 			success_message = 'Approve successful';
 		    } else {
+			approval_settings = [true, undefined];
 			collation._id = CL._context + '_' + status + '_' + user._id;
 			confirm_message = "You already have this verse saved at this stage in this environment.\nAre you sure you want to overwrite the currently saved version with this one?";
 			success_message = 'Save successful';
 		    }
-
 		    if (CL._project.hasOwnProperty('_id')) {
 			collation.project = CL._project._id;
 			collation._id += '_' + CL._project._id;
@@ -2451,11 +2480,12 @@ var CL = (function () {
 			// should never happen but just in case stick in the user id.
 			collation._id += '_' + user._id;
 		    }
-
-		    CL._services.save_collation(CL._context, collation, confirm_message, false, function(saved_successful) {
+		    CL._services.save_collation(CL._context, collation, confirm_message, approval_settings[0], approval_settings[1], function(saved_successful) {
 			document.getElementById('message_panel').innerHTML = saved_successful ? success_message : '';
-			if (typeof success_callback !== 'undefined') {
-			    success_callback();
+			if (saved_successful) { //only run success callback if successful!
+			    if (typeof success_callback !== 'undefined') {
+				success_callback();
+			    }
 			}
 			SPN.remove_loading_overlay();
 		    });
@@ -3619,7 +3649,8 @@ var CL = (function () {
 	    return token[witness].index;
 	},
 	
-	//I considered making these cumulative but decided against so that projects can always override services if they have different editorial practices
+	//I considered making these cumulative but decided against so that projects can always override services 
+	//if they have different editorial practices (can be overridden on a stage by stage basis
 	get_pre_stage_checks: function (stage) {
 	    if (CL._project.hasOwnProperty('pre_stage_checks') && CL._project.pre_stage_checks.hasOwnProperty(stage))  {
 		return CL._project.pre_stage_checks[stage];
@@ -3650,8 +3681,8 @@ var CL = (function () {
             parent = CL.find_reading_by_id(unit, parent_id);
             SV._lose_subreadings(); //must always lose subreadings first or find subreadings doesn't find them all!
             SV._find_subreadings({'unit_id': unit._id}); //we need this to see if we have any!
-            console.log(type)
-            console.log(reading_details)
+//            console.log(type)
+//            console.log(reading_details)
             if (reading.hasOwnProperty('subreadings')) {
         	for (key in reading.subreadings) {
         	    if (reading.subreadings.hasOwnProperty(key)) {
@@ -3681,8 +3712,15 @@ var CL = (function () {
 //    	    console.log(JSON.parse(JSON.stringify(CL._data)))
             //now check that we don't have any shared readings (need to prepare and unprepare for this)
             SV.prepare_for_operation();
+//    	    console.log('now we have prepared')
+//    	    console.log(JSON.parse(JSON.stringify(CL._data)))
             SV.unsplit_unit_witnesses(reading_details.unit_pos, 'apparatus');
+//    	    console.log('now we have unsplit')
+//    	    console.log(JSON.parse(JSON.stringify(CL._data)))
             SV.unprepare_for_operation();         
+//            console.log('now we have sorted out shared readings')
+//            console.log(JSON.parse(JSON.stringify(CL._data)))
+            
 	},
 
         //at this point the reading is *always* a main reading never a subreading
@@ -3812,8 +3850,6 @@ var CL = (function () {
             } else {
         	witnesses = subreading.witnesses;
             }
-//            console.log('WITNESSES REQUIRED')
-//            console.log(witnesses)
             text = JSON.parse(JSON.stringify(subreading.text)); //copy because we need them independent
             if (witnesses.length !== subreading.witnesses.length) {
         	delete_subreading = false;
@@ -3836,14 +3872,16 @@ var CL = (function () {
             //now we need to remove all not selected witnesses from the text info
             for (i = 0; i < text.length; i += 1) {
         	if (text[i][witnesses[0]].hasOwnProperty('decision_details')) { //all witness selected will have the same subreading by now even if they have been created via different routes because they are showing as subreadings
-//        	    console.log('t selected rule')
         	    text[i]['interface'] = text[i][witnesses[0]].decision_details[0].t;
         	} else if (text[i].hasOwnProperty('t')) {
-//        	    console.log('t selected not rule')
         	    text[i]['interface'] = text[i]['t'];
         	} else {
-//        	    console.log('interface selected')
-        	    text[i]['interface'] = text[i]['interface'];
+        	    console.log('else')
+        	    if (witnesses.length === 1 && typeof(text[i][witnesses[0]]['interface']) !== 'undefined') {
+        		text[i]['interface'] = text[i][witnesses[0]]['interface'];
+        	    } else {
+        		text[i]['interface'] = text[i]['interface'];
+        	    }    	    
         	}
         	for (j = 0; j < witnesses.length; j += 1) {
         	    if (text[i].hasOwnProperty(witnesses[j])) {
@@ -4028,12 +4066,14 @@ var CL = (function () {
         		'rule_classes' : project.regularisation_classes,       		
         		'book_name' : project.book_name,
         	};
-		
         	if (project.hasOwnProperty('witness_sort')) {
         	    CL._project.project_witness_sort = project.witness_sort;
         	}
         	if (project.hasOwnProperty('pre_stage_checks')) {
         	    CL._project.pre_stage_checks = project.pre_stage_checks;
+        	}
+        	if (project.hasOwnProperty('approval_settings')) {
+        	    CL._project.approval_settings = project.approval_settings;
         	}
         	CL.set_display_settings(project);
         	CL.set_local_python_functions(project);

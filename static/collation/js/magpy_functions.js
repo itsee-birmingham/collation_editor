@@ -53,6 +53,31 @@ var LOCAL = (function () {
             }
             return false;
         },
+        
+        are_no_FML_regularisations: function () {
+            var key, i, j, return_value;
+            SV._find_subreadings();
+            return_value = true;
+            for (key in CL._data) {
+        	if (CL._data.hasOwnProperty(key) && key.indexOf('apparatus') != -1) {
+        	    for (i = 0; i < CL._data[key].length; i += 1) {
+        		for (j = 0; j < CL._data[key][i].readings.length; j += 1) {
+        		    if (CL._data[key][i].readings[j].hasOwnProperty('subreadings')) {
+        			if (CL._data[key][i].readings[j].subreadings.hasOwnProperty('fix_me_later')) {
+        			    return_value = false;
+        			}
+        		    }
+        		}
+        	    }
+        	}
+            }            
+            if (CL._show_subreadings === true) {
+        	SV._find_subreadings();
+            } else {
+        	SV._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])});
+            }
+            return return_value;
+        },
 
 	get_context_from_input_form: function () {
             var book, chapter, verse, ref

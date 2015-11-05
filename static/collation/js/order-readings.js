@@ -107,16 +107,7 @@ var OR = (function () {
             }
             CL.add_subreading_events('reorder', CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading']));
             if (document.getElementById('approve')) {
-        	$('#approve').on('click', function (event) {
-        	    OR.order_witnesses_for_output();
-        	    //TODO: this must take a call back on success from here so we can run extra functions
-                    CL.save_collation('approved', function () {OR.show_approved_version({'container': CL._container});});
-                    //TODO: this does in magpy functions
-                    CL.export_to_apparatusEditor();
-                    
-                    
-                    
-                });
+        	$('#approve').on('click', function () {OR.approve_verse();});
             }
             for (i = 0; i < highest_unit; i += 1) {
                 if (document.getElementById('drag_unit_' + i) !== null) {
@@ -140,9 +131,7 @@ var OR = (function () {
             	    OR.undo();
             	});
             }
-
 	    CL.make_verse_links();
-
             event_rows = temp[2];
             for (i = 0; i < event_rows.length; i += 1) {
                 row = document.getElementById(event_rows[i]);
@@ -150,6 +139,71 @@ var OR = (function () {
                     CL._add_hover_events(row);
                 }
             }
+        },
+        
+        uniqueify_ids: function () {
+            var id_list, key, i, j, unit, new_id, extra;
+            id_list = [];
+            for (key in CL._data) {
+        	if (CL._data.hasOwnProperty(key) && key.indexOf('apparatus') != -1) {
+        	    for (i = 0; i < CL._data[key].length; i += 1) {
+        		//we are assuming units already have unique ids
+        		//if we start changing them we need to keep the overlapped_units ids in synch
+//        		extra = 0;
+//        		while (id_list.indexOf(CL._data[key][i]._id) !== -1) {
+//        		    console.log('adding new unit id')      		    
+//        		    CL.add_unit_id(CL._data[key][i], key + extra);
+//        		    console.log(JSON.parse(JSON.stringify(CL._data[key][i])));
+//        		    extra += 1;
+//        		}
+//        		id_list.push(CL._data[key][i]._id);
+        		for (j = 0; j < CL._data[key][i].readings.length; j += 1) {
+        		    extra = 0;
+        		    while (id_list.indexOf(CL._data[key][i].readings[j]._id) !== -1) {     
+        			CL.add_reading_id(CL._data[key][i].readings[j], CL._data[key][i].start, CL._data[key][i].end + 'extra' + extra)
+        			extra += 1;
+        		    }
+        		    id_list.push(CL._data[key][i].readings[j]._id);
+        		}
+        	    }
+        	}
+            }
+        },
+        
+        approve_verse: function () {
+            var standoff_problems, extra_results;
+            SPN.show_loading_overlay();
+            SV._lose_subreadings(); //for preparation and is needed
+            standoff_problems = SV.check_standoff_reading_problems();
+            if (!standoff_problems[0]) {
+        	extra_results = CL.apply_pre_stage_checks('approve');
+        	if (extra_results[0] === true) {
+        	    CL._show_subreadings = false;
+        	    //now do the stuff we need to do
+        	    //make sure all ids are unique (we know there is a problem with overlapping a readings for example)
+        	    OR.uniqueify_ids();     	    
+        	    OR.order_witnesses_for_output();
+                    CL.save_collation('approved', function () {OR.show_approved_version({'container': CL._container});});
+                    //TODO: this does in magpy functions
+                    //CL.export_to_apparatusEditor();
+        	} else {
+        	    if (CL._show_subreadings === true) {
+        		SV._find_subreadings();
+        	    } else {
+        		SV._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])});
+        	    }
+        	    alert(extra_results[1]);
+        	    SPN.remove_loading_overlay(); 
+        	}
+            } else if (standoff_problems[0]) {
+        	if (CL._show_subreadings === true) {
+        	    SV._find_subreadings();
+        	} else {
+        	    SV._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])});
+        	}
+        	alert('You cannot move to order readings because ' + standoff_problems[1]);
+        	SPN.remove_loading_overlay();
+            }          
         },
         
         order_witnesses_for_output: function () {
@@ -949,14 +1003,11 @@ var OR = (function () {
             document.getElementById('footer').innerHTML = footer_html.join('');
             $('#get_apparatus').off('click.download_link');
             $('#get_apparatus').on('click.download_link', function () {
-        	console.log('here')
         	var url;
         	url = 'http://' + SITE_DOMAIN + '/collation/apparatus';
-        	// Example usage:
-                OR.post(url, {
-                    context: CL._context,
-                    data: JSON.stringify(CL._data)
-
+        	OR.post(url, {
+                    format: 'xml',
+                    data: JSON.stringify([{"context": CL._context, "structure": CL._data}])
                 });
             });           
             CL.add_stage_links();

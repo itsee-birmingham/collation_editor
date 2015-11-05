@@ -267,48 +267,7 @@ table#raw_json td {
 	display: none;
 }
 
-/* Summary page */
-div.summary_section {
-	float:left;
-	padding-left: 20px;
-	padding-right: 20px;
-}
 
-div#summary {
-    margin-top: 10px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid black;
-    padding-left: 10px; 
-}
-
-div#project_select_div {
-    margin-bottom: 10px;
-    border-bottom: 1px solid black;
-    padding-left: 10px;
-    padding-bottom: 10px;
-}
-
-div#output {
-    padding-left: 10px;
-}
-
-br.clear {
-	clear: both;
-}
-
-label#select_chapter {
-	padding-left: 50px;
-}
-
-span#summary_title {
-	padding-left: 10px;
-}
-
-
-h3.summary_heading {
-	font-family: arial;
-	font-size: 12pt;
-}
 
 /* settings */
 .settings_dialogue {

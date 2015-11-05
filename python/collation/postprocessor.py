@@ -59,43 +59,6 @@ class PostProcessor(Regulariser):
         """Produce variant units for display and editing."""
         variant_readings = self.create_readings_sets()       
         return self.format_output(self.anchor_readings(variant_readings))
-
-    
-#     #the plan was to get rid of this but js needs to follow suite as it currently expects this marking (SV does not use it)
-#     def identify_regularised_readings(self, variant_readings):
-#         """find all the regularised readings (basically anything that has a rule applied
-#         and identify them at token level)"""
-#         for unit in variant_readings:
-#             extras = {}
-#             for i, reading in enumerate(unit):
-#                 for witness in reading['witnesses']:
-#                     for j, token in enumerate(reading['text']):
-#                         if 'decision_class' in token[witness].keys():
-#                             token['regularised'] = True
-#                         if len(reading['witnesses']) > 0 and len(reading['text']) > 0: #we only care if there is more than one witness to the reading and it has multiple words
-#                             if j > 0 and j < len(reading['text'])-1: #we don't care about the first or last words of the unit
-#                                 if 'gap_after' in token[witness].keys():
-#                                     #make a new reading
-#                                     gapped_text = self.extract_text_with_gaps(reading['text'], witness)
-#                                     if gapped_text in extras:
-#                                         extras[gapped_text] = self.merge_extra_reading(reading['text'], witness, extras[gapped_text])
-#                                     else:
-#                                         extras[gapped_text] = self.create_extra_reading(reading['text'], witness)
-#                    
-#             if len(extras.keys()) > 0:
-#                 #add in the new readings - can all go on the end no issue with position
-#                 for rdg in extras.keys():
-#                     for wit in extras[rdg]['witnesses']:                            
-#                         for j, reading in enumerate(unit):
-#                             if wit in reading['witnesses']:
-#                                 reading['witnesses'].remove(wit)
-#                                 if len(reading['witnesses']) == 0:
-#                                     unit.remove(reading)
-#                                 else:
-#                                     for token in reading['text']:
-#                                         del token[wit]
-#                     unit.append(extras[rdg])
-#         return variant_readings 
  
     def create_extra_reading(self, text_list, witness):
         new = {'witnesses': [witness], 'text': []}
@@ -139,7 +102,7 @@ class PostProcessor(Regulariser):
         #temporary fix to turn 'sigils' key in old collateX output to 'witnesses' for testing with both versions
         if 'sigils' in self.alignment_table:
             self.alignment_table['witnesses'] = self.alignment_table['sigils']
-        for unit in self.alignment_table['table']:      
+        for z, unit in enumerate(self.alignment_table['table']):      
             #first build a dictionary with text string as key to reading structure
             variant_unit = []
             readings = {}          
@@ -509,3 +472,39 @@ class PostProcessor(Regulariser):
             else:
                 token['rule_string'] = token['t']
             return token
+
+#     #the plan was to get rid of this but js needs to follow suite as it currently expects this marking (SV does not use it)
+#     def identify_regularised_readings(self, variant_readings):
+#         """find all the regularised readings (basically anything that has a rule applied
+#         and identify them at token level)"""
+#         for unit in variant_readings:
+#             extras = {}
+#             for i, reading in enumerate(unit):
+#                 for witness in reading['witnesses']:
+#                     for j, token in enumerate(reading['text']):
+#                         if 'decision_class' in token[witness].keys():
+#                             token['regularised'] = True
+#                         if len(reading['witnesses']) > 0 and len(reading['text']) > 0: #we only care if there is more than one witness to the reading and it has multiple words
+#                             if j > 0 and j < len(reading['text'])-1: #we don't care about the first or last words of the unit
+#                                 if 'gap_after' in token[witness].keys():
+#                                     #make a new reading
+#                                     gapped_text = self.extract_text_with_gaps(reading['text'], witness)
+#                                     if gapped_text in extras:
+#                                         extras[gapped_text] = self.merge_extra_reading(reading['text'], witness, extras[gapped_text])
+#                                     else:
+#                                         extras[gapped_text] = self.create_extra_reading(reading['text'], witness)
+#                    
+#             if len(extras.keys()) > 0:
+#                 #add in the new readings - can all go on the end no issue with position
+#                 for rdg in extras.keys():
+#                     for wit in extras[rdg]['witnesses']:                            
+#                         for j, reading in enumerate(unit):
+#                             if wit in reading['witnesses']:
+#                                 reading['witnesses'].remove(wit)
+#                                 if len(reading['witnesses']) == 0:
+#                                     unit.remove(reading)
+#                                 else:
+#                                     for token in reading['text']:
+#                                         del token[wit]
+#                     unit.append(extras[rdg])
+#         return variant_readings 

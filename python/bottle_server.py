@@ -6,7 +6,7 @@ import imp
 import json
 import StringIO
 from collation.preprocessor import PreProcessor
-from collation.outputter import Outputter
+from collation.exporter_factory import ExporterFactory
 import bottle
 bottle.BaseRequest.MEMFILE_MAX = 1024 * 1024
 @route('/')
@@ -128,11 +128,19 @@ def collation(context):
 @route('/collation/apparatus/', method=['POST'])
 def apparatus():
     data = json.loads(request.params.data)
-    context = request.params.context
-    out = Outputter()
-    app = StringIO.StringIO(out.format_unit(data, context))
+    format = request.params.format
+    if not format:
+        format = 'xml'
+    if format == 'xml':
+        file_ext = 'xml'
+    else:
+        file_ext = 'txt'
+    exporter_settings = request.params.settings
+    print(exporter_settings)
+    exf = ExporterFactory(exporter_settings)
+    app = StringIO.StringIO(exf.export_data(data, format))
     response.content_type = 'text/plain'
-    response.headers['Content-Disposition'] = 'attachment; filename="%s-apparatus.xml"' % context
+    response.headers['Content-Disposition'] = 'attachment; filename="%s-apparatus.%s"' % (format, file_ext)
     return app
     
     

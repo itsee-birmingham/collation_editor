@@ -54,6 +54,7 @@ class Regulariser(object):
             #we are not recording subtypes anymore so we need to check here t against n
             if (self.prepare_t(decision['t']) != decision['n'] and stage == 'pre-collate') \
                     or (self.prepare_t(decision['t']) == decision['n'] and stage == 'post-collate'): 
+                
                 if decision['scope'] == u'always' \
                     or decision['scope'] == u'verse' \
                     or (decision['scope'] == u'manuscript' \

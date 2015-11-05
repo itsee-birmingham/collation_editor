@@ -24,8 +24,7 @@ var magpy_services = {
 	                        "class_name": "PrepareData",
 	                        "function": "set_rule_string"
 	                    }
-	                },                    
-		
+	                },
 	witness_sort : function (witnesses) {
 	    return witnesses.sort(LOCAL.compare_witness_types);
 	},
@@ -437,17 +436,25 @@ var magpy_services = {
 
 	// save a collation
 	// result: true if saved and successful, false otherwise
-	save_collation : function (verse, collation, confirm_message, to_apparatus_editor, result_callback) {
+	save_collation : function (verse, collation, confirm_message, overwrite_allowed, no_overwrite_message, result_callback) {
+	    //add in the NT specific stuff we need 
 	    collation.verse = parseInt(verse.substring(verse.indexOf('V') + 1))
 	    collation.chapter = parseInt(verse.substring(verse.indexOf('K') + 1, verse.indexOf('V')))
 	    collation.book_number = parseInt(verse.substring(verse.indexOf('B') + 1, verse.indexOf('K')))
-	    MAG.REST.create_resource((to_apparatus_editor ? 'main_apparatus' : 'collation'), collation, {'error' : function () {
-		var confirmed = confirm(confirm_message);
-		if (confirmed === true) {
-		    MAG.REST.update_resource((to_apparatus_editor ? 'main_apparatus' : 'collation'), collation, {'success': function () {
-			result_callback(true);
-		    }});
+	    MAG.REST.create_resource('collation', collation, {'error' : function () {
+		var confirmed;
+		if (overwrite_allowed) {
+		    confirmed = confirm(confirm_message);
+		    if (confirmed === true) {
+			MAG.REST.update_resource('collation', collation, {'success': function () {
+			    result_callback(true);
+			}});
+		    } else {
+			result_callback(false);
+			return;
+		    }
 		} else {
+		    alert(no_overwrite_message);
 		    result_callback(false);
 		    return;
 		}
@@ -457,7 +464,6 @@ var magpy_services = {
 	},
 
 	get_saved_stage_ids : function (verse, result_callback) {
-
 	    CL._services.get_user_info(function (user) {
 		if (user) {
 		    var r, s, o, a, user_id, criteria, i;

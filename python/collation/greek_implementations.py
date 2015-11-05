@@ -56,7 +56,9 @@ class ApplySettings(object):
         return token
     
     def expand_abbreviations(self, token):
-        if 'expanded' in token:
+        if 'n' in token: #applied rules trump this setting
+            token['interface'] = token['n']
+        elif 'expanded' in token:
             token['interface'] = token['expanded']
         return token
     

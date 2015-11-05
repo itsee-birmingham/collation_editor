@@ -611,11 +611,147 @@ var CAD = (function () {
                 	}
                 	CAD.get_project_summary(selected, 'book');
                 	document.getElementById('project_selected').innerHTML = 'for ' + selected;
+                	MAG.REST.apply_to_resource('editing_project', selected, {'fields': ['managing_editor', 'interfaces', 'approval_settings'], 'success': function (selected_project) {
+                	    var revoke;
+                	    revoke = false;
+                	    if (user._id === selected_project.managing_editor) {
+                		if (selected_project.hasOwnProperty('approval_settings') && selected_project.approval_settings.hasOwnProperty('allow_approval_overwrite')) {
+                		    if (selected_project.approval_settings.allow_approval_overwrite === false) {
+                			revoke = true;
+                		    }               		    
+                		} else {
+                		    if (CL._services.hasOwnProperty('approval_settings') && CL._services.approval_settings.hasOwnProperty('allow_approval_overwrite')) {
+                			if (CL._services.approval_settings.allow_approval_overwrite === false) {
+                			    revoke = true;
+                			}
+                		    }
+                		}
+                		if (revoke) {
+                		    document.getElementById('revoke_approved').style.display = 'block';
+                		    CAD.setup_revocation_section(selected);
+                		}
+                		if (selected_project.hasOwnProperty('interfaces') && (selected_project.interfaces.indexOf('version') !== -1 || selected_project.interfaces.indexOf('patristic'))){
+                		    document.getElementById('version_export').style.display = 'block';
+                		    CAD.setup_version_export(selected);                		    
+                		}
+                	    }
+                	}});
                     } else {
                 	document.getElementById('project_selected').innerHTML = '';
                     }
                 }
 	    }); 
+	},
+	
+	setup_revocation_section: function (project_id) {
+	    //find all verses available for revocation (that is all verses which have an approved version but which have not been exported to the version interfaces)
+	    //in an ideal world you would be able to revoke verses that had not yet been started but then reexporting them becomes tricky and not allowing this fixes problem arising from a versionist having something open but not saved when something is revoked
+	    
+	    //(version table must also be changed to use single string context but keep book chapter verse just like collation data)
+	    //probably we then need to populate chapter and verse drop downs which are interlinked.
+	    //then we have a revoke verse function which deleted the table from main_app - we run a slight risk that a versionist could be working on that very verse but not have saved anything which we do need to consider
+	    //also there is a possibility that a verisonist has no data for a chapter and therefore has batch created empty records. We should maybe check that records are saved
+	    //when versionists save if no main_apparatus entry is found save should fail but that will annoy them so need some form of fallback - maybe their data structure is saved somewhere else and we can peice them together?
+	    
+	},
+	
+	setup_version_export: function (project_id) {
+	    var html, chaps, i, key;
+	    html = ['<p>There are no complete chapters ready for sending to version interfaces.</p>'];
+	    MAG.REST.apply_to_list_of_resources('collation', {'criteria': {'project': project_id, 'status': 'approved'}, 'fields': ['status', 'verse', 'chapter', 'book_number'], 'success': function (response) {
+		if (response.results.length > 0) {
+		    //then get the work details so we know how many verses we need for each chapter
+		    MAG.REST.apply_to_list_of_resources('work', {'criteria': {'book_number': response.results[0].book_number}, 'success': function (work_details) {
+			if (work_details.results.length > 0) {
+			    chaps = {};
+			    full_chaps = [];
+			    //chapter numbers are turned into strings for this section
+			    for (i = 0; i < response.results.length; i += 1) {
+				if (chaps.hasOwnProperty(String(response.results[i].chapter))) {
+				    chaps[String(response.results[i].chapter)] += 1;
+				} else {
+				    chaps[String(response.results[i].chapter)] = 1;
+				}
+			    }
+			    for (key in chaps) {
+				if (chaps.hasOwnProperty(key)) {
+				    if ((key === '0' || key === '99') && chaps[key] === 1) {
+					full_chaps.push(parseInt(key));
+				    } else if (work_details.results[0].verses_per_chapter[key] === chaps[key]) {
+					full_chaps.push(parseInt(key));
+				    }
+				}
+			    }
+			    //chapter numbers are now ints again
+			    if (full_chaps.length > 0) {
+				full_chaps.sort();
+				MAG.REST.apply_to_list_of_resources('main_apparatus', {'criteria': {'project': project_id, 'chapter': {'$in': full_chaps}, 'verse': 1}, 'fields': ['chapter'], 'success': function (main_apps) {
+				    for (i = 0; i < main_apps.results.length; i += 1) {
+					if (full_chaps.indexOf(main_apps.results[i].chapter) !== -1) {
+					    full_chaps.splice(full_chaps.indexOf(main_apps.results[i].chapter), 1);
+					}
+				    }
+				    if (full_chaps.length > 0) {
+					html = [];
+					html.push('<form id="version_export_form">');
+					html.push('<label for="version_export_select">Select chapter: </label><select id="version_export_select" name="version_export_select">');
+					html.push('<option value="none">select</option>');
+					for (i = 0; i < full_chaps.length; i += 1) {
+					    html.push('<option value="' + full_chaps[i] + '">' + full_chaps[i] + '</option>');
+					}					
+					html.push('</select>');
+					html.push('<input type="hidden" id="version_export_project" name="version_export_project" value="' + project_id + '"/>')
+					html.push('<input id="version_export_button" type="button" value="Export"/>');
+					html.push('</form>');
+					CAD.display_version_export(html);
+				    } else {
+					CAD.display_version_export(html);
+				    }
+				}});
+			    } else {
+				CAD.display_version_export(html);
+			    }			    
+			} else {
+			    CAD.display_version_export(html);
+			}
+		    }});
+		} else {
+		    CAD.display_version_export(html);
+		}
+	    }});	    
+	},
+	
+	display_version_export: function (html) {
+	    document.getElementById('version_export_content').innerHTML = html.join('');
+	    if (document.getElementById('version_export_button')) {
+		$('#version_export_button').on('click', function () {
+		    CAD.export_to_main_apparatus();
+		});
+	    }
+	},
+	
+	export_to_main_apparatus: function () {
+	    var chap, project, i;
+	    chap = document.getElementById('version_export_select').value;
+	    if (chap !== 'none') {
+		SPN.show_loading_overlay();
+		chap = parseInt(chap);
+		project = document.getElementById('version_export_project').value;
+		//get all the collations for this project that are approved and from this chapter
+		MAG.REST.apply_to_list_of_resources('collation', {'criteria': {'project': project, 'chapter': chap, 'status': 'approved'}, 'success': function (response) {
+		    for (i = 0; i < response.results.length; i += 1) {
+			//change their model and id (id should be context + _ + project_id 
+			response.results[i]._model = 'main_apparatus';
+			response.results[i]._id = response.results[i].context + '_' + response.results[i].project;
+			delete response.results[i].status;
+		    }
+		    //and create entries in main_apparatus
+		    MAG.REST.create_resource('main_apparatus', response.results, {'success': function () {
+			CAD.setup_version_export(project);
+			SPN.remove_loading_overlay();
+		    }});
+		}}); 
+	    }
 	},
 	
 	setup_admin_page: function (user, projects) {

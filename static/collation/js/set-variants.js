@@ -217,7 +217,7 @@ var SV = (function () {
         	    OR.show_reorder_readings({'container': container});
         	} else {
         	    if (CL._show_subreadings === true) {
-        		SV._find_subreadings()
+        		SV._find_subreadings();
         	    }
         	    alert(extra_results[1]);
         	    SPN.remove_loading_overlay();
@@ -3684,7 +3684,7 @@ var SV = (function () {
            *  into their parents so we don't have to worry about them.
            */
           prepare_for_operation: function () {
-              SV._remove_offset_subreadings(); //this runs find_subreadings
+              SV._remove_offset_subreadings(); //this runs find_subreadings             
               SV._lose_subreadings();
           },
           
@@ -3937,7 +3937,7 @@ var SV = (function () {
 		if (unit.readings[i].witnesses.indexOf(standoff_reading.witness) !== -1) { //if our target witness is in this reading
 		    if (test) {
 			console.log('here')
-			console.log(CL.extract_witness_text(unit.readings[i], {'witness': standoff_reading.witness, 'reading_type': 'subreading'}));
+			console.log(CL.extract_witness_text(unit.readings[i], {'witness': standoff_reading.witness, 'reading_type': 'subreading'}, true));
 			console.log(standoff_reading.reading_text);
 		    }
 		    if (standoff_reading.reading_text === CL.extract_witness_text(unit.readings[i], {'witness': standoff_reading.witness, 'reading_type': 'subreading'})) {
@@ -3973,7 +3973,7 @@ var SV = (function () {
          * 					if not supplied then subreadings of all rule classes will be extracted
          * 				unit_id: The id of the single unit to manipulate
          * */
-	_find_subreadings: function (find_options) {
+	_find_subreadings: function (find_options, test) {
 	    var i, j, key, parent, child, apparatus, readings, subreadings, type, for_deletion, options, 
 	    marked_reading, rule_classes, app_id;
 	   // console.log('SV._find_subreadings')
@@ -4008,6 +4008,10 @@ var SV = (function () {
 							&& marked_reading.end ===  apparatus[i].end) { //if unit extent is correct
 						    //get the parent 
 						    parent = SV._find_parent_reading(apparatus[i], key, marked_reading, true);
+						    if (test) {
+							console.log('parent is...')
+							console.log(parent)
+						    }
 						    if (parent !== null) {
 							if (parent.hasOwnProperty('subreadings')) {
 							    subreadings = parent.subreadings;
@@ -4015,12 +4019,16 @@ var SV = (function () {
 							    subreadings = {};
 							}
 							//then find the child reading
-							child = SV._find_child_reading(apparatus[i], marked_reading);
+							child = SV._find_child_reading(apparatus[i], marked_reading, test);
+							if (test) {
+							    console.log('child is...')
+							    console.log(child)
+							}							
 							if (child !== null) {
 							    marked_reading.applied = true;
 							    SV._add_combined_gap_data_to_parent(parent, marked_reading);
 							    //sort out the options
-							    options = {};
+							    options = {'standoff': true};
 							    if (typeof rule_classes !== 'undefined') {
 								options.rules = rule_classes;
 							    }
@@ -4035,7 +4043,7 @@ var SV = (function () {
 							    }
 							    if (typeof marked_reading.combined_gap_before_details !== 'undefined') {
 								options.combined_gap_before_details = marked_reading.combined_gap_before_details;
-							    }
+							    }							    
 							    //then make the subreading for that witness (you might have to split a reading)
 							    subreadings = SV._add_to_subreadings(subreadings, child, marked_reading.witness, marked_reading.value.split('|'), options);
 							    if (SV.witness_in(subreadings, marked_reading.witness)) {
@@ -4219,6 +4227,7 @@ var SV = (function () {
          * 									combined_gap_before - boolean 
          * 									combined_gap_after - boolean
          * 									combined_gap_before_details - string
+         * 									standoff - boolean
          * 
          * */
         _add_to_subreadings: function (subreadings, reading, witness, type_list, options) {    
@@ -4304,6 +4313,9 @@ var SV = (function () {
                                 for (j = 0; j < subreadings[type][i].text.length; j += 1) {
                                     subreadings[type][i].text[j].reading.push(witness);
                                     subreadings[type][i].text[j][witness] = target.text[j][witness];
+                                    if (options.hasOwnProperty('standoff') && options.standoff === true) {
+                                	subreadings[type][i].text[j][witness]['interface'] = target.text[j]['interface'];
+                                    }
                                 }                           
                             }
                             match_found = true;
@@ -4398,13 +4410,15 @@ var SV = (function () {
                                     reading.text[k][witness] = reading.subreadings[type][i].text[k][witness];
                 		}
                 	    } else { //this is a standoff reading so SR_text must be employed   
+                		
                 		if (!reading.hasOwnProperty('SR_text')) {
                 		    reading.SR_text = {};
-                                }
-                		//remove the extra readings from each word, siglum and reading
+                                }              		
+                		//remove the extra readings from each word, siglum and reading                		
                 		text = CL.strip_extra_witness_details_from_text_list(JSON.parse(JSON.stringify(reading.subreadings[type][i].text)), witness);
                 		reading.SR_text[witness] = {'text': text};
                 		for (k = 0; k < reading.SR_text[witness].text.length; k += 1) {
+                		    
                 		    if (reading.SR_text[witness].text[k][witness].hasOwnProperty('decision_details')) {
                 			reading.SR_text[witness].text[k]['interface'] = reading.SR_text[witness].text[k][witness].decision_details[0].t;
                                     } else {
@@ -4414,9 +4428,13 @@ var SV = (function () {
                                 	if (reading.SR_text[witness].text[k].hasOwnProperty('t')) {
                                 	    reading.SR_text[witness].text[k]['interface'] = reading.SR_text[witness].text[k].t;
                                 	} else {
-                                	    reading.SR_text[witness].text[k]['interface'] = reading.SR_text[witness].text[k]['interface'];
+                                	    if (reading.SR_text[witness].text[k][witness]['interface'] === undefined) {
+                                		reading.SR_text[witness].text[k]['interface'] = reading.SR_text[witness].text[k]['interface'];
+                                		reading.SR_text[witness].text[k][witness]['interface'] = reading.SR_text[witness].text[k]['interface'];
+                                	    } else {
+                                		reading.SR_text[witness].text[k]['interface'] = reading.SR_text[witness].text[k][witness]['interface'];
+                                	    }   	    
                                 	}
-                                	
                                     }
                 		}
                 		if (reading.subreadings[type][i].hasOwnProperty('type')) {
@@ -4527,7 +4545,7 @@ var SV = (function () {
             }
         },
         
-        /* This is used for marking how an dupliceted (because of overlapping reading) should be flagged
+        /* This is used for marking how any duplicate (because of overlapping reading) should be flagged
          * options at the moment are 'deleted' and 'overlapped'*/
         //TODO: this could be simpler if we just have a reading pointer!
         add_reading_flag: function (reading_details, flag) {
@@ -4680,7 +4698,6 @@ var SV = (function () {
         	$('#split_readings').on('click.sr_c', function(event) {
         	    var element, div, rdg_details;
                     element = SimpleContextMenu._target_element;
-                    console.log(element)
                     div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
                     rdg_details = CL.get_unit_app_reading(div.id);
                     SV.split_readings(rdg_details);

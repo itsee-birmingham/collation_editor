@@ -735,6 +735,8 @@ var RG = (function () {
                 create_function = function () {
                 	var i, data, new_unit, new_unit_data, new_reading, new_witnesses, suffix;
                         //create the rule
+                	//make sure all the data (even any disabled ones are submitted)
+                	$('#conditions input').removeAttr('disabled');
                         if (document.getElementById('scope').value === 'none') {
                             return false;
                         }
