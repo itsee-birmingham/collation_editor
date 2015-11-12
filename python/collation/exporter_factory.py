@@ -5,6 +5,7 @@ import importlib
 class ExporterFactory (object):
     
     def __init__(self, exporter_settings=None):
+        print(exporter_settings)
         if exporter_settings:
             module_name = exporter_settings['python_file']
             class_name = exporter_settings['class_name']

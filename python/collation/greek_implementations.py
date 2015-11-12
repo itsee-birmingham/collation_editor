@@ -1,4 +1,5 @@
 #-*- coding: utf-8 -*-
+import re
 
 class RuleConditions(object):
     
@@ -14,8 +15,8 @@ class RuleConditions(object):
         return(decision_word, token_words) 
         
     def ignore_supplied(self, decision_word, token_words):
-        decision_word = decision_word.replace('[', '').replace(']', '')
-        token_words = [w.replace('[', '').replace(']', '') for w in token_words]
+        decision_word = re.sub('\[(?!\d)', '', re.sub('(?<!\d)\]', '', decision_word))
+        token_words = [re.sub('\[(?!\d)', '', re.sub('(?<!\d)\]', '', w)) for w in token_words]
         return(decision_word, token_words)  
 
 class PrepareData(object):
@@ -75,7 +76,8 @@ class ApplySettings(object):
             return token
         
     def hide_supplied_text(self, token):
-        token['interface'] = token['interface'].replace('[', '').replace(']', '')
+        #token['interface'] = token['interface'].replace('[', '').replace(']', '')
+        token['interface'] = re.sub('\[(?!\d)', '', re.sub('(?<!\d)\]', '', token['interface']))
         return token       
     
     def hide_unclear_text(self, token):

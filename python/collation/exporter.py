@@ -10,11 +10,9 @@ class Exporter(object):
     def export_data(self, data, format):
         if format == 'xml':
             output = []
-            print(len(data))
             for unit in data:
-                print(unit)
-                output.append(self.get_unit_xml(unit))
-            return '<?xml version=\'1.0\' encoding=\'utf-8\'?><TEI>%s</TEI>' % '\n'.join(output).replace('<?xml version=\'1.0\' encoding=\'utf-8\'?>', '')
+                output.append(etree.tostring(self.get_unit_xml(unit), 'utf-8'))
+            return '<?xml version=\'1.0\' encoding=\'utf-8\'?><TEI xmlns="http://www.tei-c.org/ns/1.0">%s</TEI>' % '\n'.join(output).replace('<?xml version=\'1.0\' encoding=\'utf-8\'?>', '')
     
     def get_text(self, reading):
         if len(reading['text']) > 0:
@@ -33,7 +31,7 @@ class Exporter(object):
         overtext_id = entry['structure']['overtext'][0]['id']
         apparatus = entry['structure']['apparatus']
         for key in entry['structure']:
-            if re.match('apparatus\d+', key) != None:
+            if re.match('apparatus\d+', key) != None: #given that David has ordered this we probably want to process in order!
                 apparatus.extend(entry['structure'][key])
 
         vtree = etree.fromstring('<ab xml:id="%s-APP"></ab>' % (context))
@@ -61,6 +59,6 @@ class Exporter(object):
                     wit.append(idno)
                 rdg.append(wit)
             vtree.append(app)
-        return etree.tostring(vtree, 'utf-8')
+        return vtree
     
        

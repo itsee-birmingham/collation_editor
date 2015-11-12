@@ -469,6 +469,9 @@ var OR = (function () {
             SV.unsplit_unit_witnesses(unit_number, app_id);
             SV.unprepare_for_operation();
             OR.relabel_readings(unit.readings, true);
+            if (CL._show_subreadings === false) { //make sure we are still showing the edition subreadings
+        	SV._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])});
+            }
             OR.show_reorder_readings({'container': CL._container});
             document.getElementById('scroller').scrollLeft = scroll_offset[0];
             document.getElementById('scroller').scrollTop = scroll_offset[1];
@@ -916,8 +919,11 @@ var OR = (function () {
             OR.add_to_undo_stack(CL._data);
             apparatus = reading_details.app_id;
             unit = CL.find_unit_by_id(apparatus, reading_details.unit_id);
-            CL.make_standoff_reading(type, reading_details, parent_reading);
+            CL.make_standoff_reading(type, reading_details, parent_reading); 
             OR.relabel_readings(unit.readings, true);
+            if (CL._show_subreadings === false) { //make sure we are still showing the edition subreadings
+        	SV._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])});
+            }
     	    OR.show_reorder_readings({'container': CL._container});
     	    document.getElementById('scroller').scrollLeft = scroll_offset[0];
     	    document.getElementById('scroller').scrollTop = scroll_offset[1];
@@ -1002,13 +1008,8 @@ var OR = (function () {
             footer_html.push('<input id="get_apparatus" type="button" value="Get apparatus"/>')
             document.getElementById('footer').innerHTML = footer_html.join('');
             $('#get_apparatus').off('click.download_link');
-            $('#get_apparatus').on('click.download_link', function () {
-        	var url;
-        	url = 'http://' + SITE_DOMAIN + '/collation/apparatus';
-        	OR.post(url, {
-                    format: 'xml',
-                    data: JSON.stringify([{"context": CL._context, "structure": CL._data}])
-                });
+            $('#get_apparatus').on('click.download_link', function () { 
+        	OR.get_apparatus_for_context();
             });           
             CL.add_stage_links();
             SPN.remove_loading_overlay();
@@ -1021,23 +1022,22 @@ var OR = (function () {
             }           
         },
         
-        post: function (action, nameValueObj){
-            var form = document.createElement("form");
-            var i, input, prop;
-            form.method = "post";
-            form.action = action;
-            for (prop in nameValueObj) { // Loop through properties: name-value pairs
-                input = document.createElement("input");
-                input.name = prop;
-                input.value = nameValueObj[prop];
-                input.type = "hidden";
-                form.appendChild(input);
-            }
-            document.body.appendChild(form); //<-- Could be needed by some browsers?
-            form.submit();
-            console.log('done')
+        get_apparatus_for_context: function () {
+            var url;
+            SPN.show_loading_overlay();
+            url = 'http://' + SITE_DOMAIN + '/collation/apparatus';
+            $.fileDownload(url, {httpMethod: "POST", 
+        	data: {
+        	    settings: JSON.stringify(CL.get_exporter_settings()),
+        	    format: 'xml',
+        	    data: JSON.stringify([{"context": CL._context, "structure": CL._data}])
+        	},
+        	successCallback: function () {
+        	    SPN.remove_loading_overlay();
+        	}
+        	//can also add a failCallback here if you want
+            });
         },
-        
 
         /** prep stuff for loading into order readings */
         compare_overlaps: function (a, b) {

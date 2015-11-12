@@ -72,8 +72,9 @@ class Regulariser(object):
         matched = False
         for i, match_d in enumerate(decision_matches):
             if last_match and last_match[0] == True:
-                #append the last matched n to the list of match word in the token to allow chaining
-                token['rule_match'].append(last_match[1])
+                #append the last matched n to the list of match word if its not in there in the token to allow chaining
+                if last_match[1] not in token['rule_match']:
+                    token['rule_match'].append(last_match[1])
             match = self.match_tokens(token, match_d, stage)
             if match[0] == True:
                 last_match = match

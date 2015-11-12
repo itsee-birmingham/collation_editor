@@ -431,7 +431,7 @@ var CL = (function () {
 		} else if (i === unit_index) { //we do have a variant for this word
 		    if (unit.readings.length > 1 
 			    || (format === 'set_variants' && SV._show_shared_units === true) 
-			    || (format === 'regularise' && RG._show_regularisations === true)
+			    || (format === 'regularise')
 			    || format === 'version_additions') {
 			if (options.hasOwnProperty('sort') && options.sort === true) {
 			    unit.readings = CL.sort_readings(unit.readings);
@@ -1746,6 +1746,8 @@ var CL = (function () {
 
 	load_latest_stage_verse: function (latest, approved) {
 	    var key;
+	    SV._undo_stack = [];
+	    OR._undo_stack = [];
 	    if (latest === null) {
 		for (key in CL._default_display_settings) {
 		    if (CL._default_display_settings.hasOwnProperty(key)) {
@@ -2414,10 +2416,19 @@ var CL = (function () {
 			var success_message = "Approved successful";
 			CL._services.save_collation(CL._context, main_app, confirm_message, true, function(saved_successful) {			 
 			    document.getElementById('message_panel').innerHTML = saved_successful ? success_message : '';
-			    
 			});
 		    }
 	    });
+	},
+	
+	get_exporter_settings: function () {
+	    if (CL._project.hasOwnProperty('exporter_settings')) {
+		return CL._project.exporter_settings;
+	    } 
+	    if (CL._services.hasOwnProperty('exporter_settings')) {
+		return CL._services.exporter_settings;
+	    }
+	    return null;
 	},
 	
 	get_approval_settings: function () {
@@ -3014,6 +3025,8 @@ var CL = (function () {
 			SV.check_bug_status('loaded', 'saved version');
 			SV.show_set_variants({'container': CL._container});
 		    } else if (collation.status === 'ordered') {
+			SV._lose_subreadings();
+			SV._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])});
 			OR.show_reorder_readings({'container': CL._container});
 		    } else if (collation.status === 'approved') {
 			OR.show_approved_version({'container': CL._container});
@@ -3681,8 +3694,6 @@ var CL = (function () {
             parent = CL.find_reading_by_id(unit, parent_id);
             SV._lose_subreadings(); //must always lose subreadings first or find subreadings doesn't find them all!
             SV._find_subreadings({'unit_id': unit._id}); //we need this to see if we have any!
-//            console.log(type)
-//            console.log(reading_details)
             if (reading.hasOwnProperty('subreadings')) {
         	for (key in reading.subreadings) {
         	    if (reading.subreadings.hasOwnProperty(key)) {
@@ -3838,7 +3849,8 @@ var CL = (function () {
  
         make_main_reading: function (unit, parent, subtype, subreading_pos, options) {
             var unit_number, parent_reading, parent_pos, app_id, subreading, text, witnesses,
-        	i, j, interface_word_list, key, new_reading, parent_id, delete_subreading;
+        	i, j, k, interface_word_list, key, new_reading, parent_id, delete_subreading,
+        	new_readings;
             if (typeof options === 'undefined') {
         	options = {};
             }
@@ -3851,10 +3863,11 @@ var CL = (function () {
         	witnesses = subreading.witnesses;
             }
             text = JSON.parse(JSON.stringify(subreading.text)); //copy because we need them independent
-            if (witnesses.length !== subreading.witnesses.length) {
-        	delete_subreading = false;
+            if (witnesses.length !== subreading.witnesses.length) {        	
+        	//we are now working on the subreading we are leaving behind
         	//we are making fewer witnesses into a main reading than there are witnesses (if they are the same we can leave them)
         	//so we need to remove witnesses from subreading.text (and not delete the subreading at the end)
+        	delete_subreading = false;
         	for (i = 0; i < witnesses.length; i += 1) {
         	    subreading.witnesses.splice(subreading.witnesses.indexOf(witnesses[i]), 1);
         	    for (j = 0; j < subreading.text.length; j += 1) {
@@ -3869,76 +3882,72 @@ var CL = (function () {
         	//we get to the end
         	delete_subreading = true;
             }
-            //now we need to remove all not selected witnesses from the text info
-            for (i = 0; i < text.length; i += 1) {
-        	if (text[i][witnesses[0]].hasOwnProperty('decision_details')) { //all witness selected will have the same subreading by now even if they have been created via different routes because they are showing as subreadings
-        	    text[i]['interface'] = text[i][witnesses[0]].decision_details[0].t;
-        	} else if (text[i].hasOwnProperty('t')) {
-        	    text[i]['interface'] = text[i]['t'];
-        	} else {
-        	    console.log('else')
-        	    if (witnesses.length === 1 && typeof(text[i][witnesses[0]]['interface']) !== 'undefined') {
-        		text[i]['interface'] = text[i][witnesses[0]]['interface'];
-        	    } else {
-        		text[i]['interface'] = text[i]['interface'];
-        	    }    	    
-        	}
-        	for (j = 0; j < witnesses.length; j += 1) {
-        	    if (text[i].hasOwnProperty(witnesses[j])) {
-        		delete text[i][witnesses[j]].decision_class;
-        		delete text[i][witnesses[j]].decision_details;
-        	    }
-        	}
-        	for (j = 0; j < text[i].reading.length; j += 1) {
-        	    if (witnesses.indexOf(text[i].reading[j]) === -1) {
-        		if (text[i].hasOwnProperty(text[i].reading[j])) {
-        		    delete text[i][text[i].reading[j]];
-        		}
-        		text[i].reading[j] = null;
-        	    }
-        	}
-        	CL.remove_null_items(text[i].reading);
+            
+            //now we need to remove all not selected witnesses from the text info for the new reading we are creating
+            //this needs to be done per witness just for safety
+            //TODO: make this more efficient by combining entries as you go?
+            new_readings = []
+            for (j = 0; j < witnesses.length; j += 1) {
+        	new_reading = {'witnesses': [witnesses[j]], 'text': JSON.parse(JSON.stringify(text))};
+        	if (subreading.hasOwnProperty('type')) {
+        	    new_reading.type = subreading.type;
+                }
+                if (subreading.hasOwnProperty('details')) {
+                    new_reading.details = subreading.details;
+                }
+                for (i = 0; i < new_reading.text.length; i += 1) {
+                    if (new_reading.text[i].hasOwnProperty(witnesses[j]) && new_reading.text[i][witnesses[j]].hasOwnProperty('decision_details')) { //all witness selected will have the same subreading by now even if they have been created via different routes because they are showing as subreadings
+                	new_reading.text[i]['interface'] = new_reading.text[i][witnesses[j]].decision_details[0].t;
+                    } else if (new_reading.text[i].hasOwnProperty('t')) {
+                	new_reading.text[i]['interface'] = new_reading.text[i]['t'];
+                    } else {
+                	if (new_reading.text[i].hasOwnProperty([witnesses[j]]) && typeof(new_reading.text[i][witnesses[j]]['interface']) !== 'undefined') { //ALERT: this line used to say witnesses.legnth === 1 need to be sure that  multiple witnesses always have the same value????
+                	    new_reading.text[i]['interface'] = new_reading.text[i][witnesses[j]]['interface'];
+                	} else {
+                	    new_reading.text[i]['interface'] = new_reading.text[i]['interface'];
+                	}    	    
+                    }
+                    //delete decisions if there are any
+                    if (new_reading.text[i].hasOwnProperty(witnesses[j])) {
+                        delete new_reading.text[i][witnesses[j]].decision_class;
+                        delete new_reading.text[i][witnesses[j]].decision_details;
+                    }
+                    for (k = 0; k < new_reading.text[i].reading.length; k += 1) {
+                	if (new_reading.text[i].reading[k] !== witnesses[j]) {
+                	    if (new_reading.text[i].hasOwnProperty(new_reading.text[i].reading[k])) {
+                		delete new_reading.text[i][new_reading.text[i].reading[k]];
+                	    }
+                	    new_reading.text[i].reading[k] = null;
+                	}
+                    }
+                    CL.remove_null_items(new_reading.text[i].reading);
+                }
+                if (parent.hasOwnProperty('combined_gap_before_subreadings') && parent.combined_gap_before_subreadings.indexOf(witnesses[j] !== -1)) {                   
+                    new_reading.text[0].combined_gap_before = [witnesses[j]];
+                    new_reading.text[0].combined_gap_before_details = parent.combined_gap_before_subreadings_details[witnesses[j]];
+                    //now remove the details for this witness from the parent
+                    parent.combined_gap_before_subreadings.splice(parent.combined_gap_before_subreadings.indexOf(witnesses[j]), 1);
+                    delete parent.combined_gap_before_subreadings_details[witnesses[j]];
+                }
+                //repeat for combined gap after - note that there are not details stored for this because they are always available from the reading details of the particulat MS
+                if (parent.hasOwnProperty('combined_gap_after_subreadings') && parent.combined_gap_after_subreadings.indexOf(witnesses[j] !== -1)) {
+                    new_reading.text[text.length-1].combined_gap_after = [witnesses[j]];
+                    //now remove the details for this witness from the parent
+                    parent.combined_gap_after_subreadings.splice(parent.combined_gap_after_subreadings.indexOf(witnesses[j]), 1);
+                }
+        	new_readings.push(new_reading);
             }
-            if (parent.hasOwnProperty('combined_gap_before_subreadings')) {
-        	for (i = 0; i < witnesses.length; i += 1) {
-        	    if (!text[0].hasOwnProperty('combined_gap_before')) {
-        		text[0].combined_gap_before = [];
-        	    }
-        	    if (text[0].combined_gap_before.indexOf(witnesses[i]) === -1) {
-        		text[0].combined_gap_before.push(witnesses[i]);
-        		if (parent.hasOwnProperty('combined_gap_before_subreadings_details') && parent.combined_gap_before_subreadings_details.hasOwnProperty(witnesses[i])) {
-                	    text[0].combined_gap_before_details = parent.combined_gap_before_subreadings_details[witnesses[i]];
-                	    delete parent.combined_gap_before_subreadings_details.hasOwnProperty(witnesses[i]);
-            	    	}
-        	    }
-        	    if (parent.combined_gap_before_subreadings.indexOf(witnesses[i]) !== -1) {
-        		parent.combined_gap_before_subreadings.splice(parent.combined_gap_before_subreadings.indexOf(witnesses[i]), 1);
-        	    }
-        	}
-        	if (parent.combined_gap_before_subreadings.length === 0) {
-        	    delete parent.combined_gap_before_subreadings;
-        	    delete parent.combined_gap_before_subreadings_details;
-        	}
+            //check whether the parent has any empty combined gap infomation which needs removing
+            if (parent.hasOwnProperty('combined_gap_before_subreadings') && parent.combined_gap_before_subreadings.length === 0) {
+    	    	delete parent.combined_gap_before_subreadings;
+    	    	delete parent.combined_gap_before_subreadings_details;
             }
-            if (parent.hasOwnProperty('combined_gap_after_subreadings')) {
-        	for (i = 0; i < witnesses.length; i += 1) {
-        	    if (!text[text.length-1].hasOwnProperty('combined_gap_after')) {
-        		text[text.length-1].combined_gap_after = [];
-        	    }
-        	    if (text[text.length-1].combined_gap_after.indexOf(witnesses[i]) === -1) {
-        		text[text.length-1].combined_gap_after.push(witnesses[i]);
-        	    }
-        	    if (parent.combined_gap_after_subreadings.indexOf(witnesses[i]) !== -1) {
-        		parent.combined_gap_after_subreadings.splice(parent.combined_gap_after_subreadings.indexOf(witnesses[i]), 1);
-        	    }
-        	}
-        	if (parent.combined_gap_after_subreadings.length === 0) {
-        	    delete parent.combined_gap_after_subreadings;
-        	}
+            if (parent.hasOwnProperty('combined_gap_after_subreadings') && parent.combined_gap_after_subreadings.length === 0) {
+    	    	delete parent.combined_gap_after_subreadings;
             }
             //check here to see if parent still needs its combined gap before.
             SV.check_combined_gap_flags(parent);
-            //remove SR_text from parent (if present)
+            //remove witnesses from SR_text in parent (if present)
             if (parent.hasOwnProperty('SR_text')) {
         	for (j = 0; j < witnesses.length; j += 1) {
         	    if (parent.SR_text.hasOwnProperty(witnesses[j])) {
@@ -3949,7 +3958,7 @@ var CL = (function () {
         	    delete parent.SR_text;
         	}
             }
-            //remove standoff_subreadings from parent (if present)
+            //remove witnesses from standoff_subreadings in parent (if present)
             if (parent.hasOwnProperty('standoff_subreadings')) {
         	for (j = 0; j < witnesses.length; j += 1) {
         	    if (parent.standoff_subreadings.indexOf(witnesses[j]) !== -1) {
@@ -3960,15 +3969,11 @@ var CL = (function () {
         	    delete parent.standoff_subreadings;
         	}
             }
-            new_reading = {'witnesses': witnesses, 'text': text};
-            if (subreading.hasOwnProperty('type')) {
-        	new_reading.type = subreading.type;
+
+
+            for (i = 0; i < new_readings.length; i += 1) {
+        	unit.readings.splice(parent_pos + 1, 0, new_readings[i]);
             }
-            if (subreading.hasOwnProperty('details')) {
-        	new_reading.details = subreading.details;
-            }
-            
-            unit.readings.splice(parent_pos + 1, 0, new_reading);
             if (delete_subreading) {        	
         	parent.subreadings[subtype].splice(subreading_pos, 1);      	
             }
@@ -4074,6 +4079,9 @@ var CL = (function () {
         	}
         	if (project.hasOwnProperty('approval_settings')) {
         	    CL._project.approval_settings = project.approval_settings;
+        	}
+        	if (project.hasOwnProperty('exporter_settings')) {
+        	    CL._project.exporter_settings = project.exporter_settings;
         	}
         	CL.set_display_settings(project);
         	CL.set_local_python_functions(project);

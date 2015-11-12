@@ -8,6 +8,8 @@ var CAD = (function () {
             console.log('collation admin');
         },
         
+        exporter_settings: null,
+        
         initialise_admin: function (mode) {
             SPN.show_loading_overlay();
             if (CL._services.local_javascript && CL._services.local_javascript.length > 0) {
@@ -417,11 +419,6 @@ var CAD = (function () {
 	    }
 	    details = {};
 	    details.project = project_id;
-	    if (document.getElementById('get_apparatus_button')) {
-		MAG.EVENT.addEventListener(document.getElementById('get_apparatus_button'), 'click', function () {
-		    window.location = '/apparatus/?project=' + project_id + '&format=negative_plain';
-		});
-	    }
 	    MAG.REST.apply_to_resource('editing_project', project_id, {'success' : function (response) {		
 		if (response.book > 9) {
 		    book = response.book;
@@ -429,6 +426,11 @@ var CAD = (function () {
 		    book = '0' + response.book;
 		}
 		details.book = book;
+		if (response.hasOwnProperty('exporter_settings')) {
+		    CAD.exporter_settings = response.exporter_settings;
+		} else if (CL._services.hasOwnProperty('exporter_settings')) {
+		    CAD.exporter_settings = CL._services.exporter_settings;
+		}
 		MAG.REST.apply_to_resource('work', 'NT_B' + book, {'success' : function (work) {
 		    var chapter, context_summary;
 		    details.verse_total = 0;
@@ -589,6 +591,32 @@ var CAD = (function () {
 	    parent.innerHTML = html.join('');	    
 	},
 	
+	get_apparatus: function (project_id) {
+	    var url, form_data, criteria, format;
+	    SPN.show_loading_overlay();
+	    form_data = MAG.FORMS.serialize_form('apparatus_output_form');
+	    criteria = {'project': project_id, 'status': 'approved', '_sort': [['book_number', 1], ['chapter', 1], ['verse', 1]]};
+	    if (form_data.hasOwnProperty('output_format_select')) {
+		format = form_data.output_format_select;
+	    } else {
+		format = 'xml';
+	    }
+	    MAG.REST.apply_to_list_of_resources('collation', {'criteria': criteria, 'fields': ['context', 'structure'], 'success': function (data) {
+		url = 'http://' + SITE_DOMAIN + '/collation/apparatus';
+		$.fileDownload(url, {httpMethod: "POST", 
+		    data: {
+			settings: JSON.stringify(CAD.exporter_settings),
+			format: format,
+			data: JSON.stringify(data.results)
+		    },
+		    successCallback: function () {
+			SPN.remove_loading_overlay();
+		    }
+		    //can also add a failCallback here if you want
+		});
+	    }});
+	},
+	
 	setup_project_summary_page: function (user, projects, selected) {
 	    var html, i, project_data;
 	    html = [];
@@ -610,6 +638,12 @@ var CAD = (function () {
                 	    }
                 	}
                 	CAD.get_project_summary(selected, 'book');
+                	if (document.getElementById('get_apparatus_button')) {
+                            $('#get_apparatus_button').off('click.download_link');
+                            $('#get_apparatus_button').on('click.download_link', function () {
+                        	CAD.get_apparatus(selected);
+                            });
+                	}
                 	document.getElementById('project_selected').innerHTML = 'for ' + selected;
                 	MAG.REST.apply_to_resource('editing_project', selected, {'fields': ['managing_editor', 'interfaces', 'approval_settings'], 'success': function (selected_project) {
                 	    var revoke;
@@ -644,15 +678,124 @@ var CAD = (function () {
 	},
 	
 	setup_revocation_section: function (project_id) {
+	    var html;
+	    html = ['<p>There are no verses that can be revoked.</p>'];
 	    //find all verses available for revocation (that is all verses which have an approved version but which have not been exported to the version interfaces)
-	    //in an ideal world you would be able to revoke verses that had not yet been started but then reexporting them becomes tricky and not allowing this fixes problem arising from a versionist having something open but not saved when something is revoked
-	    
+	    //in an ideal world you would be able to revoke verses that had not yet been started but then reexporting them becomes tricky and not allowing this fixes problem arising from a versionist having something open but not saved when something is revoked	    
 	    //(version table must also be changed to use single string context but keep book chapter verse just like collation data)
 	    //probably we then need to populate chapter and verse drop downs which are interlinked.
 	    //then we have a revoke verse function which deleted the table from main_app - we run a slight risk that a versionist could be working on that very verse but not have saved anything which we do need to consider
 	    //also there is a possibility that a verisonist has no data for a chapter and therefore has batch created empty records. We should maybe check that records are saved
 	    //when versionists save if no main_apparatus entry is found save should fail but that will annoy them so need some form of fallback - maybe their data structure is saved somewhere else and we can peice them together?
+	    MAG.REST.apply_to_list_of_resources('collation', {'criteria': {'project': project_id, 'status': 'approved'}, 'fields': ['status', 'verse', 'chapter', 'book_number', 'context'], 'success': function (response) {
+		var i, key, sample_lookup;
+		if (response.results.length > 0) {
+		    //sort them into chapters
+		    chaps = {};
+		    //chapter numbers are turned into strings for this section
+		    for (i = 0; i < response.results.length; i += 1) {
+			if (chaps.hasOwnProperty(String(response.results[i].chapter))) {
+			    chaps[String(response.results[i].chapter)].push([response.results[i].context, response.results[i].verse]);
+			} else {
+			    chaps[String(response.results[i].chapter)] = [[response.results[i].context, response.results[i].verse]];
+			}
+		    }
+		    //check that the first example from each chapter has not been submitted to main_apparatus (this is always done by full chapter so this is safe)
+		    sample_lookup = [];
+		    for (key in chaps) {
+			if (chaps.hasOwnProperty(key)) {
+			    sample_lookup.push(chaps[key][0][0]);
+			}
+		    }
+		    MAG.REST.apply_to_list_of_resources('main_apparatus', {'criteria': {'project': project_id, 'context': {'$in': sample_lookup}}, 'fields': ['chapter'], 'success': function (main_app) {
+			for (i = 0; i < main_app.results.length; i += 1) {
+			    if (chaps.hasOwnProperty(String(main_app.results[i].chapter))) {
+				delete chaps[String(main_app.results[i].chapter)];
+			    }
+			}
+			if ($.isEmptyObject(chaps)) {
+			    CAD.display_revoke_approved(html);
+			} else {
+			    html = [];
+			    html.push('<form id="revoke_approved_form">');
+			    html.push('<label for="revoke_approved_chapter_select">Select chapter: </label><select id="revoke_approved_chapter_select" name="revoke_approved_chapter_select">');
+			    html.push('<option value="none">select</option>');
+			    for (key in chaps) {
+				if (chaps.hasOwnProperty(key)) {
+				    html.push('<option value="' + key + '">' + key + '</option>');
+				}
+			    }					
+			    html.push('</select>');
+			    html.push('<label for="revoke_approved_verse_select">Select verse: </label><select id="revoke_approved_verse_select" name="revoke_approved_verse_select">');
+			    html.push('<option value="none">select</option>');
+			    html.push('</select>');
+			    html.push('<input type="hidden" id="revoke_approved_project" name="revoke_approved_project" value="' + project_id + '"/>');
+			    html.push('<input id="revoke_approved_button" type="button" value="Revoke"/>');
+			    html.push('</form>');
+			    CAD.display_revoke_approved(html, chaps);
+			}
+		    }});
+		} else {
+		    CAD.display_revoke_approved(html);
+		}
+	    }});
 	    
+	    //revoking basically then involves deleting the version from collation table with the status approved - will not need any interaction with main_apparatus if we don't allow revoking after submission
+	    
+	},
+	
+	do_revoke_approved: function (criteria) {
+	    var delete_ids, i;
+	    MAG.REST.apply_to_list_of_resources('collation', {'criteria': criteria, 'fields': ['_id'], 'success': function (response) {
+		delete_ids = [];
+		for (i = 0; i < response.results.length; i += 1) {
+		    delete_ids.push(response.results[i]._id);
+		}
+		MAG.REST.delete_resources('collation', delete_ids, {'success': function () {
+		    CAD.check_login_status('project_summary');
+		}});
+	    }});
+	},
+	
+	revoke_approved: function () {
+	    var data, ok, criteria;
+	    data = MAG.FORMS.serialize_form('revoke_approved_form');
+	    if (document.getElementById('revoke_approved_chapter_select').value === 'none') {
+		//do nothing
+	    } else if (document.getElementById('revoke_approved_verse_select').value === 'none') {
+		ok = confirm('You are about to revoke all approved verses in chapter ' + data['revoke_approved_chapter_select'] + ' in this project. Are you sure you want to do this?');
+		criteria = {'status': 'approved', 'project': data['revoke_approved_project'], 'chapter': parseInt(data['revoke_approved_chapter_select'])};
+		if (ok) {
+		    CAD.do_revoke_approved(criteria);
+		}
+	    } else {
+		ok = confirm('You are about to revoke the approved version of ' + data['revoke_approved_chapter_select'] + ':' + data['revoke_approved_verse_select'] + ' in this project. Are you sure you want to do this?');
+		criteria = {'status': 'approved', 'project': data['revoke_approved_project'], 'chapter': parseInt(data['revoke_approved_chapter_select']), 'verse': parseInt(data['revoke_approved_verse_select'])};
+		if (ok) {
+		    CAD.do_revoke_approved(criteria);
+		}
+	    }
+	},
+	
+	display_revoke_approved: function (html, verse_lookup_dict) {
+	    var chap, verses, i;
+	    document.getElementById('revoke_approved_content').innerHTML = html.join('');
+	    if (document.getElementById('revoke_approved_chapter_select')) {
+		$('#revoke_approved_chapter_select').off('change.verseselect');
+		$('#revoke_approved_chapter_select').on('change.verseselect', function () {
+		    chap = document.getElementById('revoke_approved_chapter_select').value;
+		    verses = [];
+		    for (i = 0; i < verse_lookup_dict[chap].length; i += 1) {
+			verses.push(String(verse_lookup_dict[chap][i][1]))
+		    }
+		    MAG.FORMS.populate_select(verses, document.getElementById('revoke_approved_verse_select'));
+		});
+	    }
+	    if (document.getElementById('revoke_approved_button')) {
+		$('#revoke_approved_button').on('click', function () {
+		    CAD.revoke_approved();		    
+		});
+	    }
 	},
 	
 	setup_version_export: function (project_id) {

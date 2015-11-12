@@ -3694,7 +3694,7 @@ var SV = (function () {
               //first run find_subreadings so that the offset subreadings that were made 
               //main readings in prepare are put back as subreadings (if they still match their offset record)
               SV._lose_subreadings();
-              SV._find_subreadings();
+              SV._find_subreadings(); //this looks like the breaking point
               //then if we aren't looking at subreadings hide them again
               if (CL._show_subreadings === false) {
                   SV._lose_subreadings();
@@ -3822,6 +3822,7 @@ var SV = (function () {
 				for (id_key in make_main_ids) { 
 				    make_main_ids_list.push(id_key);
 				}
+				
 				SV.make_main_reading(make_main_ids_list, make_main_ids);
 			    }
 			}

@@ -141,6 +141,7 @@ def apparatus():
     app = StringIO.StringIO(exf.export_data(data, format))
     response.content_type = 'text/plain'
     response.headers['Content-Disposition'] = 'attachment; filename="%s-apparatus.%s"' % (format, file_ext)
+    response.set_cookie('fileDownload', 'true')
     return app
     
     
