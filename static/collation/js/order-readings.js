@@ -141,6 +141,69 @@ var OR = (function () {
             }
         },
         
+        show_approved_version: function (options) {
+            var html, i, highest_unit, header, triangles, row, label, key, overlaps, app_ids, footer_html,
+            num, temp, event_rows, scroll_offset, overlap_options, new_overlap_options, container;
+            if (typeof options === 'undefined') {
+        	options = {};
+            }
+            //make sure we have a container to put things in
+            if (!options.hasOwnProperty('container') || options.container === null) {
+        	container = document.getElementsByTagName('body')[0];
+            } else {
+        	container = options.container;
+            }
+            //sort out options and get layout
+            if (!options.hasOwnProperty('highlighted_wit') && CL._highlighted !== 'none') {
+        	options.highlighted_wit = CL._highlighted;
+            }
+            temp = CL.get_unit_layout(CL._data.apparatus, 1, 'approved', options);
+            header = CL.get_collation_header(CL._data, temp[1], false);
+            html = header[0];
+            highest_unit = header[1];
+            html.push.apply(html, temp[0]);
+            overlap_options = {'column_lengths': temp[1]};
+            if (options.hasOwnProperty('highlighted_wit')) {
+        	overlap_options.highlighted_wit = options.highlighted_wit;
+            }
+            if (options.hasOwnProperty('highlighted_unit')) {
+        	overlap_options.highlighted_unit = options.highlighted_unit;
+            }
+            app_ids = CL.get_ordered_app_lines();
+            for (i = 0; i < app_ids.length; i += 1) {
+        	num = app_ids[i].replace('apparatus', '');
+        	new_overlap_options = SV.calculate_unit_lengths(app_ids[i], overlap_options);
+        	overlaps = CL.get_overlap_layout(CL._data[app_ids[i]], num, 'reorder', header[1], new_overlap_options);
+        	html.push.apply(html, overlaps[0]);
+        	temp[2].push.apply(temp[2], overlaps[1]);
+            }
+            document.getElementById('header').innerHTML = CL.get_header_html('Approved', CL._context);
+            CL._services.show_login_status();
+            document.getElementById('header').className = 'approved_header';
+            container.innerHTML = '<div id="scroller" class="fillPage"><table class="collation_overview">'
+        	+ html.join('') + '</table></div><div id="single_witness_reading"></div>';
+            CL.expandFillPageClients();
+            //sort out footer stuff
+            footer_html = [];
+            footer_html.push('<input id="expand_collapse_button" type="button" value="collapse all" />');
+            footer_html.push('<span id="stage_links"></span>');
+            footer_html.push('<input id="get_apparatus" type="button" value="Get apparatus"/>')
+            document.getElementById('footer').innerHTML = footer_html.join('');
+            $('#get_apparatus').off('click.download_link');
+            $('#get_apparatus').on('click.download_link', function () { 
+        	OR.get_apparatus_for_context();
+            });           
+            CL.add_stage_links();
+            SPN.remove_loading_overlay();
+            CL.add_triangle_functions('table');          
+            CL.make_verse_links();
+            event_rows = temp[2];
+            for (i = 0; i < event_rows.length; i += 1) {
+        	row = document.getElementById(event_rows[i]);
+        	CL._add_hover_events(row);
+            }           
+        },
+        
         uniqueify_ids: function () {
             var id_list, key, i, j, unit, new_id, extra;
             id_list = [];
@@ -149,14 +212,6 @@ var OR = (function () {
         	    for (i = 0; i < CL._data[key].length; i += 1) {
         		//we are assuming units already have unique ids
         		//if we start changing them we need to keep the overlapped_units ids in synch
-//        		extra = 0;
-//        		while (id_list.indexOf(CL._data[key][i]._id) !== -1) {
-//        		    console.log('adding new unit id')      		    
-//        		    CL.add_unit_id(CL._data[key][i], key + extra);
-//        		    console.log(JSON.parse(JSON.stringify(CL._data[key][i])));
-//        		    extra += 1;
-//        		}
-//        		id_list.push(CL._data[key][i]._id);
         		for (j = 0; j < CL._data[key][i].readings.length; j += 1) {
         		    extra = 0;
         		    while (id_list.indexOf(CL._data[key][i].readings[j]._id) !== -1) {     
@@ -181,12 +236,14 @@ var OR = (function () {
         	    CL._show_subreadings = false;
         	    //now do the stuff we need to do
         	    //make sure all ids are unique (we know there is a problem with overlapping a readings for example)
-        	    OR.uniqueify_ids();     	    
+        	    OR.uniqueify_ids();  
         	    OR.order_witnesses_for_output();
+        	    SV._lose_subreadings(); //always lose before finding
+        	    SV._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])});
+        	    OR.get_sigla_suffixes();
                     CL.save_collation('approved', function () {OR.show_approved_version({'container': CL._container});});
-                    //TODO: this does in magpy functions
-                    //CL.export_to_apparatusEditor();
         	} else {
+        	    SV._lose_subreadings(); //always lose before finding
         	    if (CL._show_subreadings === true) {
         		SV._find_subreadings();
         	    } else {
@@ -196,6 +253,7 @@ var OR = (function () {
         	    SPN.remove_loading_overlay(); 
         	}
             } else if (standoff_problems[0]) {
+        	SV._lose_subreadings(); //always lose before finding
         	if (CL._show_subreadings === true) {
         	    SV._find_subreadings();
         	} else {
@@ -204,6 +262,42 @@ var OR = (function () {
         	alert('You cannot move to order readings because ' + standoff_problems[1]);
         	SPN.remove_loading_overlay();
             }          
+        },
+        
+        get_sigla_suffixes: function () {
+            var key, i, j, k, readings_with_suffixes, suffixes, type;
+            for (key in CL._data) {
+                if (CL._data.hasOwnProperty(key)) {
+                    if (key.indexOf('apparatus') != -1) {
+                        for (i = 0; i < CL._data[key].length; i += 1) {
+                            for (j = 0; j < CL._data[key][i].readings.length; j += 1) {
+                        	CL._data[key][i].readings[j].suffixes = OR.do_get_sigla_suffixes(CL._data[key][i].readings[j], key, CL._data[key][i].start, CL._data[key][i].end);
+                        	if (CL._data[key][i].readings[j].hasOwnProperty('subreadings')) {
+                        	    console.log('subreading')
+                        	    for (type in CL._data[key][i].readings[j].subreadings) {
+                        		for (k = 0; k < CL._data[key][i].readings[j].subreadings[type].length; k += 1) {
+                        		    console.log(OR.do_get_sigla_suffixes(CL._data[key][i].readings[j].subreadings[type][k], key, CL._data[key][i].start, CL._data[key][i].end))
+                        		    CL._data[key][i].readings[j].subreadings[type][k].suffixes = OR.do_get_sigla_suffixes(CL._data[key][i].readings[j].subreadings[type][k], key, CL._data[key][i].start, CL._data[key][i].end);
+                        		    console.log(JSON.parse(JSON.stringify( CL._data[key][i].readings[j].subreadings[type][k])))
+                        		}
+                        	    }
+                        	}
+                            }
+                        }
+                    }
+                }
+            }
+            console.log(JSON.parse(JSON.stringify(CL._data)))
+        },
+        
+        do_get_sigla_suffixes: function (data, app, start, end) {
+            var readings_with_suffixes, suffixes, i;
+            readings_with_suffixes = CL.get_reading_witnesses(data, app, start, end, true);
+            suffixes = [];
+            for (i = 0; i < readings_with_suffixes.length; i += 1) {
+        	suffixes.push(readings_with_suffixes[i].replace(data.witnesses[i], ''));
+            }
+            return suffixes;
         },
         
         order_witnesses_for_output: function () {
@@ -957,70 +1051,7 @@ var OR = (function () {
             document.getElementById('scroller').scrollLeft = scroll_offset;
         },
 
-        show_approved_version: function (options) {
-            var html, i, highest_unit, header, triangles, row, label, key, overlaps, app_ids, footer_html,
-            	num, temp, event_rows, scroll_offset, overlap_options, new_overlap_options, container;
-            if (typeof options === 'undefined') {
-        	options = {};
-            }
-            //make sure we have a container to put things in
-            if (options.hasOwnProperty('container')) {                
-                container = options.container;
-            } else {
-                container = document.getElementsByTagName('body')[0];
-            }
-            //sort out options and get layout
-            if (!options.hasOwnProperty('highlighted_wit') && CL._highlighted !== 'none') {
-        	options.highlighted_wit = CL._highlighted;
-            }
-            temp = CL.get_unit_layout(CL._data.apparatus, 1, 'approved', options);
-            header = CL.get_collation_header(CL._data, temp[1], false);
-            html = header[0];
-            highest_unit = header[1];
-            html.push.apply(html, temp[0]);
-            overlap_options = {'column_lengths': temp[1]};
-            if (options.hasOwnProperty('highlighted_wit')) {
-        	overlap_options.highlighted_wit = options.highlighted_wit;
-            }
-            if (options.hasOwnProperty('highlighted_unit')) {
-        	overlap_options.highlighted_unit = options.highlighted_unit;
-            }
-            app_ids = CL.get_ordered_app_lines();
-            for (i = 0; i < app_ids.length; i += 1) {
-        	num = app_ids[i].replace('apparatus', '');
-        	new_overlap_options = SV.calculate_unit_lengths(app_ids[i], overlap_options);
-                overlaps = CL.get_overlap_layout(CL._data[app_ids[i]], num, 'reorder', header[1], new_overlap_options);
-                html.push.apply(html, overlaps[0]);
-                temp[2].push.apply(temp[2], overlaps[1]);
-            }
-            
-            
-            document.getElementById('header').innerHTML = CL.get_header_html('Approved', CL._context);
-            CL._services.show_login_status();
-            document.getElementById('header').className = 'approved_header';
-            container.innerHTML = '<div id="scroller" class="fillPage"><table class="collation_overview">'
-                + html.join('') + '</table></div><div id="single_witness_reading"></div>';
-            CL.expandFillPageClients();
-            //sort out footer stuff
-            footer_html = [];
-            footer_html.push('<input id="expand_collapse_button" type="button" value="collapse all" />');
-            footer_html.push('<span id="stage_links"></span>');
-            footer_html.push('<input id="get_apparatus" type="button" value="Get apparatus"/>')
-            document.getElementById('footer').innerHTML = footer_html.join('');
-            $('#get_apparatus').off('click.download_link');
-            $('#get_apparatus').on('click.download_link', function () { 
-        	OR.get_apparatus_for_context();
-            });           
-            CL.add_stage_links();
-            SPN.remove_loading_overlay();
-            CL.add_triangle_functions('table');          
-	    CL.make_verse_links();
-            event_rows = temp[2];
-            for (i = 0; i < event_rows.length; i += 1) {
-                row = document.getElementById(event_rows[i]);
-                CL._add_hover_events(row);
-            }           
-        },
+
         
         get_apparatus_for_context: function () {
             var url;

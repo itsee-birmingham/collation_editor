@@ -187,8 +187,8 @@ var RG = (function () {
                 			} else {
                 			    id_dict[data[i].text[j][witness].decision_details[l]._id] = {
                 				    'scope': data[i].text[j][witness].decision_details[l].scope, 
-                				    't':data[i].text[j][witness].decision_details[l].t, 
-                				    'n':data[i].text[j][witness].decision_details[l].n, 
+                				    't':data[i].text[j][witness].decision_details[l].t.replace('<', '&lt;').replace('>', '&gt;'), 
+                				    'n':data[i].text[j][witness].decision_details[l].n.replace('<', '&lt;').replace('>', '&gt;'), 
                 				    'witnesses': [witness]};
                 			}
                 		    }
@@ -223,7 +223,7 @@ var RG = (function () {
                 			rule_cells.push('<div class="spanlike">');
                 		    }
                 		    rule_cells.push(id_dict[key].t.replace(/_/g, '&#803;'));
-                		    rule_cells.push(' &gt; ')
+                		    rule_cells.push(' &#9654; ')
                 		    rule_cells.push(id_dict[key].n.replace(/_/g, '&#803;'));
                 		    if (id_dict[key].witnesses.indexOf(hand) !== -1) {
                 			rule_cells.push('</div>');
@@ -451,30 +451,35 @@ var RG = (function () {
             SPN.remove_loading_overlay();
             CL.add_stage_links();
             $('#go_to_sv_button').on('click',
-                    function (event) {
-        		var extra_results;
-        		SPN.show_loading_overlay();
-        		//TODO: add in a check of all data? we did have problems with David's but seems to have been specific to that 
-        		if (SV.are_all_units_complete()) {
-        		    extra_results = CL.apply_pre_stage_checks('set_variants');
-        		    if (extra_results[0] === true) {
-        			RG.remove_unrequired_data() //remove the key-value pairs we don't need anymore
-        			CL._data.marked_readings = {}; //added for SV
-        			CL.add_unit_and_reading_ids(); //added for SV
-        			SV.show_set_variants({'container': container});
-        			document.getElementById('scroller').scrollLeft = 0;
-        			document.getElementById('scroller').scrollTop = 0;
-        		    } else {
-        			if (CL._show_subreadings === true) {
-        			    SV._find_subreadings()
-        			}
-        			alert(extra_results[1]);
-        			SPN.remove_loading_overlay();
-        		    }
-        		} else {
-        		    alert('You cannot move to set variants because one of the units does not have all of its required witnesses');
-        	            SPN.remove_loading_overlay();
-        		}
+        	    function (event) {
+                	var extra_results;
+                	SPN.show_loading_overlay();
+                	//check that there are no rules in stacks waiting to be added/deleted/have exceptions made etc. 
+                	if (RG.all_rule_stacks_empty()) {
+                	    if (SV.are_all_units_complete()) { //check nothing is lost and we have a full complement of witnesses for each unit
+                		extra_results = CL.apply_pre_stage_checks('set_variants');
+                		if (extra_results[0] === true) {
+                		    RG.remove_unrequired_data() //remove the key-value pairs we don't need anymore
+                		    CL._data.marked_readings = {}; //added for SV
+                		    CL.add_unit_and_reading_ids(); //added for SV
+                		    SV.show_set_variants({'container': container});
+                		    document.getElementById('scroller').scrollLeft = 0;
+                		    document.getElementById('scroller').scrollTop = 0;
+                		} else {
+                		    if (CL._show_subreadings === true) {
+                			SV._find_subreadings()
+                		    }
+                		    alert(extra_results[1]);
+                		    SPN.remove_loading_overlay();
+                		}
+                	    } else {
+                		alert('You cannot move to set variants because one of the units does not have all of its required witnesses');
+                		SPN.remove_loading_overlay();
+                	    }
+                	} else {
+                	    alert('You must recollate before moving to set variants because there are rule changes that have not yet been applied.');
+                	    SPN.remove_loading_overlay();
+                	}
                     });
             $('#settings_button').on('click',
                     function (event) {CL.show_settings(); });
@@ -518,6 +523,13 @@ var RG = (function () {
                     }
                 }
             }
+        },
+        
+        all_rule_stacks_empty: function () {
+            if (RG._rules.length > 0 || RG._for_deletion.length > 0 || RG._for_global_exceptions.length > 0) {
+        	return false;
+            } 
+            return true;
         },
         
         remove_unrequired_data: function () {
@@ -601,7 +613,9 @@ var RG = (function () {
                     RG._rule_words_summary[witnesses[i]].index = [CL.get_word_index_for_witness(unit, reading, word, witnesses[i])];
                 }
             }
-            
+            //now sort text out so that anything we turned to &lt; or &gt; get stored as < and >
+            original_text = original_text.replace('&lt;', '<').replace('&gt;', '>');
+            normalised_text = normalised_text.replace('&lt;', '<').replace('&gt;', '>');
             //now make the rules
             if (data.scope === 'always' || data.scope === 'verse') {
                 rule = {'_model' : 'decision', 'type' : 'regularisation', 'scope' : data.scope,  'class' : data['class'] || 'none', 'active' : true, 't' : original_text, 'n' : normalised_text};
@@ -670,7 +684,7 @@ var RG = (function () {
                 	context.witness = witness;
                         context.word = CL.get_word_index_for_witness(unit, reading, word, witness);
                         rule.context = context;
-                        rule.t = CL.get_word_token_for_witness(unit, reading, word);
+                        rule.t = CL.get_word_token_for_witness(unit, reading, word).replace('&lt;', '<').replace('&gt;', '>');
                     }
                     rules.push(rule);
                 }
@@ -678,7 +692,6 @@ var RG = (function () {
             }
         },       
 
-        //TODO: need to add validation to the form
         redips_init_regularise: function (id) {
             var rd, data, clone, original_form, normalised_form, normalised_text,
                 reg_menu, scope, clas, comments, witnesses, context, unit_data,
@@ -704,7 +717,7 @@ var RG = (function () {
                 	    return;
                 	} else {
                 	    //you are asking to regularise a single token to a single token that is allowed and we will continue
-                	    rd.td.target.innerHTML = '<div>' + normalised_text + '</div>';
+                	    rd.td.target.innerHTML = '<div>' + normalised_text.replace('<', '&lt;').replace('>', '&gt;') + '</div>';
                 	}
                     } else {
                         //you are trying to normalise to an empty string so stop it!
@@ -753,16 +766,19 @@ var RG = (function () {
                         $(original.parentNode).addClass('mark');
                         //add witnesses to normalised form in data structure
                         new_unit_data = rd.td.target.firstChild.id;
-                        new_unit = parseInt(new_unit_data.substring(0, new_unit_data.indexOf('_r')).replace('variant_unit_', ''), 10);
-                        new_reading = parseInt(new_unit_data.substring(new_unit_data.indexOf('_r') + 2, new_unit_data.indexOf('_w')), 10);
-                        //TODO: check this isn't causing problems by not eliminating suffixes.
-                        new_witnesses = CL.get_reading_witnesses(CL._data.apparatus[unit].readings[reading]);
-                        if (CL._project.hasOwnProperty('_id')) {
-                            for (i = 0; i < new_witnesses.length; i += 1) {
-                                suffix = RG.get_suffix(data['class']);
-                                CL._data.apparatus[new_unit].readings[new_reading].witnesses.push(new_witnesses[i] + suffix);
+                        if (new_unit_data !== '') { //only try this if it is not a user added reading
+                            new_unit = parseInt(new_unit_data.substring(0, new_unit_data.indexOf('_r')).replace('variant_unit_', ''), 10);
+                            new_reading = parseInt(new_unit_data.substring(new_unit_data.indexOf('_r') + 2, new_unit_data.indexOf('_w')), 10);
+                            //TODO: check this isn't causing problems by not eliminating suffixes.
+                            new_witnesses = CL.get_reading_witnesses(CL._data.apparatus[unit].readings[reading]);
+                            if (CL._project.hasOwnProperty('_id')) {
+                                for (i = 0; i < new_witnesses.length; i += 1) {
+                                    suffix = RG.get_suffix(data['class']);
+                                    CL._data.apparatus[new_unit].readings[new_reading].witnesses.push(new_witnesses[i] + suffix);
+                                }
                             }
                         }
+                        
                 };
                 $.get('http://' + SITE_DOMAIN + '/collation/htmlfragments/rule_menu.html', function (html) {
                     reg_menu = document.createElement('div');

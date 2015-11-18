@@ -595,7 +595,7 @@ var CAD = (function () {
 	    var url, form_data, criteria, format;
 	    SPN.show_loading_overlay();
 	    form_data = MAG.FORMS.serialize_form('apparatus_output_form');
-	    criteria = {'project': project_id, 'status': 'approved', '_sort': [['book_number', 1], ['chapter', 1], ['verse', 1]]};
+	    criteria = {'project': project_id, 'status': 'approved', 'chapter': 7, '_sort': [['book_number', 1], ['chapter', 1], ['verse', 1]]};
 	    if (form_data.hasOwnProperty('output_format_select')) {
 		format = form_data.output_format_select;
 	    } else {

@@ -70,7 +70,8 @@ var LOCAL = (function () {
         		}
         	    }
         	}
-            }            
+            }  
+            SV._lose_subreadings();
             if (CL._show_subreadings === true) {
         	SV._find_subreadings();
             } else {

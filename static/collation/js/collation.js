@@ -480,7 +480,7 @@ var CL = (function () {
 			} else if (format === 'version'){
 			    unit_data = VER.get_unit_data(unit.readings, id_string, format, unit.start, unit.end, unit_data_options);
 			} else {
-			    unit_data = CL.get_unit_data(unit.readings, id_string, format, unit.start, unit.end, unit_data_options);
+			    unit_data = OR.get_unit_data(unit.readings, id_string, format, unit.start, unit.end, unit_data_options);
 			}
 			rows.push(unit_data[0].join(''));
 			row_list.push.apply(row_list, unit_data[1]);
@@ -3001,8 +3001,6 @@ var CL = (function () {
 	    } else {
 		coll_id = id;
 	    }
-
-
 	    CL._services.load_saved_collation(coll_id, function(collation) {
 		if (collation) {
 		    CL._context = collation.context;
@@ -3029,6 +3027,8 @@ var CL = (function () {
 			SV._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])});
 			OR.show_reorder_readings({'container': CL._container});
 		    } else if (collation.status === 'approved') {
+			SV._lose_subreadings();
+			SV._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])});
 			OR.show_approved_version({'container': CL._container});
 		    }
 		} else {
@@ -3687,7 +3687,7 @@ var CL = (function () {
 	},
 	
 	make_standoff_reading: function (type, reading_details, parent_id) {
-	    var apparatus, unit, reading, parent, key, i, id, new_reading;
+	    var apparatus, unit, reading, parent, key, i, j, ids, new_reading;
 	    apparatus = reading_details.app_id;
             unit = CL.find_unit_by_id(apparatus, reading_details.unit_id);
             reading = CL.find_reading_by_id(unit, reading_details.reading_id);
@@ -3698,11 +3698,14 @@ var CL = (function () {
         	for (key in reading.subreadings) {
         	    if (reading.subreadings.hasOwnProperty(key)) {
         		for (i = reading.subreadings[key].length-1; i >= 0; i -= 1) {
-        		    id = CL.make_main_reading(unit, reading, key, i);
-        		    new_reading = CL.find_reading_by_id(unit, id);
-        		    CL.do_make_standoff_reading(type, apparatus, unit, new_reading, parent);
+        		    console.log(i)
+        		    ids = CL.make_main_reading(unit, reading, key, i);
+        		    for (j = 0; j < ids.length; j += 1) {
+        			new_reading = CL.find_reading_by_id(unit, ids[j]);
+            		    	CL.do_make_standoff_reading(type, apparatus, unit, new_reading, parent);    	
+        		    } 
         		    SV._lose_subreadings();
-        	            SV._find_subreadings({'unit_id': unit._id});
+        		    SV._find_subreadings({'unit_id': unit._id});
         		}
         	    }
         	}
@@ -3850,7 +3853,7 @@ var CL = (function () {
         make_main_reading: function (unit, parent, subtype, subreading_pos, options) {
             var unit_number, parent_reading, parent_pos, app_id, subreading, text, witnesses,
         	i, j, k, interface_word_list, key, new_reading, parent_id, delete_subreading,
-        	new_readings;
+        	new_readings, ids;
             if (typeof options === 'undefined') {
         	options = {};
             }
@@ -3935,6 +3938,14 @@ var CL = (function () {
                     //now remove the details for this witness from the parent
                     parent.combined_gap_after_subreadings.splice(parent.combined_gap_after_subreadings.indexOf(witnesses[j]), 1);
                 }
+                //remove witnesses from SR_text in parent (if present)
+                if (parent.hasOwnProperty('SR_text') && parent.SR_text.hasOwnProperty(witnesses[j])) {                   
+                    delete parent.SR_text[witnesses[j]];
+                }
+                //remove witnesses from standoff_subreadings in parent (if present)
+                if (parent.hasOwnProperty('standoff_subreadings') && parent.standoff_subreadings.indexOf(witnesses[j]) !== -1) {
+                    parent.standoff_subreadings.splice(parent.standoff_subreadings.indexOf(witnesses[j]), 1);
+                }
         	new_readings.push(new_reading);
             }
             //check whether the parent has any empty combined gap infomation which needs removing
@@ -3945,39 +3956,23 @@ var CL = (function () {
             if (parent.hasOwnProperty('combined_gap_after_subreadings') && parent.combined_gap_after_subreadings.length === 0) {
     	    	delete parent.combined_gap_after_subreadings;
             }
+            if (parent.hasOwnProperty('SR_text') && $.isEmptyObject(parent.SR_text)) {
+        	delete parent.SR_text;
+            }
+            if (parent.hasOwnProperty('standoff_subreadings') && parent.standoff_subreadings.length === 0) {
+        	delete parent.standoff_subreadings;
+            }
             //check here to see if parent still needs its combined gap before.
             SV.check_combined_gap_flags(parent);
-            //remove witnesses from SR_text in parent (if present)
-            if (parent.hasOwnProperty('SR_text')) {
-        	for (j = 0; j < witnesses.length; j += 1) {
-        	    if (parent.SR_text.hasOwnProperty(witnesses[j])) {
-        		delete parent.SR_text[witnesses[j]];
-        	    }
-        	}
-        	if ($.isEmptyObject(parent.SR_text)) {
-        	    delete parent.SR_text;
-        	}
-            }
-            //remove witnesses from standoff_subreadings in parent (if present)
-            if (parent.hasOwnProperty('standoff_subreadings')) {
-        	for (j = 0; j < witnesses.length; j += 1) {
-        	    if (parent.standoff_subreadings.indexOf(witnesses[j]) !== -1) {
-        		parent.standoff_subreadings.splice(parent.standoff_subreadings.indexOf(witnesses[j]), 1);
-        	    }
-        	}
-        	if (parent.standoff_subreadings.length === 0) {
-        	    delete parent.standoff_subreadings;
-        	}
-            }
-
-
+            ids = [];
             for (i = 0; i < new_readings.length; i += 1) {
         	unit.readings.splice(parent_pos + 1, 0, new_readings[i]);
+        	ids.push(CL.add_reading_id(unit.readings[parent_pos + 1], unit.start, unit.end));
             }
             if (delete_subreading) {        	
         	parent.subreadings[subtype].splice(subreading_pos, 1);      	
             }
-            parent_id = CL.add_reading_id(unit.readings[parent_pos + 1], unit.start, unit.end);            
+                        
             if (parent.subreadings[subtype].length === 0) {
         	delete parent.subreadings[subtype];
             }
@@ -4008,7 +4003,7 @@ var CL = (function () {
         	    }
                 }
             }   
-            return parent_id;
+            return ids;
         },
         
         get_ordered_app_lines: function () {

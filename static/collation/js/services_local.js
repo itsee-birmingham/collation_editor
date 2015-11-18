@@ -437,16 +437,21 @@ var local_services = {
 	    local_services._get_resource('textrepo/json/' + witness_list[i] + '/' + verse + '.json', function (json, status) {
 		if (status === 200) {
 		    var j = JSON.parse(json);
-		    var doc_wit = {
-			    _id : witness_list[i] + '_' + verse,
-			    context : verse,
-			    tei : '',
-			    siglum : j.siglum,
-			    transcription_id : j.transcription_id,
-			    transcription_siglum : j.transcription_siglum,
-			    witnesses : j.witnesses
+		    if (!$.isArray(j)) {
+			j = [j];
 		    }
-		    results.push(doc_wit);
+		    for (var k = 0; k < j.length; k += 1) {
+			var doc_wit = {
+				_id : witness_list[i] + '_' + verse,
+				context : verse,
+				tei : '',
+				siglum : j[k].siglum,
+				transcription_id : j[k].transcription_id,
+				transcription_siglum : j[k].transcription_siglum,
+				witnesses : j[k].witnesses
+			}
+			results.push(doc_wit);
+		    } 
 		}
 		local_services._load_witnesses(verse, witness_list, finished_callback, results, ++i);
 	    });
