@@ -67,6 +67,7 @@ var RG = (function () {
         	    collation_data.push.apply(collation_data, verse_data);
         	    RG.calculate_lac_wits(collation_data, function(lac_witness_list) {
         		CL._services.get_siglum_map(lac_witness_list, function(lac_witnesses) {
+        		    
         		    CL._collate_data = {'data':collation_data, 'lac_witnesses': lac_witnesses};
         		    if (typeof callback !== 'undefined') {
         			callback();
@@ -187,8 +188,8 @@ var RG = (function () {
                 			} else {
                 			    id_dict[data[i].text[j][witness].decision_details[l]._id] = {
                 				    'scope': data[i].text[j][witness].decision_details[l].scope, 
-                				    't':data[i].text[j][witness].decision_details[l].t.replace('<', '&lt;').replace('>', '&gt;'), 
-                				    'n':data[i].text[j][witness].decision_details[l].n.replace('<', '&lt;').replace('>', '&gt;'), 
+                				    't':data[i].text[j][witness].decision_details[l].t.replace(/</g, '&lt;').replace(/>/g, '&gt;'), 
+                				    'n':data[i].text[j][witness].decision_details[l].n.replace(/</g, '&lt;').replace(/>/g, '&gt;'), 
                 				    'witnesses': [witness]};
                 			}
                 		    }
@@ -404,7 +405,7 @@ var RG = (function () {
         show_verse_collation: function (data, context, container, options) {
             var html, i, last_row, tr, temp, event_rows, row, triangles, bk, ch, v, nextCh, nextV, prevCh, prevV,
                 header, unit_events, key, global_exceptions_html;
-            console.log(data);
+            console.log(JSON.parse(JSON.stringify(data)));
             
             if (typeof options === 'undefined') {
         	options = {};
@@ -467,7 +468,7 @@ var RG = (function () {
                 		    document.getElementById('scroller').scrollTop = 0;
                 		} else {
                 		    if (CL._show_subreadings === true) {
-                			SV._find_subreadings()
+                			SR._find_subreadings()
                 		    }
                 		    alert(extra_results[1]);
                 		    SPN.remove_loading_overlay();
@@ -614,11 +615,12 @@ var RG = (function () {
                 }
             }
             //now sort text out so that anything we turned to &lt; or &gt; get stored as < and >
-            original_text = original_text.replace('&lt;', '<').replace('&gt;', '>');
-            normalised_text = normalised_text.replace('&lt;', '<').replace('&gt;', '>');
+            //TODO: I'm not sure we even use original_text anymore - check and streamline? 
+            original_text = original_text
+            normalised_text = normalised_text.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
             //now make the rules
             if (data.scope === 'always' || data.scope === 'verse') {
-                rule = {'_model' : 'decision', 'type' : 'regularisation', 'scope' : data.scope,  'class' : data['class'] || 'none', 'active' : true, 't' : original_text, 'n' : normalised_text};
+                rule = {'_model' : 'decision', 'type' : 'regularisation', 'scope' : data.scope,  'class' : data['class'] || 'none', 'active' : true, 't' : CL.get_word_token_for_witness(unit, reading, word).replace(/&lt;/g, '<').replace(/&gt;/g, '>'), 'n' : normalised_text};
                 if (data.hasOwnProperty('comments')) {
                     rule.comments = data.comments;
                 }
@@ -639,6 +641,7 @@ var RG = (function () {
                 } else {
                     rule.user = user._id;
                 }
+                console.log(rule)
                 return [rule];
             }
             if (data.scope === 'manuscript' || data.scope === 'once') {
@@ -677,15 +680,17 @@ var RG = (function () {
                     }
                     if (data.scope === 'manuscript') {
                         rule.context = {'witness' : witness};
-                        rule.t = original_text;
+                        //rule.t = original_text;
+                        rule.t = CL.get_word_token_for_witness(unit, reading, word).replace(/&lt;/g, '<').replace(/&gt;/g, '>');
                     } else if (data.scope === 'once') {
                 	context = {};
                 	context.unit = CL._context;
                 	context.witness = witness;
                         context.word = CL.get_word_index_for_witness(unit, reading, word, witness);
                         rule.context = context;
-                        rule.t = CL.get_word_token_for_witness(unit, reading, word).replace('&lt;', '<').replace('&gt;', '>');
+                        rule.t = CL.get_word_token_for_witness(unit, reading, word).replace(/&lt;/g, '<').replace(/&gt;/g, '>');
                     }
+                    console.log(rule)
                     rules.push(rule);
                 }
                 return rules;
@@ -717,7 +722,7 @@ var RG = (function () {
                 	    return;
                 	} else {
                 	    //you are asking to regularise a single token to a single token that is allowed and we will continue
-                	    rd.td.target.innerHTML = '<div>' + normalised_text.replace('<', '&lt;').replace('>', '&gt;') + '</div>';
+                	    rd.td.target.innerHTML = '<div>' + normalised_text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
                 	}
                     } else {
                         //you are trying to normalise to an empty string so stop it!
@@ -740,7 +745,7 @@ var RG = (function () {
                 reading = parseInt(unit_data.substring(unit_data.indexOf('_r') + 2, unit_data.indexOf('_w')), 10);
                 word = parseInt(unit_data.substring(unit_data.indexOf('_w') + 2), 10);
                 witnesses = CL._data.apparatus[unit].readings[reading].witnesses;
-                original_text = CL._data.apparatus[unit].readings[reading].text[word].rule_string; 
+                original_text = CL._data.apparatus[unit].readings[reading].text[word]; 
                 original_display_text = CL._data.apparatus[unit].readings[reading].text[word]['interface']; 
                 if (document.getElementById('reg_form') !== null) {
                     document.getElementsByTagName('body')[0].removeChild(document.getElementById('reg_form'));
@@ -786,7 +791,7 @@ var RG = (function () {
                     reg_menu.setAttribute('class', 'reg_form');
                     reg_menu.innerHTML = U.TEMPLATE.substitute(html, {'unit_data' : unit_data,
                         'original_text' : original_display_text.replace(/_/g, '&#803;'),
-                        'normalised_text' : normalised_text.replace(/_/g, '&#803;')});
+                        'normalised_text' : normalised_text.replace(/_/g, '&#803;').replace(/</g, '&lt;').replace(/>/g, '&gt;')});
                     document.getElementsByTagName('body')[0].appendChild(reg_menu);
                     reg_rules = CL._get_rule_classes('create_in_RG', true, 'value', ['identifier', 'name', 'RG_default']);
                     new_reg_rules = [];

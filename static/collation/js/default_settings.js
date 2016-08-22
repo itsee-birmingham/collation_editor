@@ -69,6 +69,9 @@ var DEF = (function () {
                 }
             ] 
         },
+        overlapped_options: {
+        	
+        }
         
     }        
 }());

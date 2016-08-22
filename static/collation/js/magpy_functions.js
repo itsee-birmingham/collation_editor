@@ -56,7 +56,7 @@ var LOCAL = (function () {
         
         are_no_FML_regularisations: function () {
             var key, i, j, return_value;
-            SV._find_subreadings();
+            SR._find_subreadings();
             return_value = true;
             for (key in CL._data) {
         	if (CL._data.hasOwnProperty(key) && key.indexOf('apparatus') != -1) {
@@ -71,13 +71,33 @@ var LOCAL = (function () {
         	    }
         	}
             }  
-            SV._lose_subreadings();
+            SR._lose_subreadings();
             if (CL._show_subreadings === true) {
-        	SV._find_subreadings();
+        	SR._find_subreadings();
             } else {
-        	SV._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])});
+        	SR._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])});
             }
             return return_value;
+        },
+        
+        are_no_disallowed_overlaps: function () {
+            var key, main_apparatus_data, unit, i;
+            main_apparatus_data = [];
+            for (i = 0; i < CL._data.apparatus.length; i += 1) {
+        	unit = CL._data.apparatus[i];
+        	main_apparatus_data.push(unit.start + '-' + unit.end);
+            }
+            for (key in CL._data) {
+        	if (key.indexOf('apparatus') !== -1 && key !== 'apparatus') {
+        	    for (i = 0; i < CL._data[key].length; i += 1) {
+        		unit = CL._data[key][i];
+        		if (main_apparatus_data.indexOf(unit.start + '-' + unit.end) !== -1) {
+        		    return false;
+        		}
+        	    }
+        	}
+            }
+            return true;
         },
 
 	get_context_from_input_form: function () {

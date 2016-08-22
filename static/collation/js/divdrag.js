@@ -89,7 +89,7 @@ var DND = (function () {
         },
         
         OnMouseMove: function (e) {
-        	var newleft, newright;
+        	var newleft, newright, newtop, newbase;
             if (e === null) {
                 e = window.event;
             }
@@ -102,7 +102,11 @@ var DND = (function () {
             	}
             }
             if (DND._vertical === true) {
-            	DND._dragElement.style.top = (DND._offsetY + e.clientY - DND._startY) + 'px';
+            	newtop = DND._offsetY + e.clientY - DND._startY;
+            	newbase = newtop + DND._dragElement.offsetHeight;
+            	if (newtop > 0 && newbase < window.innerHeight) {
+            		DND._dragElement.style.top = (DND._offsetY + e.clientY - DND._startY) + 'px';
+            	}
             }
         },
         

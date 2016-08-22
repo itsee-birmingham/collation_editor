@@ -90,7 +90,6 @@ class PreProcessor(Regulariser):
     
     
     def regularise(self, decisions, witnesses, verse, settings, collation_settings, project, accept):
-        print(verse)
         """Regularise the witness."""
         print('There are %s decisions' % len(decisions))
         for witness in witnesses['collatable']:
@@ -108,6 +107,9 @@ class PreProcessor(Regulariser):
                         except:
                             token['decision_details'] = details
         return self.get_collation(witnesses, verse, decisions, settings, collation_settings, project, accept)
+    
+    
+    
 
     def get_collation(self, witnesses, verse, decisions, settings, collation_settings, project, accept):
         """
@@ -135,6 +137,7 @@ class PreProcessor(Regulariser):
                     if len(witness['tokens']) > 0 and 'gap_after' in witness['tokens'][-1].keys():
                         algorithm = 'dekker'
                         break
+            print('preprocessing complete')
             collatex_response = self.do_collate(witness_list, accept, algorithm, tokenComparator,
                                                 collation_settings['host'])
             # Start with raw XML types
@@ -151,7 +154,6 @@ class PreProcessor(Regulariser):
                 self.finish()
                 return
     
-            # Now we deal with longest common subsequence
             try:
                 alignment_table = json.loads(collatex_response)
             except ValueError:
@@ -159,7 +161,7 @@ class PreProcessor(Regulariser):
 
             #get overtext details
             overtext_details = self.get_overtext(verse)
-
+            print('collation done')
             return self.do_post_processing(alignment_table, decisions, overtext_details[0], overtext_details[1], witnesses['om'], witnesses['lac'], witnesses['hand_id_map'], settings)
            
     def do_post_processing(self, alignment_table, decisions, overtext_name, overtext, om_readings, lac_readings, hand_id_map, settings):

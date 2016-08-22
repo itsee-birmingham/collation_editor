@@ -28,16 +28,27 @@ var magpy_services = {
 	witness_sort : function (witnesses) {
 	    return witnesses.sort(LOCAL.compare_witness_types);
 	},
-	pre_stage_checks: {"order_readings": [{
-	        "function": "LOCAL.are_no_duplicate_statuses",
-	        "pass_condition": true,
-	        "fail_message": "You cannot move to order readings while there are duplicate overlapped readings"
-	    },
-	    {
-	        "function": "LOCAL.check_om_overlap_problems",
-	        "pass_condition": false,
-	        "fail_message": "You cannot move to order readings because there is a overlapped reading with the status 'overlapped' that has text in the overlapped unit"
-	    }]},
+	pre_stage_checks: {
+	    "order_readings": [
+        	{
+        	   "function": "LOCAL.are_no_duplicate_statuses",
+        	   "pass_condition": true,
+        	   "fail_message": "You cannot move to order readings while there are duplicate overlapped readings"
+        	},
+        	{
+        	   "function": "LOCAL.check_om_overlap_problems",
+        	   "pass_condition": false,
+        	   "fail_message": "You cannot move to order readings because there is a overlapped reading with the status 'overlapped' that has text in the overlapped unit"
+        	},
+	    ],
+	    "approve": [
+	        {
+	            "function": "LOCAL.are_no_disallowed_overlaps",
+	            "pass_condition": true,
+	            "fail_message": "You cannot approve this verse because it has an overlapped reading which is identical in word range to a main apparatus unit."
+	        }
+	    ]
+	},
 	overlapped_options : [{
 	    "id": "show_as_overlapped", 
 	    "label": "Show as overlapped",  
@@ -128,7 +139,8 @@ var magpy_services = {
                 }
             ]
         },
-        rule_conditions : { 
+    
+    rule_conditions : { 
         "python_file": "collation.greek_implementations",
         "class_name": "RuleConditions",
         "configs" : [
@@ -277,55 +289,63 @@ var magpy_services = {
 	    }
 	},
 	
-	get_editing_projects : function (criteria, success_callback) {
-	    MAG.REST.apply_to_list_of_resources('editing_project', {'criteria': criteria, 'success': function (response) {
-		success_callback(response.results);
-	    }});
+	get_editing_projects: function (criteria, success_callback) {
+		MAG.REST.apply_to_list_of_resources('editing_project', {'criteria': criteria, 'success': function (response) {
+			success_callback(response.results);
+		}});
 	},
 	
-	get_adjoining_verse : function (verse, is_previous, result_callback) {
-	    var context, bk, ch, v, nextCh, nextV;
-	    context = verse
-	    bk = context.substring(1, 3);
-	    ch = parseInt(context.substring(4, context.indexOf('V')), 10);
-	    v = parseInt(context.substring(context.indexOf('V') + 1), 10);
-	    nextCh = ch;
-	    nextV = v;
-	    MAG.REST.apply_to_resource('work', 'NT_B' + bk, {'success': function (response) {
-
-		if (is_previous) {
-		    if (v === 1 && ch !== 1) {
-			nextCh = ch - 1;
-			nextV = response.verses_per_chapter[nextCh];
-		    } else if (v > 1) {
-			nextV = v - 1;
-		    }
-		} else {
-		    if (v + 1 <= response.verses_per_chapter[ch]) {
-			nextCh = ch;
-			nextV = v + 1;
-		    } else if (ch !== response.chapters) {
-			nextCh = ch + 1;
-			nextV = 1;
-		    }
-		}
-
-		if (nextCh !== ch || nextV !== v) {
-		    return result_callback('B' + bk + 'K' + nextCh + 'V' + nextV);
-		}
-
-		return result_callback(null);
-
-	    }});
+	get_adjoining_verse: function (verse, is_previous, result_callback) {
+		var context, bk, ch, v, nextCh, nextV;
+		context = verse
+		bk = context.substring(1, 3);
+		ch = parseInt(context.substring(4, context.indexOf('V')), 10);
+		v = parseInt(context.substring(context.indexOf('V') + 1), 10);
+		nextCh = ch;
+		nextV = v;
+		MAG.REST.apply_to_resource('work', 'NT_B' + bk, {'success': function (response) {
+			if (is_previous) {
+				if (v === 0 && ch === 99) {
+					nextCh = response.chapters;
+					nextV = response.verses_per_chapter[response.chapters];
+				} else  if (v === 1 && ch !== 0) {
+					nextCh = ch - 1;
+					if (nextCh === 0) {
+						nextV = 0;
+					} else {
+						nextV = response.verses_per_chapter[nextCh];
+					}
+				} else if (v > 1) {
+					nextV = v - 1;
+				}
+			} else {
+				if (v + 1 <= response.verses_per_chapter[ch] && ch !== 99) {
+					nextCh = ch;
+					nextV = v + 1;
+				} else if (ch !== response.chapters && ch !== 99) {
+					nextCh = ch + 1;
+					nextV = 1;
+				} else if (ch === response.chapters) {
+					nextCh = 99;
+					nextV = 0;
+				}
+			}
+			if (nextCh !== ch || nextV !== v) {
+				return result_callback('B' + bk + 'K' + nextCh + 'V' + nextV);
+			}
+			return result_callback(null);
+		}});
 	},
+	
 	//WARNING: this returns only the specified fields which are fine for current uses but if extra uses are added extra fields may be needed.
-	get_verse_data : function (verse, witness_list, private_witnesses, success_callback) {
-	    var search = {'context': verse, 'transcription_id' : {'$in': witness_list}};	
-	    MAG.REST.apply_to_list_of_resources((private_witnesses?'private_':'')+'verse', {'criteria': search, 'fields': ['transcription_id', 'siglum', 'duplicate_position', 'witnesses'], 'force_reload': true, 'success': function (response) {
-		success_callback(response.results);
-	    }});
+	get_verse_data: function (verse, witness_list, private_witnesses, success_callback) {
+		var search = {'context': verse, 'transcription_id' : {'$in': witness_list}};	
+		MAG.REST.apply_to_list_of_resources((private_witnesses?'private_':'')+'verse', {'criteria': search, 'fields': ['transcription_id', 'siglum', 'duplicate_position', 'witnesses'], 'force_reload': true, 'success': function (response) {
+			success_callback(response.results);
+		}});
 	},
-	get_siglum_map : function (id_list, result_callback) {
+	
+	get_siglum_map: function (id_list, result_callback) {
 	    MAG.REST.apply_to_list_of_resources('transcription', {'criteria': {'_id': {'$in': id_list}},
 		'fields': ['siglum'],
 		'success': function(response) {						    
@@ -436,14 +456,16 @@ var magpy_services = {
 
 	// save a collation
 	// result: true if saved and successful, false otherwise
-	save_collation : function (verse, collation, confirm_message, overwrite_allowed, no_overwrite_message, result_callback) {
+	save_collation: function (verse, collation, confirm_message, overwrite_allowed, no_overwrite_message, result_callback) {
 	    //add in the NT specific stuff we need 
 	    collation.verse = parseInt(verse.substring(verse.indexOf('V') + 1))
 	    collation.chapter = parseInt(verse.substring(verse.indexOf('K') + 1, verse.indexOf('V')))
 	    collation.book_number = parseInt(verse.substring(verse.indexOf('B') + 1, verse.indexOf('K')))
 	    MAG.REST.create_resource('collation', collation, {'error' : function () {
 		var confirmed;
+
 		if (overwrite_allowed) {
+
 		    confirmed = confirm(confirm_message);
 		    if (confirmed === true) {
 			MAG.REST.update_resource('collation', collation, {'success': function () {
@@ -466,18 +488,26 @@ var magpy_services = {
 	get_saved_stage_ids : function (verse, result_callback) {
 	    CL._services.get_user_info(function (user) {
 		if (user) {
-		    var r, s, o, a, user_id, criteria, i;
+		    var r, s, o, a, user_id, criteria, criteria_1, criteria_2, i;
 		    r = null;
 		    s = null;
 		    o = null;
 		    a = null;
 		    user_id = user._id;
-		    criteria = {};
-		    criteria.context = verse
-		    criteria.user = user_id;
+		    criteria_1 = {};
+		    criteria_1.context = verse
+		    criteria_1.user = user_id;
 		    if (CL._project.hasOwnProperty('_id')) {
-			criteria.project = CL._project._id;
+			criteria_1.project = CL._project._id;
+			criteria_2 = {};
+			criteria_2.context = verse;
+			criteria_2.project = CL._project._id;
+			criteria_2.status = 'approved';
+			criteria = {'$or': [criteria_1, criteria_2]};
+		    } else {
+			criteria = criteria_1;
 		    }
+		    
 		    MAG.REST.apply_to_list_of_resources('collation', {'criteria': criteria,
 			'success': function (response) {
 			    for (i = 0; i < response.results.length; i += 1) {

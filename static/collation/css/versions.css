@@ -10,46 +10,88 @@
      font-family: arial, helvetica, sans-serif;
 }
 
+#manuscript_details_form_div {
+     position: absolute;
+     left: 20px;
+     top: 20px;
+     width:500px;
+     z-index: 2000;
+     background-color: white;
+     border:2px solid #000;
+     padding-top: 0px;
+     font-family: arial, helvetica, sans-serif;
+}
+
 .missing {
     color: red !important;
 }
 
-#version_form_div div#parent_readings_div, #version_form_div div#version_witnesses {
+#manuscript_details_table div.row {
+    border: 1px solid lightgrey;
+}
+
+#new_reading_extent_div {  
+    padding-top: 10px;
+}
+
+#version_form_div div#parent_readings_div, #version_form_div div#version_witnesses, div#ms_details_witnesses, div#manuscript_details_div {
     background-color: lightgrey;
     padding: 5px;
     margin-bottom: 5px;
 }
+.added_ms_details {
+    cursor: pointer;
+}
 
-#version_form_div fieldset {
+#version_form_div fieldset, #manuscript_details_form_div fieldset {
     padding: 0 0 0 0;
     margin: 0 0 0 0;
     border: none;
 }
 
-#version_form_div img.add_logo {
+#version_form_div img.add_logo, #manuscript_details_form img.add_logo {
     vertical-align: middle;
+    cursor: pointer;
 }
 
-#version_form_div img.delete_logo {
+#version_form_div img.delete_logo, #manuscript_details_form img.delete_logo {
     padding-left: 10px;
     vertical-align: middle;
+    cursor: pointer;
 }
 
-#version_form_div label.fixed_width {
+#manuscript_details_form_div label.fixed_width {
     display: inline-block;
-    width: 150px;
+    width: 160px;
+}
+
+#manuscript_details_form_div input.details_text {
+    width: 300px;
 }
 
 #version_form_div input.version_text {
     width: 400px;
 }
 
-#version_form_div #editor_comment, #version_form_div #printed_comment {
+#version_form_div #editor_comment, #manuscript_details_form_div #comment {
     width: 95%
 }
 
 div.version_selected, tr.version_selected {
     border: 3px solid green;
+}
+
+div#manuscript_details_form_header {
+    /*width: 100%;*/
+    background-color: MediumTurquoise;
+    height: 30px;
+    padding-top: 10px;
+    padding-left: 10px;
+}
+
+div#manuscript_details_form_header h1 {
+    font-size: 12pt;
+    margin-top: 0px;
 }
 
 div#witness_form_header {
@@ -63,7 +105,15 @@ div#witness_form_header {
 
 div#witness_form_header h1 {
     font-size: 12pt;
-    margin-top: 0px;
+    
+    float: left;
+}
+
+div#witness_form_header h3 {
+    font-size: 10pt;
+    float: left;
+    margin-left: 10px;
+    
 }
 
 div.form_section {
@@ -76,16 +126,42 @@ div.submit_section {
     padding-top: 10px;
 }
 
+.other_version_parent {
+    color: blue;
+}
+
 tr.version_parent {
     color: green;
 }
 
-tr.highlighted_version {
-    background-color: skyblue;
+div#witness_form_header {
+    cursor: all-scroll; 
 }
 
-tr.highlighted.highlighted_version {
+div#toggle_version_form, div#toggle_manuscript_details_form {
+    float: right;
+}
+
+#version_form {
+    display: block;
+}
+
+h1#form_title {
+    float: left;
+}
+
+td.version_main_reading {
+    width: 100%;
+}
+
+tr.highlighted_version > td > div {
+    background-color: skyblue;
+    border: 1px solid skyblue;
+}
+
+tr.highlighted.highlighted_version > td > div {
     background-color: paleturquoise;
+    border: 1px solid paleturquoise;
 }
 
 label.disabled {
@@ -111,10 +187,52 @@ div.form_column_left h2, div.form_column_right h2 {
     margin-top: 0px;
 }
 
+#manuscript_details_form h2 {
+    font-size: 12pt;
+    margin-top: 0px;
+}
+
 br.clear {
     clear: both;
 }
 
-#modifiers {
+#modifiers, #ms_details_modifiers {
     width: 50px;
 }
+
+div#submit_extras {
+    position: fixed;
+    bottom: 50px;
+    width: 250px;
+    right: 20px;
+    background-color: white; 
+    border: 1px solid black;
+    padding: 10px;
+    font-family: arial, helvetica, sans-serif;
+}
+
+div#subversion_submit_extras {
+    z-index: 50;
+    position: fixed;
+    bottom: 50px;
+    width: 250px;
+    right: 20px;
+    background-color: red; 
+    border: 1px solid black;
+    padding: 10px;
+    font-family: arial, helvetica, sans-serif;
+}
+
+input#do_submit_button {
+    float: right;
+    margin-right: 10px;
+    margin-top: 5px;
+}
+
+input#cancel_subversion_submit {
+    float: left;
+    margin-right: 10px;
+    margin-top: 5px;
+}
+
+

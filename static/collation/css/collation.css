@@ -351,6 +351,10 @@ div.clone {
     padding-left: 2px;
 }
 
+td.main_reading, td.overlap_main_reading {
+    width: 100%;
+} 
+
 #single_witness_reading {
 	background: white;
 	left: 10px;
