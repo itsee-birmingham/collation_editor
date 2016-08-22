@@ -1,0 +1,41 @@
+<form id="admin_form">
+    <div id="upload_admin">
+        <div>
+            <div id="transcription_admin" class="form_section">
+                <h2 class="sectionheader">Upload Local Transcriptions</h2>
+                <p>Upload transcriptions from your local machine to the private area of the workspace.<br/> 
+                These transcriptions will only be available to you and other people assigned to work on your projects.</p>
+                <input type="button" name="upload_button" id="upload_button" value="Upload"/>
+            </div>
+            <div id="project_config_admin" class="form_section">
+                <form id="project_config_upload_form">
+                    <h2 class="sectionheader">Upload a Project Configuration</h2>
+                    <input type="hidden" id="src" name="src" class="string"/>
+                    <p>Upload a JSON project config from your local machine.</p>
+                    <input id="index_file" type="file" onchange="CAD.uploadFile()"/>
+                    <input type="button" value="Upload" id="upload_project_config_button" disabled="disabled"/>
+                </form>
+            </div>            
+           <!-- <div id="project_admin" class="form_section">
+                <h2 class="sectionheader">Create New Project</h2>
+                <p>Create a new editing project with you as the managing editor.<br/>
+                Adding other editors to your project must be done by a technical officer.</p>
+                <input type="button" value="Create project" id="new_project_button"/>
+            </div>-->
+        </div>
+        <div id="managing_editor_only" style="display:none">
+            <!--<div id="project_admin" class="form_section">
+                <h2 class="sectionheader">Edit Existing Project</h2>
+                <br/>
+                <label for="project">Select Project: <select name="project" id="project"></select></label>
+                <input type="button" value="Edit existing project" id="edit_project_button"/>
+            </div>-->
+            <div id="rules_admin" class="form_section">
+                <h2 class="sectionheader">Manage Global Rules</h2>
+                <br/>
+                <label for="project_for_rules">Select Project: <select name="project_for_rules" id="project_for_rules"></select></label>
+                <input type="button" value="Edit project rules" id="edit_rules_button"/>
+            </div>
+        </div>
+    </div>
+</form>

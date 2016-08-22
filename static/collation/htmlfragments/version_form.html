@@ -1,0 +1,58 @@
+<div id="witness_form_header">
+    <h1 id="form_title">Witness Entry Form</h1><h3 id="unit_indexes"></h3>
+    <div id="toggle_version_form">&#9650;</div>
+</div>
+<form id="version_form">
+     <input type="hidden" id="start_unit_id" name="start_unit_id" value=""/>
+     <input type="hidden" id="end_unit_id" name="end_unit_id" value=""/>
+     <input type="hidden" id="app_line" name="app_line" value=""/>
+     <input type="hidden" id="version_unit_id" name="version_unit_id" value=""/>
+     <input type="hidden" id="version_reading_id" name="version_reading_id" value=""/>
+     <div class="form_section">
+        <div class="form_column_left">
+          <h2>Parent reading/s</h2>
+          <div id="parent_readings_div" style="display:none">
+                <fieldset id="parent_readings" class="data_group">
+          
+                </fieldset>
+          </div>
+          <label for="parent_select" id="parent_select_label">Parent: <select id="parent_select"><option value="none">Select</option></select></label>
+          <img class="add_logo" height="20px" width="20px" title="Add parent" src="/citations/images/add.png" id="add_parent"/>
+        </div>
+        <div class="form_column_right">
+           <h2>Witness/es</h2>
+           
+           <div id="version_witnesses" style="display:none">
+                
+           </div>
+           <label for="language_select" id="language_select_label">Language: <select id="language_select"><option value="none">Select</option></select></label>
+           <label for="subtype_select" id="subtype_select_label">Subtype: <select id="subtype_select"><option value="none">Select</option></select></label>
+           <label for="modifiers" id="modifiers_label">Modifiers: <input type="text" id="modifiers"/></label>
+           <img class="add_logo" height="20px" width="20px" title="Add witness" src="/citations/images/add.png" id="add_witness"/>
+        </div>
+        <br class="clear"/>
+     </div>
+     <div class="form_section">
+        <div id="new_reading_details_div">
+            <label id="version_reading_text_label" for="version_reading_text" class="disabled">Reading to display: <input type="text" id="version_reading_text" name="version_reading_text" disabled="disabled"/></label><br/>
+        </div>
+        <div id="new_reading_extent_div" style="display:none">    
+            <label id="unit_end_label" for="unit_end" class="disabled">Unit end (if variant extends beyond current unit): <select id="unit_end" name="unit_end" disabled="disabled"><option value="none">Select</option></select></label><br/> 
+        </div>
+     </div>
+     <div class="form_section">
+        <div id="manuscript_details_div" class="drag_div" style="display:none">
+            <table id="manuscript_details_table">
+                
+            </table>
+        </div>
+        <input id="manuscript_details_button" type="button" value="Add further details"/>
+     </div>
+     <div class="form_section">
+        <label for="editor_comment">Comment for editor (unpublished): </label><br/><textarea id="editor_comment" name="editor_comment"></textarea><br/>
+     </div>
+     <div class="submit_section">
+        <input type="button" id="cancel_button" value="Cancel"/>
+        <input type="button" id="add_version_button" value="Add"/>
+     </div>
+</form>

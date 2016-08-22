@@ -1,0 +1,33 @@
+<div id="manuscript_details_form_header">
+    <h1 id="form_title">Further Details Form</h1>
+    <div id="toggle_manuscript_details_form">&#9650;</div>
+</div>
+<form id="manuscript_details_form">
+    <div class="form_section">
+    <input type="hidden" id="original_id"/>
+        <h2>Witness/es</h2>
+            
+           <div id="ms_details_witnesses" style="display:none">  
+           </div>
+           <label for="ms_details_language_select" id="ms_details_language_select_label">Language: <select id="ms_details_language_select"><option value="none">Select</option></select></label>
+           <label for="ms_details_subtype_select" id="ms_details_subtype_select_label">Subtype: <select id="ms_details_subtype_select"><option value="none">Select</option></select></label>
+           <label id="ms_details_modifiers_label" for="ms_details_modifiers">Modifiers: <input type="text" id="ms_details_modifiers"/></label>
+           <img class="add_logo" height="20px" width="20px" title="Add witness" src="/citations/images/add.png" id="ms_details_add_witness"/>
+    </div>
+
+        <div class="form_section">
+            <label id="versional_text_label" for="versional_text" class="fixed_width">Versional text: </label><input type="text" id="versional_text" name="versional_text" class="details_text"/><br/>
+            <label id="retroversion_label" for="retroversion" class="fixed_width">Greek retroversion: </label><input type="text" id="retroversion" name="retroversion" class="details_text"/><br/>
+            <label id="english_translation_label" for="english_translation" class="fixed_width">English translation: </label><input type="text" id="english_translation" name="english_translation" class="details_text"/><br/>
+            <label id="german_translation_label" for="german_translation" class="fixed_width">German translation: </label><input type="text" id="german_translation" name="german_translation" class="details_text"/><br/>
+        </div>
+        <div class="form_section">
+            <label id="comment_label" for="comment">Comment: </label><br/><textarea id="comment" name="comment"></textarea><br/>
+        </div>
+    
+     
+     <div class="submit_section">
+        <input type="button" id="cancel_ms_details_button" value="Cancel"/>
+        <input type="button" id="add_ms_details_button" value="Add details"/>
+     </div>
+</form>

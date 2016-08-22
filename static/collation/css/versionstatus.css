@@ -1,0 +1,98 @@
+table {
+    border-collapse: collapse; 
+}
+
+table.layout {
+    border: 1px solid white;
+    table-layout: fixed;
+}
+
+table.layout td {
+    padding: 2px;
+    vertical-align: middle;
+    width: 150px;
+    border: 1px solid white;
+}
+
+table#details_table td {
+    border: 1px solid black;
+    padding: 5px;
+    width: 50px;
+}
+
+table#details_table td.saved {
+    background: #FF9966;
+}
+
+table#details_table td.submitted {
+    background: #99CC66;
+}
+
+#display_details_button {
+    margin-top: 10px;
+}
+
+#details_table {
+    margin-top: 20px;    
+}
+
+div.column {
+    width: 45%;
+    padding-left: 10px;
+}
+
+div#subversion_submit_extras {
+    z-index:  2000000001;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    margin: auto;
+    width: 250px;
+    height: 100px;
+    background-color: white; 
+    border: 1px solid black;
+    padding: 10px;
+    font-family: arial, helvetica, sans-serif;
+}
+
+input#do_submit_button {
+    float: right;
+    margin-right: 10px;
+    margin-top: 5px;
+}
+
+input#cancel_submit_button {
+    float: left;
+    margin-right: 10px;
+    margin-top: 5px;
+}
+
+#language_select_label {
+    margin-left: 20px;
+}
+
+div#project_select_div {
+    margin-bottom: 10px;
+    border-bottom: 1px solid black;
+    padding-left: 10px;
+    padding-bottom: 10px;
+}
+
+.chapter_number {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.chapter_ready {
+    font-weight: bold;
+    background: orange;
+}
+
+.section {
+    padding-bottom: 10px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid black;
+}

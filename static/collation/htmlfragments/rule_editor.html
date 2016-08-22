@@ -1,0 +1,60 @@
+<div class="menu_section">
+<h3>Batch upload global rules</h3>
+    <p>Global rules can be pre-loaded from a csv file with tab separation. The first row is assumed to be headers and will be ignored.</p>
+    <p>The columns should be
+        <ol>
+            <li>original form</li>  
+            <li>normalised form</li>
+            <li>rule class (must match one of your rule classes)</li>
+            <li>ignore supplied tags (Y/N)</li>
+            <li>ignore unclear tags (Y/N)</li>
+            <li>only apply to nomina sacra (Y/N)</li>
+        </ol>
+    </p>
+    <label for="file_selector">Select Rule File: <input type="file" id="file_selector"/></label>
+    <input type="button" value="Upload rules" id="add_rules_button"/>
+</div>
+<div class="menu_section">
+<h3>Add a new rule</h3>
+<form id="add_rule_form" class="table_form">
+<table>
+<tbody>
+<tr><th>Original form:</th><th>Normalised form:</th><th>Rule class:</th><th>Ignore supplied tags?</th><th>Ignore unclear tags?</th><th>Only apply to nomina sacra?</th></tr>
+<tr>
+    <td><input type="text" name="t"></td>
+    <td><input type="text" name="n"></td>
+    <td><select name="rule_name" id="rule_name"><option value="none">select</option></select></td>
+    <td><select name="ignore_supplied"><option value="N">N</option><option value="Y">Y</option></select></td>
+    <td><select name="ignore_unclear"><option value="N">N</option><option value="Y">Y</option></select></td>
+    <td><select name="only_nomsac"><option value="N">N</option><option value="Y">Y</option></select></td>
+</tr>
+</tbody>
+</table>
+<br/>
+<input type="button" value="Add rule" id="add_rule"/>
+</form>
+</div>
+<div class="menu_section">
+<h3>View/Delete existing global rules</h3>
+<form id="search_form">
+<table id="search_table">
+<tbody>
+<tr><th>Select</th><th>Original form</th><th>Normalised form</th><th>Rule class</th><th>Ignore supplied tags?</th><th>Ignore unclear tags?</th><th>Only apply to nomina sacra?</th><th>Verse exceptions</th><th></th></tr>
+<tr>
+    <td><input type="checkbox" id="select_all"/></td>
+    <td><input type="text" name="search_t"></td>
+    <td><input type="text" name="search_n"></td>
+    <td><select name="search_rule_name" id="search_rule_name"><option value="none">select</option></select></td>
+    <td><select name="search_ignore_supplied"><option value="none">select</option><option value="N">N</option><option value="Y">Y</option></select></td>
+    <td><select name="search_ignore_unclear"><option value="none">select</option><option value="N">N</option><option value="Y">Y</option></select></td>
+    <td><select name="search_only_nomsac"><option value="none">select</option><option value="N">N</option><option value="Y">Y</option></select></td>
+    <td><select name="search_verse_exceptions"><option value="none">select</option><option value="N">N</option><option value="Y">Y</option></select></td>
+    <td><input type="button" value="Search" id="search"/></td>
+</tr>
+</tbody>
+</table>
+<br/>
+<input type="button" value="Delete selected" id="delete_selected"/>
+</form>
+<div id="errors_overlay" style="display:none">
+</div>

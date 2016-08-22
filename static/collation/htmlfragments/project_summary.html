@@ -1,0 +1,77 @@
+<div>
+    <div class="column">
+       
+    <div id="summary">
+        <h3>Progress summary</h3>
+        <span id="summary_title">Showing summary data for <span id="data_range">whole book</span>.</span>
+        <label id="select_chapter">Select Chapter:<select id="summary_selection"></select></label>
+        <br class="clear"/>
+    
+        <div class="summary_section" id="regularised">
+            <h3 class="summary_heading">regularised</h3>
+            <div style="width:100px;border:1px solid black"><div id="regularised_bar" style="background-color:blue;height:20px;width:0px"></div></div>
+            <span><span id="regularised_progress">0</span> of <span id="regularised_total">0</span> (<span id="regularised_percentage">0</span>%)</span>
+        </div>
+        
+       <div class="summary_section" id="set">
+            <h3 class="summary_heading">set</h3>
+            <div style="width:100px;border:1px solid black"><div id="set_bar" style="background-color:blue;height:20px;width:0px"></div></div>
+            <span><span id="set_progress">0</span> of <span id="set_total">0</span> (<span id="set_percentage">0</span>%)</span>
+        </div>
+        
+        <div class="summary_section" id="ordered">
+            <h3 class="summary_heading">ordered</h3>
+            <div style="width:100px;border:1px solid black"><div id="ordered_bar" style="background-color:blue;height:20px;width:0px"></div></div>
+            <span><span id="ordered_progress">0</span> of <span id="ordered_total">0</span> (<span id="ordered_percentage">0</span>%)</span>
+        </div>
+        
+        <div class="summary_section" id="approved">
+            <h3 class="summary_heading">approved</h3>
+            <div style="width:100px;border:1px solid black"><div id="approved_bar" style="background-color:blue;height:20px;width:0px"></div></div>
+            <span><span id="approved_progress">0</span> of <span id="approved_total">0</span> (<span id="approved_percentage">0</span>%)</span>
+        </div>
+    <br class="clear"/>
+    <br/>
+    </div>
+    <div id="details_div">
+        <h3>Progress Details</h3>
+        <form id="progress_details_form">
+            <label for="search_chapter">Chapter:<select id="search_chapter" name="chapter"></select></label><br/>
+            <label for="search_status">Status:<select id="search_status" name="status"></select></label><br/>
+            <input type="checkbox" name="all_editors" id="all_editors"/> Show data for all editors? <br/><br/>
+            <input type="button" value="Search" id="details_search_button"/>
+            <div id="progress_details"></div>
+        </form>
+    </div>
+    </div>
+    <div class="column">
+    <div id="revoke_approved" style="display:none"> <!-- only managing editor -->
+        <h3>Revoke approved versions</h3>
+        <div id="revoke_approved_content">
+        </div>
+        
+    </div>
+    <div id="version_export" style="display:none"><!-- only managing editor -->
+        <h3>Send to Version/patristics editors</h3>
+        <div id="version_export_content">
+        </div>
+    </div>
+    <div id="output">
+        <h3>Apparatus output</h3>
+        <form id="apparatus_output_form">
+
+        <input type="hidden" id="apparatus_output_data_range" name="apparatus_output_data_range" value="all"/>
+        <label for="format_select">Apparatus format:<select id="apparatus_output_format_select" name="apparatus_output_format_select"><option value="positive_xml">Positive XML</option><option value="negative_xml">Negative XML</option><option value="positive_plain">Positive Plain</option><option value="abbreviated_positive_plain">Abbreviated Positive Plain</option><option value="negative_plain">Negative Plain</option><option value="cbgm">CBGM</option></select></label>
+        <br/>
+        <br/>
+        <!-- <label for="output_chapter">Chapter:<select id="output_chapter"><option value="none">select</option></select></label>
+        <br/>
+        <br/>
+        <label for="output_verse">Verse:<select id="output_verse"><option value="none">select</option></select></label>
+        <br/>
+        <br/>-->
+        <input id="get_apparatus_button" type="button" value="Get apparatus"/>
+        </form>
+    </div>
+        </div>
+</div>

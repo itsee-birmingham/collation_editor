@@ -1,0 +1,158 @@
+<form id="editing_project_form" action="#">
+        <div class="subsection" id="basic_settings">
+            <div class="subsection_header"><h2><span class="menu_triangle">&#9650</span> Basic Settings</h2></div>
+            <div id="basic_settings_content" class="subsection_content" style="display:block;">
+                
+                <input class="string" type="hidden" id="_model" name="_model" value="editing_project"/>
+                <input class="string" type="hidden" id="_id" name="_id"/>
+                <input class="string" type="hidden" id="managing_editor" name="managing_editor"/>
+                <input class="string" type="hidden" id="book_name" name="book_name"/>
+                <input class="stringlist" type="hidden" id="editors" name="editors"/>
+                <span id="new_form_instructions"></span>
+                <br/>
+                <label for="identifier" class="top width_half">ID:<input class="string" type="text" name="identifier" id="identifier" disabled="disabled"/></label><br/>      
+                <label for="project" class="top width_half">Project Name:  <b>*</b><input class="required string" type="text" id="project" name="project"/></label>
+                <label for="book" class="top width_half">Book:  <b>*</b><select class="required integer" id="book" name="book"><option value="none">select</option></select></label>
+                <label for="language" class="top width_quarter">Language:  <b>*</b><select class="required string" id="language" name="language">
+                                                <option value="none">select</option>
+                                                <option value="grc">Greek</option>
+                                                <option value="lat">Latin</option>
+                                            </select></label>
+                <input type="button" value="Ok" id="submit_first_section"/>
+
+            </div>
+        </div>
+        
+<!-- OTE settings -->        
+         <div class="subsection" id="ote_settings">
+            <div class="subsection_header"><h2><span class="menu_triangle">&#9660</span> OTE Settings</h2></div>
+            <div id="ote_settings_content" class="subsection_content" style="display:none;">
+                <input class="string" type="hidden" id="transcription_repository" name="transcription_repository" value="WCE"/>
+                <input class="stringlist" type="hidden" id="transcribers" name="transcribers"/>
+                <input class="stringlist" type="hidden" id="reconcilers" name="reconcilers"/>
+                <input class="stringlist" type="hidden" id="transcription_managers" name="transcription_managers"/>
+                <input class="stringlist" type="hidden" id="published_transcription_managers" name="published_transcription_managers"/>
+                <input class="stringlist" type="hidden" id="document_types" name="document_types"/>
+                <label for="transcription_workflow" class="top width_half">Transcription workflow:
+                    <select id="transcription_workflow" name="transcription_workflow">
+                        <option value="none">select</option>
+                        <option value="double-blind">double-blind</option>
+                        <option value="single-proofread">single-proofread</option>
+                        <option value="single">single</option>
+                    </select>
+                </label>
+                <label for="transcription_base_text" class="top width_half">Transcription basetext:
+                    <select id="transcription_base_text" name="transcription_base_text">
+                        <option value="none">select</option>
+                    </select>
+                </label>
+                <p>At present transcribers, reconcilers and transcription managers can only be added and deleted by a technical officer.
+                <br/>You will be included in each list as default.
+                </p>
+            </div>
+         </div>
+         
+<!-- collation settings -->          
+         <div class="subsection" id="collation_settings">
+            <div class="subsection_header"><h2><span class="menu_triangle">&#9660</span> Collation Settings</h2></div>
+            <div id="collation_settings_content" class="subsection_content" style="display: none;">
+                <input class="string" type="hidden" id="collation_source" name="collation_source" value="WCE"/>
+                <div class="form_section" id="witness_selection_details">
+             <h2 class="sectionheader">Witness Selection</h2>
+            <div id="witness_summary">
+                <p>There are <span id="witness_count">no</span> witnesses selected. The base text is <span id="base_text_span">not selected</span>.</p>    
+            </div>
+            <br/>
+            <input id="show_witness_selection_button" type="button" value="Show witness selection"/>     
+            <fieldset id="witnesses" class="data_group" style="display:none">
+                
+            </fieldset>
+        </div>
+        <div id="rule_definition_section">
+            <h2 class="sectionheader">Regularisation Classes</h2>
+            <br/>
+            <div>
+            <input type="checkbox" class="boolean" id="V_for_supplied" name="V_for_supplied"/><label for="V_for_supplied">Automatically Add V to witnesses with supplied text? </label><br/>
+            </div>
+            <br/>
+            <div id="reg_class_summary">
+                <div id="drag">
+                    <table id="reg_class_table">
+                        <tbody>
+                            <tr><th></th><th></th><th></th><th></th></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="load_default_classes_message">
+                    <p>There are currently <span id="reg_class_span">no regularisation classes</span> for this project. <br/>You can load the default classes and/or add your own.</p>
+                    <input id="load_default_classes_button" type="button" value="Load default classes"/>
+                </div>
+            </div>
+            <br/>
+            <input type="button" id="add_class_button" value="Add regularisation class"/>
+            <div class="subform hidden" id="rc_subform">
+                <label for="rc_name" class="top width_half">Rule name:
+                    <input type="text" id="rc_name"/>
+                </label>
+                <label for="identifier" class="top width_half">Identifier:
+                    <input type="text" id="rc_identifier"/>
+                </label>
+                <br/>
+                <br/>
+                <p>At which stage/s do you want this rule to be available for use?</p>
+                <label for="rc_create_in_RG"><input type="checkbox" id="rc_create_in_RG" class="boolean"/>Regularisation</label>
+                <span id="RG_default_span" class="hidden"><label for="rc_RG_default" ><input type="checkbox" id="rc_RG_default" class="boolean"/>Default option in regularisation menu?</label></span>
+                <br/>
+                <label for="rc_create_in_SV"><input type="checkbox" id="rc_create_in_SV" class="boolean"/>Set Variants</label>
+                <br/>
+                <label for="rc_create_in_OR"><input type="checkbox" id="rc_create_in_OR" class="boolean"/>Order Readings</label>
+                <br/>
+                <br/>
+                <p>How should the rule be indicated in the apparatus (select nothing if you don't want it indicated)?</p>
+                <label for="rc_suffixed_sigla"><input type="checkbox" id="rc_suffixed_sigla" class="boolean"/>Suffixed sigla</label>
+                <br/>
+                <label for="rc_suffixed_label"><input type="checkbox" id="rc_suffixed_label" class="boolean"/>Suffixed label</label>
+                <br/>
+                <label for="rc_suffixed_reading"><input type="checkbox" id="rc_suffixed_reading" class="boolean"/>Suffixed reading</label>
+                <br/>
+                <br/>
+                <p>How should the reading be treated in the display?</p>
+                <label for="rc_keep_as_main_reading"><input type="checkbox" id="rc_keep_as_main_reading" class="boolean"/>Keep as main reading</label>
+                <br/>
+                <label for="rc_subreading"><input type="checkbox" id="rc_subreading" class="boolean"/>Treat as subreading</label>
+                <br/>
+                <br/>
+                <p>Should the readings be put in an appendix?</p>
+                <label for="rc_linked_appendix"><input type="checkbox" id="rc_linked_appendix" class="boolean"/>Yes</label>
+                <br/>
+                <br/>
+                <input type="button" value="Save Class" id="save_reg_class"/>
+                <input type="button" value="Reset Form" id="reset_reg_class"/>
+                <input type="button" value="Hide Form" id="hide_subform"/>
+            </div>
+            <br/>
+        </div>
+            </div>
+         </div>
+         
+<!-- Versionist settings -->         
+         <div class="subsection" id="versionist_settings">
+            <div class="subsection_header"><h2><span class="menu_triangle">&#9660</span> Versionist Settings</h2></div>
+            <div id="versionist_settings_content" class="subsection_content" style="display:none">
+                <input type="hidden" class="stringify" id="versionists" name="versionists"/>
+                <input type="hidden" class="stringify" id="version_subtypes" name="version_subtypes"/>
+                <input type="hidden" class="stringify" id="versions" name="versions"/>
+                <p>At present versionist settings can only be added or modified by a technical officer.</p>
+            </div>
+         </div>
+         <div class="subsection" id="save">
+            <div class="subsection_header"><h2><span class="menu_triangle">&#9650</span> Save</h2></div>
+            <div id="save_content" class="subsection_content" style="display:block">
+                <div id="submission_section">
+                    <br/>
+                    <input type="button" value="Save project" onclick="CAD.submit()"/>
+                </div>
+            </div>
+         </div>
+
+</form>

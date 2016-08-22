@@ -1,0 +1,54 @@
+<div>
+    <div class="column">
+        <div id="waiting" class="section">
+            <h3>Available chapters</h3>
+            <p>The chapters highlighted below have a complete Greek apparatus and versional evidence may be added to them.</p>
+            <div id="chapters_ready"></div>
+        </div>
+        <div id="summary" class="section">
+            <h3>Progress summary</h3>
+            <div id="summary_title">Showing <select id="status_type"><option value="both">saved and submitted</option><option value="saved">saved</option><option value="submitted">submitted</option></select> <span id="version_language_span"></span> version data for:</div>
+            <br/>
+            <table class="layout">
+                <tr>
+                    <td>whole book</td>
+                    <td>available chapters</td>
+                    <td><span>chapter </span><select id="chapter_selection"></select></td>
+                </tr>
+                <tr>
+                    <td><div style="width:100px;border:1px solid black"><div id="book_bar" style="background-color:blue;height:20px;width:0px;border:0px;"></div></div>
+                <span><span id="book_progress">0</span> of <span id="book_total">0</span> verses (<span id="book_percentage">0</span>%)</span></td>
+                    <td><div style="width:100px;border:1px solid black"><div id="available_bar" style="background-color:blue;height:20px;width:0px;border:0px;"></div></div>
+                <span><span id="available_progress">0</span> of <span id="available_total">0</span> verses (<span id="available_percentage">0</span>%)</span></td>
+                    <td><div style="width:100px;border:1px solid black"><div id="chapter_bar" style="background-color:blue;height:20px;width:0px;border:0px;"></div></div>
+                    <span><span id="chapter_progress">0</span> of <span id="chapter_total">0</span> verses (<span id="chapter_percentage">0</span>%)</span></td>
+                </tr>
+            </table>
+            
+        </div>
+        <div>
+            <h3>Progress details</h3>
+            <label for="detail_chapter_select">Select chapter:<select id="detail_chapter_selection"></select></label><br/>
+            <label for="all_versions_checkbox">Show all versions? </label><input type="checkbox" id="all_versions_checkbox"></input><br/>
+            <input type="button" value="display" id="display_details_button"/>
+            <div id="details_table"></div>
+            
+        </div>
+    </div>
+    <div class="column">
+    <div class="section">
+        <h3>Get Text Output</h3>
+        <p>Here you can get the text output for your data for any in progress or submitted verses in the selected chapter.</p>
+        <label for="text_output_chapter_select">Select chapter to output: <select id="text_output_chapter_select"><option value="none">select</option></select> 
+        <a id="download_text_link" href="#" class="active" download="my file"><button>Get text output</button></a>
+    </div>
+    <div>
+        <h3>Batch Submit</h3>
+        <p>Here you can submit full chapters of saved data or submit blank records if there is no evidence in your data for a chapter.<br/>
+        You will be warned if blank data is being submitted and you will need to confirm that this is the action you require.<br/>
+        Chapters which have already had all verses submitted for this version and chapters not yet made available by the editor will not appear on this list.</p>
+        <label for="submit_chapter_select">Select chapter to submit: <select id="submit_chapter_select"><option value="none">select</option></select> 
+        <input type="button" value="submit chapter" id="chapter_submit_button"/>
+    </div>
+    </div>
+</div>
