@@ -9,9 +9,23 @@ from collation.preprocessor import PreProcessor
 from collation.exporter_factory import ExporterFactory
 import bottle
 bottle.BaseRequest.MEMFILE_MAX = 1024 * 1024
+# the decorator
+def enable_cors(fn):
+    def _enable_cors(*args, **kwargs):
+        # set CORS headers
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
+
+        if bottle.request.method != 'OPTIONS':
+            # actual request; reply with the actual response
+            return fn(*args, **kwargs)
+
+    return _enable_cors
+
 @route('/')
 def start_point():
-    redirect('/collation')
+    redirect('/collation/')
 
 @route('/<app>')
 @route('/<app>/')
@@ -65,8 +79,9 @@ def datastore():
     else:
         abort(400, "Bad Request")
 
-@route('/collationserver/<context>/', method=['POST'])
-@route('/collationserver/<context>', method=['POST'])
+@route('/collationserver/<context>/', method=['OPTIONS', 'POST'])
+@route('/collationserver/<context>', method=['OPTIONS', 'POST'])
+@enable_cors
 def collation(context):
     params = json.loads(request.params.options)
     requested_witnesses = params['data_settings']['witness_list']    
@@ -126,16 +141,18 @@ def collation(context):
 
 @route('/collation/apparatus', method=['POST'])
 @route('/collation/apparatus/', method=['POST'])
+@route('/apparatus', method=['POST'])
+@route('/apparatus/', method=['POST'])
 def apparatus():
     data = json.loads(request.params.data)
     format = request.params.format
     if not format:
-        format = 'xml'
-    if format == 'xml':
+        format = 'negative_xml'
+    if format == 'negative_xml' or format == 'positive_xml':
         file_ext = 'xml'
     else:
         file_ext = 'txt'
-    exporter_settings = request.params.settings
+    exporter_settings = json.loads(request.params.settings)
     print(exporter_settings)
     exf = ExporterFactory(exporter_settings)
     app = StringIO.StringIO(exf.export_data(data, format))
@@ -148,4 +165,4 @@ def apparatus():
 
 args = sys.argv
 basedir = args[1]
-run(host='localhost', port=8080, debug=True)
+run(host='localhost', port=8888, debug=True)

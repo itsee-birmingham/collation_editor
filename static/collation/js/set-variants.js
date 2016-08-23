@@ -46,7 +46,7 @@ var SV = (function () {
 			}
 			//make sure we have a container to put things in
 			if (options.hasOwnProperty('container')) {                
-				container = options.container;
+				if (container !== options.container) container = options.container;
 			} else {
 				container = document.getElementsByTagName('body')[0];
 			}
@@ -239,7 +239,7 @@ var SV = (function () {
 					OR.merge_all_lacs()
 					OR.add_labels(true); //this adds the reading labels to the datastructure itself - still required so they can be edited
 					//log that we have moved to OR in the event_list
-					CL._data.event_list.push('moved to order readings');
+					if (CL._data.hasOwnProperty('event_list')) CL._data.event_list.push('moved to order readings');
 					SR._find_subreadings({'rule_classes': CL._get_rule_classes('subreading', true, 'value', ['identifier', 'subreading'])}); //only show the subreadings when there class is labelled as subreading in the project)))
 					OR.show_reorder_readings({'container': container});
 				} else {

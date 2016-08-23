@@ -2,12 +2,18 @@
 """Algorithm for post-collate processing.
 
 """
+from __future__ import print_function
 from functools import partial
 import copy
 import decimal
 import re
 import importlib
 from collation.regulariser import Regulariser
+import sys
+
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 
 class PostProcessor(Regulariser):
@@ -194,8 +200,11 @@ class PostProcessor(Regulariser):
                         new_readings[text]['witnesses'] = self.combine_lists(new_readings[text]['witnesses'], \
                                                                              readings_list[j]['witnesses'])
                 else:
-                    if text == 'None':
+                    if text == 'None' or i >= len(readings_list[j]['text']):
                         new_readings[text] = {'text': []}
+                        if text != 'None':
+                            eprint('split_unit_into_single_words: highest is greater than possible words available in data')
+                            eprint('readings_list[j]["text"]: %s, len: %d, i: %d' % (readings_list[j]['text'], len(readings_list[j]['text']), i))
                     else:
                         new_readings[text] = {'text': [readings_list[j]['text'][i]]}
                     new_readings[text]['witnesses'] = readings_list[j]['witnesses']

@@ -10,8 +10,7 @@ var local_services = {
 	supported_rule_scopes: {'once': 'This place, these wits', 
 	    			'always': 'Everywhere, all wits'},
 	
-	
-	
+	 
 	//optional settings/functions
 	//local_javascript 
 	//local_python_implementations
@@ -483,6 +482,24 @@ var local_services = {
 		}
 		return local_services._get_saved_user_collations(user, verse, result_callback, collations, ++i);
 	    });
+	},
+
+	get_apparatus_for_context: function (success_callback) {
+		var url;
+		url = 'http://' + SITE_DOMAIN + '/collation/apparatus';
+		$.fileDownload(url, {httpMethod: "POST", 
+			data: {
+				settings: JSON.stringify(CL.get_exporter_settings()),
+				format: 'negative_xml',
+				data: JSON.stringify([{"context": CL._context, "structure": CL._data}])
+			},
+			successCallback: function () {
+				if (success_callback) {
+					success_callback();
+				}
+			}
+			//can also add a failCallback here if you want
+		});
 	},
 
 };
