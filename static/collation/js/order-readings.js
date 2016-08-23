@@ -189,7 +189,10 @@ var OR = (function () {
 			document.getElementById('footer').innerHTML = footer_html.join('');
 			$('#get_apparatus').off('click.download_link');
 			$('#get_apparatus').on('click.download_link', function () { 
-				OR.get_apparatus_for_context();
+				SPN.show_loading_overlay();
+				CL._services.get_apparatus_for_context(function() {
+					SPN.remove_loading_overlay();
+				});
 			});           
 			CL.add_stage_links();
 			SPN.remove_loading_overlay();
@@ -293,7 +296,6 @@ var OR = (function () {
 			for (i = 0; i < readings_with_suffixes.length; i += 1) {
 				suffixes.push(readings_with_suffixes[i].replace(data.witnesses[i], ''));				
 			}
-			console.log(suffixes)
 			return suffixes;
 		},
 
@@ -1114,22 +1116,6 @@ var OR = (function () {
 
 
 
-		get_apparatus_for_context: function () {
-			var url;
-			SPN.show_loading_overlay();
-			url = 'http://' + SITE_DOMAIN + '/collation/apparatus';
-			$.fileDownload(url, {httpMethod: "POST", 
-				data: {
-					settings: JSON.stringify(CL.get_exporter_settings()),
-					format: 'negative_xml',
-					data: JSON.stringify([{"context": CL._context, "structure": CL._data}])
-				},
-				successCallback: function () {
-					SPN.remove_loading_overlay();
-				}
-				//can also add a failCallback here if you want
-			});
-		},
 
 		/** prep stuff for loading into order readings */
 		compare_overlaps: function (a, b) {

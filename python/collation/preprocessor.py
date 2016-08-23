@@ -1,8 +1,15 @@
 #-*- coding: utf-8 -*-
+from __future__ import print_function
 import json
 from collation.postprocessor import PostProcessor
 import urllib2
 from collation.regulariser import Regulariser
+import sys
+
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 
 class PreProcessor(Regulariser):
     
@@ -91,7 +98,7 @@ class PreProcessor(Regulariser):
     
     def regularise(self, decisions, witnesses, verse, settings, collation_settings, project, accept):
         """Regularise the witness."""
-        print('There are %s decisions' % len(decisions))
+        eprint('There are %s decisions' % len(decisions))
         for witness in witnesses['collatable']:
             for token in witness['tokens']:
                 hit, normalised, details = self.regularise_token(token, decisions, 'pre-collate')
@@ -137,7 +144,7 @@ class PreProcessor(Regulariser):
                     if len(witness['tokens']) > 0 and 'gap_after' in witness['tokens'][-1].keys():
                         algorithm = 'dekker'
                         break
-            print('preprocessing complete')
+            eprint('preprocessing complete')
             collatex_response = self.do_collate(witness_list, accept, algorithm, tokenComparator,
                                                 collation_settings['host'])
             # Start with raw XML types
@@ -161,7 +168,7 @@ class PreProcessor(Regulariser):
 
             #get overtext details
             overtext_details = self.get_overtext(verse)
-            print('collation done')
+            eprint('collation done')
             return self.do_post_processing(alignment_table, decisions, overtext_details[0], overtext_details[1], witnesses['om'], witnesses['lac'], witnesses['hand_id_map'], settings)
            
     def do_post_processing(self, alignment_table, decisions, overtext_name, overtext, om_readings, lac_readings, hand_id_map, settings):
@@ -204,12 +211,12 @@ class PreProcessor(Regulariser):
 
     def do_collate(self, payload, accept, algorithm, tokenComparator, host='localhost'):
         """Do the collation"""
-        print('COLLATING')
-        print('algorithm - %s' % (algorithm))
-        print('tokenComparator - %s' % (tokenComparator))
+        eprint('COLLATING')
+        eprint('algorithm - %s' % (algorithm))
+        eprint('tokenComparator - %s' % (tokenComparator))
         payload['algorithm'] = algorithm #'needleman-wunsch'#'dekker' #'needleman-wunsch'#'dekker-experimental'#
         payload['tokenComparator'] = tokenComparator #{"type": "levenshtein", "distance": 2}#{'type': 'equality'}
-        target = 'http://%s/collate' % host
+        target = 'http://%s/collate/' % host
         json_witnesses = json.dumps(payload)#, default=json_util.default)
         accept_header = self.convert_header_argument(accept)
         headers = {'content-type': 'application/json',

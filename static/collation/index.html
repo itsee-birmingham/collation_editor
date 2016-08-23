@@ -7,31 +7,34 @@
   <title>Collation Editor</title>
   <meta name="description" content="Collation and Apparatus Editor" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <script type="text/javascript" src="/sitedomain.js"></script>
-  <script type="text/javascript" src="/shared/js/utils.js"></script>
-  <script type="text/javascript" src="/collation/js/default_settings.js"></script>
-  <script type="text/javascript" src="/collation/js/collation.js"></script>
-  <script type="text/javascript" src="/collation/js/regularise.js"></script>
-  <script type="text/javascript" src="/collation/js/set-variants.js"></script>
-  <script type="text/javascript" src="/collation/js/subreadings.js"></script>
-  <script type="text/javascript" src="/collation/js/order-readings.js"></script>
-  <script type="text/javascript" src="/collation/js/redips-drag-source.js"></script>
-  <script type="text/javascript" src="/collation/js/divdrag.js"></script>
-  <script type="text/javascript" src="/collation/js/contextmenu.js"></script>
-  <script type="text/javascript" src="/collation/js/md5.js"></script>
-  <script type="text/javascript" src="/collation/js/spin-min.js"></script>
-  <script type="text/javascript" src="/collation/js/spinner_controller.js"></script>
-  <script type="text/javascript" src="/collation/js/jquery.min.js"></script>
-  <script type="text/javascript" src="/collation/js/fileDownload.js"></script>
+  <script type="text/javascript" src="../sitedomain.js"></script>
+  <script type="text/javascript" src="../shared/js/utils.js"></script>
+  <script type="text/javascript" src="js/default_settings.js"></script>
+  <script type="text/javascript" src="js/collation.js"></script>
+  <script type="text/javascript" src="js/regularise.js"></script>
+  <script type="text/javascript" src="js/set-variants.js"></script>
+  <script type="text/javascript" src="js/subreadings.js"></script>
+  <script type="text/javascript" src="js/order-readings.js"></script>
+  <script type="text/javascript" src="js/redips-drag-source.js"></script>
+  <script type="text/javascript" src="js/divdrag.js"></script>
+  <script type="text/javascript" src="js/contextmenu.js"></script>
+  <script type="text/javascript" src="js/md5.js"></script>
+  <script type="text/javascript" src="js/spin-min.js"></script>
+  <script type="text/javascript" src="js/spinner_controller.js"></script>
+  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <script type="text/javascript" src="js/fileDownload.js"></script>
   
-
+<!--
   <script type="text/javascript" src="/collation/js/services_magpy.js"></script>
 
-<!--
-  <script type="text/javascript" src="/collation/js/services_local.js"></script>
+
 -->
+	<script type="text/javascript" src="js/services_local.js"></script>
+
 <!--
-  <script type="text/javascript" src="/collation/js/services_vmr.js"></script>
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+	<script type="text/javascript" src="js/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="js/services_vmr.js"></script>
 -->
   
 
@@ -39,11 +42,11 @@
     type="text/javascript"></script>
   <script type="text/javascript" src="/collation/js/validator.js"></script>-->
 
-  <link rel=stylesheet href="/collation/css/spinner.css" type="text/css"/>
-  <link rel=stylesheet href="/collation/css/structure.css" type="text/css"/>
-  <link rel=stylesheet href="/collation/css/collation.css" type="text/css"/>
+  <link rel=stylesheet href="css/spinner.css" type="text/css"/>
+  <link rel=stylesheet href="css/structure.css" type="text/css"/>
+  <link rel=stylesheet href="css/collation.css" type="text/css"/>
 </head>
-<body onload="CL.initialise_editor();" oncontextmenu="return false;">
+<body onload="CL.initialise_editor()" oncontextmenu="return false;">
 	<div id="header" class="collation_header"><h1 id="stage_id">Collation</h1><h1 id="project_name"></h1><div id="login_status"></div></div>
 	<div id="container">
 	<p>Please login using the link in the top right corner to use the editing interface</p>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+  <ModulePrefs
+	title="Apparatus Editor"
+	title_url="http://ntvmr.uni-muenster.de"
+	author_email="c.j.smith@bham.ac.uk"
+	author="ITSEE"
+	description="Apparatus Editor"
+	screenshot="http://ntvmr.uni-muenster.de/community/images/listescreenshot.png"
+	thumbnail="http://ntvmr.uni-muenster.de/community/images/pageicon.gif"
+	scrolling="false"
+   >
+  <Optional feature="pubsub-2">
+    <Param name="topics">
+    </Param>
+  </Optional>
+  <Optional feature="dynamic-height"/>
+  <Optional feature="views"/>
+  <Optional feature="opensocial-0.8"/>
+</ModulePrefs>
+
+<UserPref name="baseTextDocID" datatype="string" display_name="Base Text DocID" default_value="" />
+
+<UserPref name="transType" datatype="enum" display_name="Transcription Type" default_value="1">
+	<EnumValue value="1" display_value="Project"/>
+	<EnumValue value="2" display_value="Published"/>
+	<EnumValue value="3" display_value="Current User"/>
+</UserPref>
+<UserPref name="height" datatype="enum" display_name="Gadget Height" default_value="400">
+	<EnumValue value="200" display_value="Short"/>
+	<EnumValue value="400" display_value="Medium"/>
+	<EnumValue value="600" display_value="Tall"/>
+	<EnumValue value="-1" display_value="Dynamic"/>
+</UserPref>
+
+<Content type="html">
+
+<![CDATA[
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=8" />
+
+	<title>Collation Editor</title>
+	<meta name="description" content="Collation and Apparatus Editor" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+	<link rel="stylesheet" type="text/css" href="/community/js/jquery-ui/jquery-ui.css"/>
+
+	<script type="text/javascript" src="/community/js/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/community/js/jquery-ui/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="/community/js/URI.min.js"></script>
+	<script type="text/javascript" src="/community/js/jquery/jquery.cookie.js"></script>
+	<script type="text/javascript" src="/community/js/vmr-common.js"></script>
+
+	<script type="text/javascript" src="../sitedomain.js"></script>
+	<script type="text/javascript" src="../shared/js/utils.js"></script>
+	<script type="text/javascript" src="js/default_settings.js"></script>
+	<script type="text/javascript" src="js/collation.js"></script>
+	<script type="text/javascript" src="js/regularise.js"></script>
+	<script type="text/javascript" src="js/set-variants.js"></script>
+	<script type="text/javascript" src="js/subreadings.js"></script>
+	<script type="text/javascript" src="js/order-readings.js"></script>
+	<script type="text/javascript" src="js/redips-drag-source.js"></script>
+	<script type="text/javascript" src="js/divdrag.js"></script>
+	<script type="text/javascript" src="js/contextmenu.js"></script>
+	<script type="text/javascript" src="js/md5.js"></script>
+	<script type="text/javascript" src="js/spin-min.js"></script>
+	<script type="text/javascript" src="js/spinner_controller.js"></script>
+	<script type="text/javascript" src="js/fileDownload.js"></script>
+
+	<script type="text/javascript" src="js/services_vmr.js"></script>
+
+	<link rel=stylesheet href="css/spinner.css" type="text/css"/>
+	<link rel=stylesheet href="css/structure.css" type="text/css"/>
+	<link rel=stylesheet href="css/collation.css" type="text/css"/>
+
+<script type="text/javascript">
+
+var baseTextDocID = null;
+var transcriptionUser = null;
+
+</script>
+
+
+</head>
+<body oncontextmenu="return false;">
+	<div id="header" class="collation_header"><h1 id="stage_id">Collation</h1><h1 id="project_name"></h1><div id="login_status"></div></div>
+	<div id="container">
+	<p>Please login using the link in the top right corner to use the editing interface</p>
+	
+	<br/>
+	<br/>
+	</div>
+	
+  	<div id="footer">
+	
+	</div>
+	<div id="tool_tip" class="tooltip">
+
+	</div>
+
+<script type="text/javascript">
+
+VMR.init(function() {
+
+	var transType = VMR.prefs.getString('transType');
+	if (transType == 1) transcriptionUser = VMR.siteName;
+	else if (transType == 3) transcriptionUser = VMR.userName;
+
+	baseTextDocID = parseInt(VMR.prefs.getString('baseTextDocID'));
+	if (isNaN(baseTextDocID)) baseTextDocID = null;
+
+	vmr_services.set_vmr_services(VMR.servicesURL);
+	SITE_DOMAIN = VMR.gadgetsRoot + 'modules/collation_editor/static';
+	LOCAL_SERVICES_DOMAIN = VMR.gadgetsRoot + 'modules/collation_editor/static/collation';
+
+	vmr_services.local_javascript = [
+		(SITE_DOMAIN.length < 4 || SITE_DOMAIN.substring(0,4) !== 'http' ? 'http://' : '') + SITE_DOMAIN + '/collation/js/menus.js',
+		(SITE_DOMAIN.length < 4 || SITE_DOMAIN.substring(0,4) !== 'http' ? 'http://' : '') + SITE_DOMAIN + '/collation/js/magpy_functions.js'
+	];
+
+	CL.initialise_editor();
+
+}, '../../../../', true);
+
+</script>
+
+</body>
+</html>
+
+]]>
+</Content>
+</Module>

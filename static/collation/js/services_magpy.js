@@ -140,7 +140,7 @@ var magpy_services = {
             ]
         },
     
-    rule_conditions : { 
+    rule_conditions : {
         "python_file": "collation.greek_implementations",
         "class_name": "RuleConditions",
         "configs" : [
@@ -573,7 +573,24 @@ var magpy_services = {
 	    });
 	},
 
-	
+	get_apparatus_for_context: function (success_callback) {
+		var url;
+		url = 'http://' + SITE_DOMAIN + '/collation/apparatus';
+		$.fileDownload(url, {httpMethod: "POST", 
+			data: {
+				settings: JSON.stringify(CL.get_exporter_settings()),
+				format: 'negative_xml',
+				data: JSON.stringify([{"context": CL._context, "structure": CL._data}])
+			},
+			successCallback: function () {
+				if (success_callback) {
+					success_callback();
+				}
+			}
+			//can also add a failCallback here if you want
+		});
+	},
+
 
 };
 

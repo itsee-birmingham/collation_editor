@@ -4376,7 +4376,9 @@ var CL = (function () {
 			local_js = [];
 			if (project.hasOwnProperty('local_js_file')) {
 				for (i = 0; i < project.local_js_file.length; i += 1) {
-					local_js.push('http://' + SITE_DOMAIN + project.local_js_file[i]);
+					var url = SITE_DOMAIN;
+					if (url.length < 4 || url.substring(0,4) !== 'http') url = 'http://'+SITE_DOMAIN;
+					local_js.push(url + project.local_js_file[i]);
 				}
 			}
 			CL.include_javascript(local_js, function () {
@@ -4431,7 +4433,11 @@ var CL = (function () {
 				} else if (CL._services.hasOwnProperty('context_input')) {
 					CL._context_input = CL._services.context_input;
 				}
-				url = 'http://' + SITE_DOMAIN + '/collation/';
+
+				url = SITE_DOMAIN;
+				if (url.length < 4 || url.substring(0,4) !== 'http') url = 'http://'+SITE_DOMAIN;
+				url += '/collation/';
+
 				if (CL._context_input) {
 					url += CL._context_input.form;
 				} else {
