@@ -165,4 +165,4 @@ def apparatus():
 
 args = sys.argv
 basedir = args[1]
-run(host='localhost', port=8888, debug=True)
+run(host='localhost', port=8080, debug=True)
