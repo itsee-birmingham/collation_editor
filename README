@@ -1,3 +1,14 @@
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
+
+Please note this project is now deprecated. 
+
+The project has been split into two repositories 
+
+For code that will run locally please consider: https://github.com/itsee-birmingham/standalone_collation_editor
+
+For integration into other platforms please consider: https://github.com/itsee-birmingham/collation_editor_core
+
+
 1. Requirements
 
 The collation editor requires python 2.7+ but does not yet support Python3. I will add support for this as soon as possible and hopefully have a single version of the code that will run in both python versions.
