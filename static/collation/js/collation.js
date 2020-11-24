@@ -59,7 +59,7 @@ var CL = (function () {
 		 * set our service provider layer,
 		 * allowing re-implementation of core services */
 		set_service_provider: function (service_provider) {
-			CL._services = service_provider;    
+			CL._services = service_provider;
 		},
 
 		initialise_editor: function () {
@@ -74,11 +74,11 @@ var CL = (function () {
 				CL.include_javascript(CL._services.local_javascript, function () {
 					CL._services.initialise_editor();
 					SPN.remove_loading_overlay();
-				}); 
+				});
 			} else {
 				CL._services.initialise_editor();
 				SPN.remove_loading_overlay();
-			}	    
+			}
 		},
 
 		//recursive function to load a list of js files and then once done run the supplied callback
@@ -86,12 +86,12 @@ var CL = (function () {
 			if (js.length === 0) {
 				if (typeof callback !== 'undefined') {
 					callback();
-				}	
+				}
 				return;
 			}
 			if (typeof i === 'undefined') {
 				i = 0;
-			} 
+			}
 			if (i === (js.length-1)) {
 				$.getScript(js[i], callback);
 				return;
@@ -178,11 +178,11 @@ var CL = (function () {
 		/**apparatus - the list of units
 		 * app - a number showing which row of apparatus
 		 * format - which stage of the editor are we at
-		 * overtext_length - the number of words and spaces (columns) in overtext 
+		 * overtext_length - the number of words and spaces (columns) in overtext
 		 * options - a dictionary of possible options
 		 * 		possibilities are:
 		 * 			sort - boolean - do the readings need sorting (default = false)
-		 * 			highlighted_wit - the witness to highlight 
+		 * 			highlighted_wit - the witness to highlight
 		 * 			highlighted_unit - a unit to mark as having an error
 		 * 			column_lengths - dictionary detailing widths of columns in top apparatus
 		 * 			overlap_details - a dictionary keyed by id of overlapping reading giving column width for that unit
@@ -206,7 +206,7 @@ var CL = (function () {
 			}
 			rows.push('<tr><td></td>'); //the extra ones for navigation arrows
 			//only care about highlighted unit if we are in the right apparatus
-			if (options.hasOwnProperty('highlighted_unit') && options.highlighted_unit !== undefined && options.highlighted_unit[0] !== 'apparatus' + app) {                
+			if (options.hasOwnProperty('highlighted_unit') && options.highlighted_unit !== undefined && options.highlighted_unit[0] !== 'apparatus' + app) {
 				delete options.highlighted_unit;
 			}
 			while (i <= overtext_length) {
@@ -237,15 +237,15 @@ var CL = (function () {
 					}
 					i += 1;
 				} else if (i === unit_index) { //we do have a variant for this word
-					if (unit.readings.length > 1 
-							|| (format === 'set_variants' && SV._show_shared_units === true) 
+					if (unit.readings.length > 1
+							|| (format === 'set_variants' && SV._show_shared_units === true)
 							|| (format === 'regularise' && CL._display_settings.view_original_forms === true)
 							|| (format === 'regularise' && RG._show_regularisations === true)
 							|| format === 'version_additions'
 								|| format === 'other_version_additions') {
 						//check to see if we need any gaps at this index point before the unit (to account for combined gap before in another reading)
-						if (options.overlap_details[unit._id].hasOwnProperty('gap_before') 
-								&& options.overlap_details[unit._id].gap_before > 0) {			  
+						if (options.overlap_details[unit._id].hasOwnProperty('gap_before')
+								&& options.overlap_details[unit._id].gap_before > 0) {
 							rows.push('<td class="mark" colspan="' + options.overlap_details[unit._id].gap_before + '"></td>');
 						}
 						if (options.hasOwnProperty('sort') && options.sort === true) {
@@ -273,7 +273,7 @@ var CL = (function () {
 						}
 						if (unit.hasOwnProperty('split_readings') && unit.split_readings === true) {
 							unit_data_options.split = true;
-						} 
+						}
 						if (unit.hasOwnProperty('created') && unit.created === true) {
 							unit_data_options.created = true;
 						}
@@ -358,16 +358,16 @@ var CL = (function () {
 						if (typeof base_subreading_rules !== 'undefined') {
 							SR._find_subreadings({'rule_classes': base_subreading_rules});
 						}
-						if (stage === 'reorder') {			    
+						if (stage === 'reorder') {
 							OR.show_reorder_readings({'container': CL._container});
-						} else { 
+						} else {
 							SV.show_set_variants_data();
 							CL.add_subreading_events(stage, base_subreading_rules);
 						}
 						document.getElementById('scroller').scrollLeft = scroll_offset[0];
 						document.getElementById('scroller').scrollTop = scroll_offset[1];
 					});
-				}		
+				}
 			} else {
 				if (document.getElementById('show_hide_subreadings_button')) {
 					document.getElementById('show_hide_subreadings_button').value = document.getElementById('show_hide_subreadings_button').value.replace('hide', 'show');
@@ -392,11 +392,11 @@ var CL = (function () {
 
 		/**apparatus - the list of units
 		 * app - a number showing which row of apparatus
-		 * format - which stage of the editor are we at 
+		 * format - which stage of the editor are we at
 		 * options - a dictionary of possible options
 		 * 		possibilities are:
 		 * 			sort - boolean - do the readings need sorting (default = false)
-		 * 			highlighted_wit - the witness to highlight 
+		 * 			highlighted_wit - the witness to highlight
 		 * 			highlighted_version - a versional witness to highlight (version editor only)
 		 * 			highlighted_unit - a unit to mark as having an error*/
 		get_unit_layout: function (apparatus, app, format, options) {
@@ -418,9 +418,9 @@ var CL = (function () {
 			}
 			rows.push('<tr><td></td>');
 			//only care about highlighted unit if we are in the right apparatus
-			if (options.hasOwnProperty('highlighted_unit') 
-					&& options.highlighted_unit !== undefined 
-					&& options.highlighted_unit[0] !== 'apparatus' + app) {                
+			if (options.hasOwnProperty('highlighted_unit')
+					&& options.highlighted_unit !== undefined
+					&& options.highlighted_unit[0] !== 'apparatus' + app) {
 				delete options.highlighted_unit;
 			}
 			while (j < apparatus.length) {
@@ -433,8 +433,8 @@ var CL = (function () {
 					}
 					i += 1;
 				} else if (i === unit_index) { //we do have a variant for this word
-					if (unit.readings.length > 1 
-							|| (format === 'set_variants' && SV._show_shared_units === true) 
+					if (unit.readings.length > 1
+							|| (format === 'set_variants' && SV._show_shared_units === true)
 							|| (format === 'regularise')
 							|| format === 'version_additions'
 								|| format === 'other_version_additions') {
@@ -463,10 +463,10 @@ var CL = (function () {
 						}
 						if (unit.hasOwnProperty('split_readings') && unit.split_readings === true) {
 							unit_data_options.split = true;
-						} 
+						}
 						if (unit.hasOwnProperty('created') && unit.created === true) {
 							unit_data_options.created = true;
-						} 
+						}
 						if (unit.hasOwnProperty('overlap_units')) {
 							unit_data_options.overlapping_ids = [];
 							for (key in unit.overlap_units) {
@@ -521,8 +521,8 @@ var CL = (function () {
 			return [rows, col_len_dict, row_list, events, j];
 		},
 
-		/** format - which editor stage are we at 
-		 * options - dict of options 
+		/** format - which editor stage are we at
+		 * options - dict of options
 		 * 		start - the start point of unit
 		 * 		end - the end point of unit
 		 * 		dropable - is it dropable on (mainly for set variants)
@@ -538,7 +538,7 @@ var CL = (function () {
 					id_string = ' id="' + options.id + '"';
 				} else {
 					id_string = '';
-				}		
+				}
 				if (!options.hasOwnProperty('start') || !options.hasOwnProperty('end')) {
 					if (options.hasOwnProperty('dropable') && options.dropable === true) {
 						cell = '<td' + id_string + '></td>';
@@ -623,7 +623,7 @@ var CL = (function () {
 							//om verse
 							document.getElementById('single_witness_reading').innerHTML = '<span class="highlighted_reading"><b>' + display_hand + ':</b> no text</span>';
 						}
-					} 
+					}
 				} else {
 					//lac verse
 					document.getElementById('single_witness_reading').innerHTML = '<span class="highlighted_reading"><b>' + display_hand + ':</b> no text</span>';
@@ -632,7 +632,7 @@ var CL = (function () {
 		},
 
 		get_unit_data: function (data, id, format, start, end, options) {
-			var i, html, j, decisions, rows, cells, row_list, temp, events, max_length, row_id, 
+			var i, html, j, decisions, rows, cells, row_list, temp, events, max_length, row_id,
 			type, subrow_id, colspan, hand, text, label, rules, key, reading_label, reading_suffix;
 			html = [];
 			row_list = [];
@@ -640,7 +640,7 @@ var CL = (function () {
 				hand = options.highlighted_wit.split('|')[1];
 			} else {
 				hand = null;
-			}    
+			}
 			rules = CL._get_rule_classes(undefined, undefined, 'value', ['identifier', 'keep_as_main_reading', 'suffixed_label', 'suffixed_reading']);
 			for (key in rules) {
 				if (rules.hasOwnProperty(key) && rules[key][1] === false) {
@@ -687,7 +687,7 @@ var CL = (function () {
 			html.push('</table>');
 			html.push('</td>');
 
-			return [html, row_list];  
+			return [html, row_list];
 		},
 
 		/** add lac_verse and om_verse to the collated data */
@@ -744,8 +744,8 @@ var CL = (function () {
 			CL._display_settings_details.configs.sort(function(a, b){return a.menu_pos-b.menu_pos});
 			for (i = 0; i < CL._display_settings_details.configs.length; i += 1) {
 				if (CL._display_settings_details.configs[i].menu_pos === null) {
-					settings_html.push('<input class="boolean" name="' + CL._display_settings_details.configs[i].id 
-							+ '" id="' + CL._display_settings_details.configs[i].id 
+					settings_html.push('<input class="boolean" name="' + CL._display_settings_details.configs[i].id
+							+ '" id="' + CL._display_settings_details.configs[i].id
 							+ '" type="hidden" value="' + CL._display_settings_details.configs[i].check_by_default + '"/>');
 				} else {
 					settings_html.push('<label for="' + CL._display_settings_details.configs[i].id + '">' +CL._display_settings_details.configs[i].label + '</label>');
@@ -782,8 +782,8 @@ var CL = (function () {
 			});
 		},
 
-		/* 
-		 * finds the first word of the witness (by finding the first reading of the 
+		/*
+		 * finds the first word of the witness (by finding the first reading of the
 		 * witness with a length and checking that the index is 2)
 		 * if that word has a gap_before attribute then return true and the details (as a list)
 		 * else return false (as a list)
@@ -801,11 +801,11 @@ var CL = (function () {
 						//if the reading is overlapped. Now we are solidifying gaps I think that if they are moved any resulting oms should
 						//stay as om - in reality probably this should never happen and of course they can be regularised to something else
 						//but I think it is far less confusing to show om instead of having some solid and some elastic gaps in the same situation.
-//						if (reading.hasOwnProperty('overlap_status') && apparatus[i].hasOwnProperty('overlap_units')) {		    
+//						if (reading.hasOwnProperty('overlap_status') && apparatus[i].hasOwnProperty('overlap_units')) {
 //						for (key in apparatus[i].overlap_units) {
-//						if (apparatus[i].overlap_units.hasOwnProperty(key)) {			    	
+//						if (apparatus[i].overlap_units.hasOwnProperty(key)) {
 //						if (apparatus[i].overlap_units[key].indexOf(witness) !== -1) {
-//						temp = CL.find_overlap_unit_by_id(key); 
+//						temp = CL.find_overlap_unit_by_id(key);
 //						if (temp !== null) {
 //						ol_unit = temp;
 //						}
@@ -813,7 +813,7 @@ var CL = (function () {
 //						if (ol_unit.readings[k].witnesses.indexOf(witness) !== -1) {
 //						reading = CL.get_reading(ol_unit.readings[k], witness);
 //						}
-//						}					
+//						}
 //						}
 //						}
 //						}
@@ -873,11 +873,11 @@ var CL = (function () {
 				for (j = 0; j < apparatus[i].readings.length; j += 1) {
 					if (CL.get_all_reading_witnesses(apparatus[i].readings[j]).indexOf(witness) !== -1) {
 						reading = CL.get_reading(apparatus[i].readings[j], witness);
-						if (reading.hasOwnProperty('overlap_status')  && apparatus[i].hasOwnProperty('overlap_units')) {		    
+						if (reading.hasOwnProperty('overlap_status')  && apparatus[i].hasOwnProperty('overlap_units')) {
 							for (key in apparatus[i].overlap_units) {
-								if (apparatus[i].overlap_units.hasOwnProperty(key)) {			    	
+								if (apparatus[i].overlap_units.hasOwnProperty(key)) {
 									if (apparatus[i].overlap_units[key].indexOf(witness) !== -1) {
-										temp = CL.find_overlap_unit_by_id(key); 
+										temp = CL.find_overlap_unit_by_id(key);
 										if (temp !== null) {
 											ol_unit = temp;
 										}
@@ -885,7 +885,7 @@ var CL = (function () {
 											if (ol_unit.readings[k].witnesses.indexOf(witness) !== -1) {
 												reading = CL.get_reading(ol_unit.readings[k], witness);
 											}
-										}					
+										}
 									}
 								}
 							}
@@ -932,7 +932,7 @@ var CL = (function () {
 			witnesses = [];
 			if (reading.text.length === 0) {
 				for (i = 0; i < reading.witnesses.length; i += 1) {
-					if ((reading.hasOwnProperty('SR_text') && !reading.SR_text.hasOwnProperty(reading.witnesses[i])) 
+					if ((reading.hasOwnProperty('SR_text') && !reading.SR_text.hasOwnProperty(reading.witnesses[i]))
 							|| !reading.hasOwnProperty('SR_text')) {
 						if (witnesses.indexOf(reading.witnesses[i]) === -1) {
 							witnesses.push(reading.witnesses[i]);
@@ -985,7 +985,7 @@ var CL = (function () {
 			if (reading.hasOwnProperty('subreadings')) {
 				for (key in reading.subreadings) {
 					if (reading.subreadings.hasOwnProperty(key)) {
-						for (i = 0; i < reading.subreadings[key].length; i += 1) {			    
+						for (i = 0; i < reading.subreadings[key].length; i += 1) {
 							witnesses.push.apply(witnesses, reading.subreadings[key][i].witnesses);
 						}
 					}
@@ -1049,9 +1049,9 @@ var CL = (function () {
 
 		/** This deals with getting the correct om and lac details in the interface when a MS has no text for a reading
 		 * it needs to be done 'live' because when units and readings are moved values can change
-		 * 
+		 *
 		 * this could be run when subreadings are shown and when subreadings are hidden
-		 * 
+		 *
 		 *  */
 		lac_om_fix: function () {
 			var i, j, k, apparatus, witnesses, empty_witnesses, token, extra_readings, overlap, key, subreading_data, text, overlap_status;
@@ -1062,9 +1062,9 @@ var CL = (function () {
 			for (i = 0; i < apparatus.length; i += 1) { // loop through units
 				extra_readings = [];
 				for (j = 0; j < apparatus[i].readings.length; j += 1) { // loop through readings
-					//if this is reading contains an empty reading and if this isn't a whole verse lac or whole verse om 
-					if (CL.contains_empty_reading(apparatus[i].readings[j]) //includes subreadings and SR_text 
-							&& apparatus[i].readings[j].type !== 'lac_verse' 
+					//if this is reading contains an empty reading and if this isn't a whole verse lac or whole verse om
+					if (CL.contains_empty_reading(apparatus[i].readings[j]) //includes subreadings and SR_text
+							&& apparatus[i].readings[j].type !== 'lac_verse'
 								&& apparatus[i].readings[j].type !== 'om_verse') {
 						overlap_status = undefined;
 						if (apparatus[i].readings[j].hasOwnProperty('overlap_status')) {
@@ -1080,33 +1080,33 @@ var CL = (function () {
 							if (!CL.is_overlapped(apparatus[i], witnesses[k])) {
 								//TODO: need to test that this works if first unit word has gap before and after I think it probably does
 								if (i === 0) { //this is the first unit so we need to look for gaps before the first word in witness
-									token = CL.has_gap_before(apparatus, witnesses[k]);			
+									token = CL.has_gap_before(apparatus, witnesses[k]);
 								} else {
 									token = CL.has_gap_after(apparatus, witnesses[k], i);
 								}
-								if (token[0] === true && empty_witnesses.indexOf(witnesses[k]) !== -1) {			    
+								if (token[0] === true && empty_witnesses.indexOf(witnesses[k]) !== -1) {
 									//set up a new reading for the lac version
 									extra_readings = CL.add_lac_reading(extra_readings, witnesses[k], token[1], overlap_status);
 									witnesses[k] = null; // just make it null and delete later so you don't change size mid loop
-								} else if (apparatus[i].readings[j].witnesses.indexOf(witnesses[k]) !== -1 
-										&& ((apparatus[i].readings[j].hasOwnProperty('SR_text') && !apparatus[i].readings[j].SR_text.hasOwnProperty(witnesses[k])) 
-												|| !apparatus[i].readings[j].hasOwnProperty('SR_text'))) {	
+								} else if (apparatus[i].readings[j].witnesses.indexOf(witnesses[k]) !== -1
+										&& ((apparatus[i].readings[j].hasOwnProperty('SR_text') && !apparatus[i].readings[j].SR_text.hasOwnProperty(witnesses[k]))
+												|| !apparatus[i].readings[j].hasOwnProperty('SR_text'))) {
 									//if this witness is a genuine main reading
 									//then leave the witness alone and if its text length is 0 ensure it is om not lac (it may have changed when moving readings about)
 									if (apparatus[i].readings[j].text.length === 0) {
 										apparatus[i].readings[j].type = 'om';
 										delete apparatus[i].readings[j].details;
 									}
-								} else if (apparatus[i].readings[j].witnesses.indexOf(witnesses[k]) !== -1 
-										&& apparatus[i].readings[j].hasOwnProperty('SR_text') 
+								} else if (apparatus[i].readings[j].witnesses.indexOf(witnesses[k]) !== -1
+										&& apparatus[i].readings[j].hasOwnProperty('SR_text')
 										&& apparatus[i].readings[j].SR_text.hasOwnProperty(witnesses[k])
-										&& apparatus[i].readings[j].SR_text[witnesses[k]].text.length === 0) {				   
+										&& apparatus[i].readings[j].SR_text[witnesses[k]].text.length === 0) {
 									//squelch if this is an om reading which is a subreading of another reading
 
-								} else { 
+								} else {
 									witnesses[k] = null;
 								}
-							} 
+							}
 						}
 						apparatus[i].readings[j].witnesses = CL.remove_null_items(witnesses); //strip null from witnesses
 						//if no witnesses remain delete the reading
@@ -1141,7 +1141,7 @@ var CL = (function () {
 						delete text[i][text[i].reading[j]];
 						text[i].reading[j] = null;
 					}
-				}		
+				}
 				text[i].reading = CL.remove_null_items(text[i].reading);
 			}
 			return text;
@@ -1165,8 +1165,8 @@ var CL = (function () {
 		},
 
 		/**
-		 * Tests whether the given unit has a reading that contains text or not 
-		 * 
+		 * Tests whether the given unit has a reading that contains text or not
+		 *
 		 * @method unit_has_text
 		 * @param {Object} unit The unit to be tested
 		 * @return {boolean} returns true if the unit contains a reading with text or false if all om/lac etc.
@@ -1176,7 +1176,7 @@ var CL = (function () {
 			for (i = 0; i < unit.readings.length; i += 1) {
 				if (unit.readings[i].text.length > 0 ){
 					return true;
-				} 
+				}
 				if (unit.readings[i].hasOwnProperty('subreadings')) {
 					for (key in unit.readings[i].subreadings) {
 						if (unit.readings[i].subreadings.hasOwnProperty(key)) {
@@ -1201,9 +1201,9 @@ var CL = (function () {
 			return false;
 		},
 
-		/** 
+		/**
 		 * Removes units which only contain om/lac readings from the data structure
-		 * 
+		 *
 		 * @method clean_extra_gaps
 		 * */
 		clean_extra_gaps: function () {
@@ -1240,7 +1240,7 @@ var CL = (function () {
 		},
 
 		/** returns a copy of the readings (not a pointer) as a single list regardless of how many overlap units there are
-		 * 
+		 *
 		 */
 		get_overlap_unit_readings: function (unit) {
 			var overlap_readings, key, ol_unit, i;
@@ -1255,7 +1255,7 @@ var CL = (function () {
 							}
 						}
 					}
-				}		
+				}
 			}
 			return overlap_readings;
 		},
@@ -1263,18 +1263,18 @@ var CL = (function () {
 		check_extra_gap_required_before: function (reading, witness) {
 			var subreading;
 			if (reading.text.length > 0 && !reading.text[0].hasOwnProperty('combined_gap_before')) {
-				if (!reading.hasOwnProperty('combined_gap_before_subreadings') 
-						|| (reading.hasOwnProperty('combined_gap_before_subreadings') 
+				if (!reading.hasOwnProperty('combined_gap_before_subreadings')
+						|| (reading.hasOwnProperty('combined_gap_before_subreadings')
 								&& reading.combined_gap_before_subreadings.indexOf(witness === -1))) {
-					if (reading.text.length > 0 
-							&& reading.text[0].hasOwnProperty(witness) 
+					if (reading.text.length > 0
+							&& reading.text[0].hasOwnProperty(witness)
 							&& reading.text[0][witness].hasOwnProperty('gap_before')) {
 						return true;
 					}
 					if (reading.hasOwnProperty('subreadings') || reading.hasOwnProperty('SR_text')) {
 						subreading = CL.get_subreading_of_witness(reading, witness, true);
-						if (subreading && subreading.text.length > 0 
-								&& !subreading.text[0].hasOwnProperty('combined_gap_before') 
+						if (subreading && subreading.text.length > 0
+								&& !subreading.text[0].hasOwnProperty('combined_gap_before')
 								&& subreading.text[0][witness].hasOwnProperty('gap_before')) {
 							return true;
 						}
@@ -1287,7 +1287,7 @@ var CL = (function () {
 		//this is only ever going to be called on the very first unit in the apparatus
 		extra_gap_required_before: function (unit) {
 			var i, j, k, readings, witnesses, ol_readings;
-			readings = unit.readings; 
+			readings = unit.readings;
 			for (i = 0; i < readings.length; i += 1) {
 				witnesses = CL.get_all_reading_witnesses(readings[i]);
 				for (j = 0; j < witnesses.length; j += 1) {
@@ -1302,7 +1302,7 @@ var CL = (function () {
 								return true;
 							}
 						}
-					} 
+					}
 				}
 			}
 			return false;
@@ -1330,11 +1330,11 @@ var CL = (function () {
 //							if (unit_pos === 0) {
 //							console.log('continuing to check')
 //							}
-							if (!readings[i].hasOwnProperty('combined_gap_after_subreadings') 
-									|| (readings[i].hasOwnProperty('combined_gap_after_subreadings') 
+							if (!readings[i].hasOwnProperty('combined_gap_after_subreadings')
+									|| (readings[i].hasOwnProperty('combined_gap_after_subreadings')
 											&& readings[i].combined_gap_after_subreadings.indexOf(witnesses[j] === -1))) {
-								if (readings[i].text.length > 0 
-										&& readings[i].text[readings[i].text.length-1].hasOwnProperty(witnesses[j]) 
+								if (readings[i].text.length > 0
+										&& readings[i].text[readings[i].text.length-1].hasOwnProperty(witnesses[j])
 										&& readings[i].text[readings[i].text.length-1][witnesses[j]].hasOwnProperty('gap_after')) {
 									if (CL.combined_gap_in_next_unit(unit_list, unit_pos, witnesses[j]) === false) {
 										return true;
@@ -1342,8 +1342,8 @@ var CL = (function () {
 								}
 								if (readings[i].hasOwnProperty('subreadings') || readings[i].hasOwnProperty('SR_text')) {
 									subreading = CL.get_subreading_of_witness(readings[i], witnesses[j], true);
-									if (subreading && subreading.text.length > 0 
-											&& !subreading.text[subreading.text.length-1].hasOwnProperty('combined_gap_after') 
+									if (subreading && subreading.text.length > 0
+											&& !subreading.text[subreading.text.length-1].hasOwnProperty('combined_gap_after')
 											&& subreading.text[subreading.text.length-1][witnesses[j]].hasOwnProperty('gap_after')) {
 										if (CL.combined_gap_in_next_unit(unit_list, unit_pos, witnesses[j]) === false) {
 											return true;
@@ -1359,7 +1359,7 @@ var CL = (function () {
 		},
 
 		//returns true if the unit following the position supplied has a combined gap at the beginning.
-		//will use overlapped reading if there is on (and check 1st word only) 
+		//will use overlapped reading if there is on (and check 1st word only)
 		//This should not be called in the middle of an overlapped unit
 		combined_gap_in_next_unit: function (unit_list, unit_pos, witness) {
 			var unit, i, subreading, readings;
@@ -1368,11 +1368,11 @@ var CL = (function () {
 				if (CL.is_overlapped(unit, witness)) {
 					readings = CL.get_overlap_unit_readings(unit);
 				} else {
-					readings = unit.readings; 
+					readings = unit.readings;
 				}
 				for (i = 0; i < readings.length; i += 1) {
 					if (readings[i].witnesses.indexOf(witness) !== -1) {
-						if (readings[i].hasOwnProperty('combined_gap_before_subreadings') 
+						if (readings[i].hasOwnProperty('combined_gap_before_subreadings')
 								&& readings[i].combined_gap_before_subreadings.indexOf(witness) !== -1) {
 							return true;
 						}
@@ -1397,9 +1397,9 @@ var CL = (function () {
 			details = {};
 			if (ol_reading.hasOwnProperty('combined_gap_before_subreadings')) {
 				details.witnesses = ol_reading.combined_gap_before_subreadings;
-				details.details = ol_reading.combined_gap_before_subreadings_details[ol_reading.combined_gap_before_subreadings[0]]; 
+				details.details = ol_reading.combined_gap_before_subreadings_details[ol_reading.combined_gap_before_subreadings[0]];
 			} else {
-				if (ol_reading.text.length > 0 
+				if (ol_reading.text.length > 0
 						&& ol_reading.text[0].hasOwnProperty('combined_gap_before')) {
 					details.details = ol_reading.text[0].combined_gap_before_details;
 				}
@@ -1408,14 +1408,14 @@ var CL = (function () {
 				details.details = ol_reading.text[ol_reading.text.length-1][ol_reading.combined_gap_after_subreadings].gap_details;
 				details.witnesses = ol_reading.combined_gap_after_subreadings;
 			} else {
-				if (ol_reading.text.length > 0 
+				if (ol_reading.text.length > 0
 						&& ol_reading.text[ol_reading.text.length-1].hasOwnProperty('combined_gap_after')) {
 					details.details = ol_reading.text[ol_reading.text.length-1][ol_reading.witnesses[0]].gap_details;
 				}
 			}
 			if (!details.hasOwnProperty('witnesses')) {
 				details.witnesses = ol_reading.witnesses;
-			}		    
+			}
 			for (i = 0; i < unit.readings.length; i += 1) {
 				if (unit.readings[i].witnesses.indexOf(details.witnesses[0]) !== -1) {
 					if (typeof unit.readings[i].overlap_status !== 'undefined') {
@@ -1433,7 +1433,7 @@ var CL = (function () {
 			if (ol_reading.hasOwnProperty('details')) {
 				details.details = ol_reading.details;
 			}
-			return details;	    
+			return details;
 		},
 
 		//if all of the provided overlap_unit ids have empty readings
@@ -1455,7 +1455,7 @@ var CL = (function () {
 			for (key in overlap_units) {
 				if (overlap_units.hasOwnProperty(key)) {
 					ol_unit = CL.find_overlap_unit_by_id(key);
-					//the 1 in the next line can be hard coded because overlapped readings only ever have a single reading 
+					//the 1 in the next line can be hard coded because overlapped readings only ever have a single reading
 					//after the a reading at this point
 					if (ol_unit.readings[1].text.length === 0) {
 						return true;
@@ -1468,17 +1468,17 @@ var CL = (function () {
 		add_extra_gap_readings: function (adjacent_unit, all_witnesses, new_unit, inclusive_overlaps) {
 			var lac_wits, om_wits, other_wits, key, ol_unit, i, j, k, new_rdg;
 			//the rest of this section is really just adding the readings (and witnesses) to this unit
-			lac_wits = JSON.parse(JSON.stringify(CL._data.lac_readings));			
+			lac_wits = JSON.parse(JSON.stringify(CL._data.lac_readings));
 			om_wits = JSON.parse(JSON.stringify(CL._data.om_readings));
 			other_wits = JSON.parse(JSON.stringify(all_witnesses));
 			//if anything marked as overlapped and is empty in the first 'real' unit
 			//ALL overlap indexes need adding to this one
-			if (adjacent_unit.hasOwnProperty('overlap_units') 
+			if (adjacent_unit.hasOwnProperty('overlap_units')
 					&& CL.overlap_has_empty_reading(adjacent_unit.overlap_units)) {
 				for (key in adjacent_unit.overlap_units) {
-					if (adjacent_unit.overlap_units.hasOwnProperty(key) 
-							&& (typeof inclusive_overlaps === 'undefined' 
-								|| typeof inclusive_overlaps !== 'undefined' 
+					if (adjacent_unit.overlap_units.hasOwnProperty(key)
+							&& (typeof inclusive_overlaps === 'undefined'
+								|| typeof inclusive_overlaps !== 'undefined'
 									&& inclusive_overlaps.indexOf(key) !== -1)
 					) {
 						ol_unit = CL.find_overlap_unit_by_id(key);
@@ -1523,15 +1523,15 @@ var CL = (function () {
 			}
 			//now add your whole verse lac and om witnesses
 			if (lac_wits.length > 0) {
-				new_unit.readings.push({'witnesses': lac_wits, 
-					'text': [], 
-					'type': 'lac_verse', 
+				new_unit.readings.push({'witnesses': lac_wits,
+					'text': [],
+					'type': 'lac_verse',
 					'details': 'lac verse'});
 			}
 			if (om_wits.length > 0) {
-				new_unit.readings.push({'witnesses': om_wits, 
-					'text': [], 
-					'type': 'om_verse', 
+				new_unit.readings.push({'witnesses': om_wits,
+					'text': [],
+					'type': 'om_verse',
 					'details': 'om verse'});
 			}
 			CL.add_unit_id(new_unit, 'apparatus');
@@ -1543,7 +1543,7 @@ var CL = (function () {
 			var key;
 			if (current + 1 < CL._data.apparatus.length && CL._data.apparatus[current+1].hasOwnProperty('overlap_units')) {
 				for (key in CL._data.apparatus[current].overlap_units) {
-					if (CL._data.apparatus[current].overlap_units.hasOwnProperty(key) 
+					if (CL._data.apparatus[current].overlap_units.hasOwnProperty(key)
 							&& CL._data.apparatus[current+1].overlap_units.hasOwnProperty(key)) {
 						return true;
 					}
@@ -1557,7 +1557,7 @@ var CL = (function () {
 			inclusive_overlaps = [];
 			if (current + 1 < CL._data.apparatus.length && CL._data.apparatus[current+1].hasOwnProperty('overlap_units')) {
 				for (key in CL._data.apparatus[current].overlap_units) {
-					if (CL._data.apparatus[current].overlap_units.hasOwnProperty(key) 
+					if (CL._data.apparatus[current].overlap_units.hasOwnProperty(key)
 							&& CL._data.apparatus[current+1].overlap_units.hasOwnProperty(key)) {
 						inclusive_overlaps.push(key);
 					}
@@ -1593,10 +1593,10 @@ var CL = (function () {
 				if (i === 0) { //then we are in the very first unit and if we have gaps before then we must add a unit
 					if (CL.extra_gap_required_before(apparatus[i])) {
 						//create a new unit
-						dict = {'start': 1, 
-								'end': 1, 
+						dict = {'start': 1,
+								'end': 1,
 								'created': true,
-								'first_word_index': '1.1', 
+								'first_word_index': '1.1',
 								'readings': []};
 						dict = CL.add_extra_gap_readings(apparatus[i], all_witnesses, dict);
 						//store the new unit for adding later (so we don't destroy our loop)
@@ -1606,10 +1606,10 @@ var CL = (function () {
 				if (CL.extra_gap_required_after(apparatus, i)) {
 					if (i === apparatus.length - 1) {
 						//this is the very last unit
-						dict = {'start': apparatus[i].end + 1, 
-								'end': apparatus[i].end + 1, 
+						dict = {'start': apparatus[i].end + 1,
+								'end': apparatus[i].end + 1,
 								'created': true,
-								'first_word_index': apparatus[i].end + 1 + '.' + 1, 
+								'first_word_index': apparatus[i].end + 1 + '.' + 1,
 								'readings': []};
 						dict = CL.add_extra_gap_readings(apparatus[i], all_witnesses, dict);
 						extras['' + (i+1)] = dict;
@@ -1621,10 +1621,10 @@ var CL = (function () {
 //						console.log('^^^^')
 //						temp = CL.get_extra_gap_location(apparatus[i].end);
 //						//if this has any shared overlaps on either side
-//						dict = {'start': temp['start'], 
-//						'end': temp['end'], 
+//						dict = {'start': temp['start'],
+//						'end': temp['end'],
 //						'created': true,
-//						'first_word_index': temp['first_word_index'], 
+//						'first_word_index': temp['first_word_index'],
 //						'readings': []};
 //						console.log(dict)
 //						//this needs to only separate the ones that appear on both sides.
@@ -1634,8 +1634,8 @@ var CL = (function () {
 					} else {
 						//otherwise we have no inclusive overlaps
 						temp = CL.get_extra_gap_location(apparatus[i].end);
-						dict = {'start': temp['start'], 
-								'end': temp['end'], 
+						dict = {'start': temp['start'],
+								'end': temp['end'],
 								'created': true,
 								'first_word_index': temp['first_word_index'],
 								'readings': []};
@@ -1645,7 +1645,7 @@ var CL = (function () {
 				}
 			}
 			keys = Object.keys(extras).sort(function(a, b){return b-a});
-			
+
 			for (i = 0; i < keys.length; i += 1) {
 				CL.add_unit_id(extras[keys[i]]);
 				apparatus.splice(parseInt(keys[i]), 0, extras[keys[i]]);
@@ -1658,8 +1658,8 @@ var CL = (function () {
 		add_lac_reading: function (extra_readings, witness, gap_details, overlap_status) {
 			var i, extra_reading, key;
 			for (i = 0; i < extra_readings.length; i += 1) {
-				if (extra_readings[i].details === gap_details 
-						&& ((typeof overlap_status === 'undefined' && !extra_readings[i].hasOwnProperty('overlap_status')) 
+				if (extra_readings[i].details === gap_details
+						&& ((typeof overlap_status === 'undefined' && !extra_readings[i].hasOwnProperty('overlap_status'))
 								|| (typeof overlap_status !== 'undefined' && extra_readings[i].overlap_status === overlap_status))) {
 					extra_readings[i].witnesses.push(witness);
 					return extra_readings;
@@ -1824,7 +1824,7 @@ var CL = (function () {
 						document.getElementById('scroller').scrollLeft = 0;
 						document.getElementById('scroller').scrollTop = 0;
 					} else if (latest.status === 'set') {
-						//if anything that should have an _id attribute doesn't have one then 
+						//if anything that should have an _id attribute doesn't have one then
 						//add them
 						if (SV.check_ids()[0]) {
 							CL.add_unit_and_reading_ids();
@@ -1850,22 +1850,7 @@ var CL = (function () {
 			}
 		},
 
-		//not used at the moment
-		remove_overlapped_readings: function () {
-			var apparatus, i, j;
-			apparatus = CL._data.apparatus;
-			for (i = 0; i < apparatus.length; i += 1) {
-				for (j = 0; j < apparatus[i].readings.length; j += 1) {
-					if (apparatus[i].readings[j].hasOwnProperty('overlap')) {
-						apparatus[i].readings[j] = 'None';
-					}
-				}
-				while (apparatus[i].readings.indexOf('None') !== -1) {
-					apparatus[i].readings.splice(apparatus[i].readings.indexOf('None'), 1);
-				}
-			}
-			CL._data.apparatus = apparatus;
-		},
+
 
 		/** returns the token with the following priorities
 		 * interface > n > t */
@@ -1919,14 +1904,14 @@ var CL = (function () {
 					console.log('I have been overlapped and ' + reading.overlap_status);
 				}
 				return 'system_gen_' + reading.overlap_status;
-			}	    
+			}
 			//now look at options and set flag accordingly
 			if (options.hasOwnProperty('witness')) {
 				witness = options.witness;
 				if (test === true) {
 					console.log('I was given the witnesses ' + witness);
 				}
-			} 
+			}
 			if (options.hasOwnProperty('reading_type')) {
 				reading_type = options.reading_type;
 				if (test === true) {
@@ -1954,7 +1939,7 @@ var CL = (function () {
 				}
 			}
 			//if no witness was supplied try to find a main reading witness and if not just return interface reading of all words or lac/om stuff
-			if (typeof witness === 'undefined' && !reading.hasOwnProperty('created')) {	//don't do this for created readings as you are overwriting the genuine witness text in these cases	
+			if (typeof witness === 'undefined' && !reading.hasOwnProperty('created')) {	//don't do this for created readings as you are overwriting the genuine witness text in these cases
 				for (i = 0; i < reading.witnesses.length; i += 1) {
 					if (reading.text.length > 0 && reading.text[0].hasOwnProperty(reading.witnesses[i])) {
 						witness = reading.witnesses[i];
@@ -1965,14 +1950,14 @@ var CL = (function () {
 					}
 				}
 			}
-			if (typeof witness === 'undefined' && reading.hasOwnProperty('witnesses') 		 
+			if (typeof witness === 'undefined' && reading.hasOwnProperty('witnesses')
 					&& CL.get_all_reading_witnesses(reading).length === 1  && !reading.hasOwnProperty('created')) {
 				witness = CL.get_all_reading_witnesses(reading)[0];
 				if (test === true) {
 					console.log('I found the witness ' + witness + ' because it was the only one in the reading at all');
 				}
 			}
-			//we didn't find a main reading witness so return interface reading of all words or lac/om stuff 
+			//we didn't find a main reading witness so return interface reading of all words or lac/om stuff
 			//TODO: ? this does not check for gap after or any other gap details - should it?
 			if (typeof witness === 'undefined') {
 				if (test === true) {
@@ -1986,7 +1971,7 @@ var CL = (function () {
 						text.push(reading.text[i]['interface']);
 					}
 					return text.join(' ').replace(/_/g, '&#803;');
-				} 	
+				}
 				if (reading.hasOwnProperty('details')) {
 					return '&lt;' + reading.details + '&gt;';
 					if (test === true) {
@@ -1998,7 +1983,7 @@ var CL = (function () {
 					if (test === true) {
 						console.log('the reading is om');
 					}
-				} 
+				}
 				if (test === true) {
 					console.log('I didn\'t find a reading so here is an empty string by way of compensation!');
 				}
@@ -2063,20 +2048,20 @@ var CL = (function () {
 			if (reading_type === 'mainreading' && typeof app_id !== 'undefined' && typeof unit_id !== 'undefined' && typeof witness !== 'undefined') {
 				//if we have a standoff regularisation return its parent text
 				text = CL.find_standoff_regularisation_text(app_id, unit_id, witness);
-				if (text !== null) {		    
+				if (text !== null) {
 					if (test === true) {
 						console.log('This reading has been resularised using standoff so here it what it should read');
 					}
 					return text;
 				}
-			} 
+			}
 			//at this point we have returned anything that isn't a case that needs to be extracted word by word from witness_text
 			text = [];
 			if (test === true) {
 				console.log(text)
 			}
 			//deal with combined gap before
-			if (reading.hasOwnProperty('combined_gap_before_subreadings') 
+			if (reading.hasOwnProperty('combined_gap_before_subreadings')
 					&& reading.combined_gap_before_subreadings.indexOf(witness) !== -1
 					&& reading.hasOwnProperty('combined_gap_before_subreadings_details')
 					&& reading.combined_gap_before_subreadings_details.hasOwnProperty(witness)) {
@@ -2095,19 +2080,19 @@ var CL = (function () {
 					if (test === true) {
 						console.log('There was a combined gap before this first token in this reading');
 					}
-				} 
+				}
 			}
-			//deal with text and internal gaps   
+			//deal with text and internal gaps
 			for (i = 0; i < witness_text.length; i += 1) {
 				found_word = undefined;
 				if (reading_type === 'subreading' && witness_text[i][witness].hasOwnProperty('decision_details')) {
 					//loop backwards and only use t of rules that match your list of supplied types
 					if (typeof required_rules === 'undefined') {
-						text.push(witness_text[i][witness].decision_details[0].t); //this gets the first t from the decision details so effectively undoing all regularisations 
+						text.push(witness_text[i][witness].decision_details[0].t); //this gets the first t from the decision details so effectively undoing all regularisations
 						if (test === true) {
 							console.log('I am a subreading but have not been given specific rules to apply')
 						}
-					} else {					
+					} else {
 						for (j = witness_text[i][witness].decision_details.length-1; j >=0; j-=1) {
 							if (required_rules.indexOf(witness_text[i][witness].decision_details[j]['class']) !== -1) {
 								found_word = witness_text[i][witness].decision_details[j].t;
@@ -2137,7 +2122,7 @@ var CL = (function () {
 					if (test === true) {
 						console.log('I am just the same as the interface value');
 					}
-				}		
+				}
 				if (i === witness_text.length-1 && reading.text.length > 0 && reading.text[reading.text.length-1].hasOwnProperty('combined_gap_after')) {
 					//this is the last word in our witness so deal with combined_gap_after
 					//are we sure this works for all witnesses - what if a subreading does not need combining such as P66 in 16:23
@@ -2167,7 +2152,7 @@ var CL = (function () {
 					console.log(text)
 				}
 			}
-			return text.join(' ').replace(/_/g, '&#803;');	    
+			return text.join(' ').replace(/_/g, '&#803;');
 		},
 
 
@@ -2178,7 +2163,7 @@ var CL = (function () {
 				for (key in CL._data.marked_readings) {
 					if (CL._data.marked_readings.hasOwnProperty(key)) {
 						for (i = 0; i < CL._data.marked_readings[key].length; i += 1) {
-							if (CL._data.marked_readings[key][i].apparatus === app_id 
+							if (CL._data.marked_readings[key][i].apparatus === app_id
 									&& CL._data.marked_readings[key][i].start === unit.start
 									&& CL._data.marked_readings[key][i].end === unit.end
 									&& CL._data.marked_readings[key][i].witness === witness) {
@@ -2222,7 +2207,7 @@ var CL = (function () {
 			if (CL._display_settings.view_supplied === false) {
 				word = word.replace(/\[([^0-9]*?)\]/g, '$1');
 			}
-			//TODO: this needs to be converted into js if we want punctuation to show up in subreadings 
+			//TODO: this needs to be converted into js if we want punctuation to show up in subreadings
 //			if 'view_punctuation' in self.settings:
 //			if 'pc_before' in token:
 //			word = '%s%s' % (token['pc_before'], word)
@@ -2361,7 +2346,7 @@ var CL = (function () {
 				return 1;
 			}
 			return 0;
-		},	
+		},
 
 		compare_first_word_indexes: function (a, b) {
 			var a_main, b_main, a_sub, b_sub;
@@ -2395,11 +2380,11 @@ var CL = (function () {
 				return 1;
 			}
 			return 0;
-		},	
+		},
 
 		compare_start_indexes: function (a, b) {
 			return a.start - b.start;
-		},	
+		},
 
 		get_active_unit_witnesses: function (unit, app_id) {
 			var witnesses, i, j, key;
@@ -2485,7 +2470,7 @@ var CL = (function () {
 			}
 		},
 
-		//TODO: we may not need all of this data 
+		//TODO: we may not need all of this data
 		//at the moment I am just keeping everything we have in the collation object
 		//but this can probably be thinned out when I know what we need
 		export_to_apparatusEditor: function () {
@@ -2507,12 +2492,12 @@ var CL = (function () {
 						main_app._id += '_' + user._id;
 					}
 
-					//TODO: Important! make an error message that checks if any versions have been added 
+					//TODO: Important! make an error message that checks if any versions have been added
 					//and if they have then don't allow
 
 					var confirm_message = "This project already has an version of this verse in the main apparatus.\nAre you sure you want to overwrite the currently saved version with this one?\nOverwriting may mean versional data needs to be checked and edited in the apparatus editor.";
 					var success_message = "Approved successful";
-					CL._services.save_collation(CL._context, main_app, confirm_message, true, function(saved_successful) {			 
+					CL._services.save_collation(CL._context, main_app, confirm_message, true, function(saved_successful) {
 						document.getElementById('message_panel').innerHTML = saved_successful ? success_message : '';
 					});
 				}
@@ -2522,7 +2507,7 @@ var CL = (function () {
 		get_exporter_settings: function () {
 			if (CL._project.hasOwnProperty('exporter_settings')) {
 				return CL._project.exporter_settings;
-			} 
+			}
 			if (CL._services.hasOwnProperty('exporter_settings')) {
 				return CL._services.exporter_settings;
 			}
@@ -2536,26 +2521,26 @@ var CL = (function () {
 				if (CL._project.approval_settings.hasOwnProperty('allow_approval_overwrite')) {
 					if (CL._project.approval_settings.allow_approval_overwrite === true) {
 						return [true, ''];
-					} 
+					}
 					if (CL._project.approval_settings.hasOwnProperty('no_overwrite_message')) {
 						return [false, CL._project.approval_settings.no_overwrite_message];
-					} 
+					}
 					return [false, 'You are not allowed to overwrite a previously approved version in this project.'];
-				} 
+				}
 				return defaults;
-			} 
+			}
 			if (CL._services.hasOwnProperty('approval_settings')) {
 				if (CL._services.approval_settings.hasOwnProperty('allow_approval_overwrite')) {
 					if (CL._services.approval_settings.allow_approval_overwrite === true) {
 						return [true];
-					} 
+					}
 					if (CL._services.approval_settings.hasOwnProperty('no_overwrite_message')) {
 						return [false, CL._services.approval_settings.no_overwrite_message];
-					} 
+					}
 					return [false, 'You are not allowed to overwrite a previously approved version.'];
-				} 
+				}
 				return defaults;
-			} 
+			}
 			return defaults;
 		},
 
@@ -2645,7 +2630,7 @@ var CL = (function () {
 					if (typeof start !== 'undefined' && typeof end !== 'undefined' && typeof app_id !== 'undefined') {
 						for (key in CL._data.marked_readings) {
 							for (j = 0; j < CL._data.marked_readings[key].length; j += 1) {
-								if (CL._data.marked_readings[key][j].start === start 
+								if (CL._data.marked_readings[key][j].start === start
 										&& CL._data.marked_readings[key][j].end === end
 										&& CL._data.marked_readings[key][j].apparatus === app_id
 										&& CL._data.marked_readings[key][j].witness === witness ) {
@@ -2655,7 +2640,7 @@ var CL = (function () {
 												suffix += CL._data.marked_readings[key][j].identifier[k];
 											}
 										}
-									} 
+									}
 								}
 							}
 						}
@@ -2757,7 +2742,7 @@ var CL = (function () {
 					return fn.apply(this, args);
 				} else {
 					alert('there may be a security problem on this page');
-				}	
+				}
 			} else {
 				return function_ref.apply(this, args)
 			}
@@ -2791,7 +2776,7 @@ var CL = (function () {
 				while (element.tagName !== 'BODY' && (element.tagName !== ancestor || (element.tagName === ancestor && condition_test(element) === false))) {
 					element = element.parentNode;
 				}
-				return element;                
+				return element;
 			}
 		},
 
@@ -2916,9 +2901,9 @@ var CL = (function () {
 				reading_label = ''; //this will be the default if it doesn't get replaced
 				if (reading.overlap_status === 'duplicate') {
 					reading_label = '↓';
-				} else {  
+				} else {
 					for (i = 0; i < CL._overlapped_options.length; i += 1) {
-						if (CL._overlapped_options[i].reading_flag === reading.overlap_status 
+						if (CL._overlapped_options[i].reading_flag === reading.overlap_status
 								&& CL._overlapped_options[i].hasOwnProperty('reading_label_display')) {
 							reading_label = CL._overlapped_options[i].reading_label_display;
 						}
@@ -3104,7 +3089,7 @@ var CL = (function () {
 					if (collation.status === 'regularised') {
 						RG.show_verse_collation(CL._data, CL._context, CL._container);
 					} else if (collation.status === 'set') {
-						//if anything that should have an _id attribute doesn't have one then 
+						//if anything that should have an _id attribute doesn't have one then
 						//add them
 						if (SV.check_ids()[0]) {
 							CL.add_unit_and_reading_ids();
@@ -3465,7 +3450,7 @@ var CL = (function () {
 			} else {
 				CL.expand_all(format);
 				document.getElementById('expand_collapse_button').value = 'collapse all';
-				$('#expand_collapse_button').on('click.collapse_all', function (event) {CL.collapse_all(format); });         
+				$('#expand_collapse_button').on('click.collapse_all', function (event) {CL.collapse_all(format); });
 			}
 		},
 
@@ -3575,10 +3560,10 @@ var CL = (function () {
 				document.getElementsByTagName('body')[0].removeChild(document.getElementById('wit_form'));
 			});
 			if (document.getElementById('wit_select_all')) {
-				$('#wit_select_all').on('click', function (event) {	
+				$('#wit_select_all').on('click', function (event) {
 					CL.check_witnesses(event.target.id);
 				});
-			}   
+			}
 		},
 
 
@@ -3596,14 +3581,14 @@ var CL = (function () {
 			//populate the parent drop down
 			parents = [];
 			for (i = 0; i < CL._data[reading_details.app_id][reading_details.unit_pos].readings.length; i += 1) {
-				//if the reading is 
+				//if the reading is
 				//	not the reading being made a subreading
 				//	its not an empty reading (doesn't have a type attribute)
 				//	it is an empty reading but isn't lac verse or om verse (probably should change this and deal with them differently)
 				//	the unit is an overlap and i != 0 (which means this is the a reading)
-				if (i !== reading_details.reading_pos 
-						&& (!CL._data[reading_details.app_id][reading_details.unit_pos].readings[i].hasOwnProperty('type') 
-								|| (CL._data[reading_details.app_id][reading_details.unit_pos].readings[i].hasOwnProperty('type') 
+				if (i !== reading_details.reading_pos
+						&& (!CL._data[reading_details.app_id][reading_details.unit_pos].readings[i].hasOwnProperty('type')
+								|| (CL._data[reading_details.app_id][reading_details.unit_pos].readings[i].hasOwnProperty('type')
 										&& CL._data[reading_details.app_id][reading_details.unit_pos].readings[i].type !== 'om_verse'
 											&& CL._data[reading_details.app_id][reading_details.unit_pos].readings[i].type !== 'lac_verse'))
 											&& (reading_details.app_id === 'apparatus' || (
@@ -3632,7 +3617,7 @@ var CL = (function () {
 					document.getElementById('reading_details').removeAttribute('disabled');
 				} else if (event.target.value === 'other') {
 					document.getElementById('reading_details').value = '';
-					document.getElementById('reading_details').removeAttribute('disabled');     	    
+					document.getElementById('reading_details').removeAttribute('disabled');
 				} else {
 					document.getElementById('reading_details').value = '';
 					document.getElementById('reading_details').setAttribute('disabled', 'disabled');
@@ -3648,7 +3633,7 @@ var CL = (function () {
 						if (key === 'duplicate') {
 							duplicate = true;
 						} else if (key === 'subreading_type') {
-							type = data[key]; 
+							type = data[key];
 						} else if (key === 'reading_details') {
 							extra_details = data[key].replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 						} else if (key !== 'parent_reading' && data.hasOwnProperty(key)) {
@@ -3696,14 +3681,14 @@ var CL = (function () {
 
 
 		/** check to see if the given witness has an entry in the standoff marked_readings
-		 * if it does return the reading 
+		 * if it does return the reading
 		 * if it does not return null */
 		find_standoff_witness: function (witness, start, end) {
 			var key, i, entry;
 			for (key in CL._data.marked_readings) {
 				if (CL._data.marked_readings.hasOwnProperty(key)) {
 					for (i = CL._data.marked_readings[key].length - 1; i >= 0; i -= 1) {
-						if (CL._data.marked_readings[key][i].witness === witness 
+						if (CL._data.marked_readings[key][i].witness === witness
 								&& CL._data.marked_readings[key][i].start === start
 								&& CL._data.marked_readings[key][i].end === end) {
 							entry = JSON.parse(JSON.stringify(CL._data.marked_readings[key][i]));
@@ -3766,7 +3751,7 @@ var CL = (function () {
 			return token[witness].index;
 		},
 
-		//I considered making these cumulative but decided against so that projects can always override services 
+		//I considered making these cumulative but decided against so that projects can always override services
 		//if they have different editorial practices (can be overridden on a stage by stage basis
 		get_pre_stage_checks: function (stage) {
 			if (CL._project.hasOwnProperty('pre_stage_checks') && CL._project.pre_stage_checks.hasOwnProperty(stage))  {
@@ -3774,7 +3759,7 @@ var CL = (function () {
 			}
 			if (CL._services.hasOwnProperty('pre_stage_checks') && CL._services.pre_stage_checks.hasOwnProperty(stage)) {
 				return CL._services.pre_stage_checks[stage];
-			}	    
+			}
 			return [];
 		},
 
@@ -3852,7 +3837,7 @@ var CL = (function () {
 					standoff_reading.combined_gap_before_details = reading.text[0].combined_gap_before_details;
 				}
 			}
-			
+
 			CL._data.marked_readings[standoff_reading.value].push(standoff_reading);
 		},
 
@@ -3877,7 +3862,7 @@ var CL = (function () {
 					standoff_reading['values'].push(rule_type);
 					standoff_reading.reading_history.push(CL.get_historical_reading(rule_type, lowest_rule_positions, classes, details, original_reading, witness, subreading));
 					classes = CL.remove_applied_rules(rule_type, lowest_rule_positions, classes);
-				}				
+				}
 			}
 			//now add the current one
 			standoff_reading['suffixed_sigla'].push(rule_details[type][0]);
@@ -3903,18 +3888,18 @@ var CL = (function () {
 		get_historical_reading: function (rule_type, positions, classes, details, reading, witness, subreading) {
 			var i, new_reading;
 			new_reading = [];
-			if (reading.hasOwnProperty('combined_gap_before_subreadings') 
+			if (reading.hasOwnProperty('combined_gap_before_subreadings')
 					&& reading.combined_gap_before_subreadings.indexOf(witness) !== -1
 					&& reading.hasOwnProperty('combined_gap_before_subreadings_details')
 					&& reading.combined_gap_before_subreadings_details.hasOwnProperty(witness)) {
 				new_reading.push('&lt;' + reading.combined_gap_before_subreadings_details[witness] + '&gt;');
-			}  else if (reading.text.length > 0 && reading.text[0].hasOwnProperty('combined_gap_before') && (!reading.hasOwnProperty('SR_text') || !reading.SR_text.hasOwnProperty(witness))) {				
+			}  else if (reading.text.length > 0 && reading.text[0].hasOwnProperty('combined_gap_before') && (!reading.hasOwnProperty('SR_text') || !reading.SR_text.hasOwnProperty(witness))) {
 				if (reading.text[0].hasOwnProperty(witness) && reading.text[0][witness].hasOwnProperty('gap_before')) { //first unit in verse this might actually work like the others now
-					new_reading.push('&lt;' + reading.text[0][witness].gap_before_details + '&gt;');	
+					new_reading.push('&lt;' + reading.text[0][witness].gap_before_details + '&gt;');
 				} else if (reading.text[0].hasOwnProperty('combined_gap_before') && reading.text[0].combined_gap_before.length > 0 && reading.text[0].hasOwnProperty('combined_gap_before_details')) { //subsequent units in verse
 					//this may be the only condition ever hit here
 					new_reading.push('&lt;' + reading.text[0].combined_gap_before_details + '&gt;');
-				} 
+				}
 			}
 			for (i = 0; i < positions.length; i += 1) {
 				if (positions[i] !== null) {
@@ -3931,7 +3916,7 @@ var CL = (function () {
 					new_reading.push(details[i][details[i].length-1].n);
 				} else {
 					new_reading.push(details[i][0].n);
-				}				
+				}
 				if (i === positions.length-1 && reading.text[i].hasOwnProperty('combined_gap_after') && reading.text[i].combined_gap_after.indexOf(witness) !== -1) {
 					if (subreading.text[i][witness].hasOwnProperty('gap_after')) {
 						new_reading.push('&lt;' + subreading.text[i][witness].gap_details + '&gt;');
@@ -3950,14 +3935,14 @@ var CL = (function () {
 			var rule_type, positions, lowest_position, i, j;
 			positions = [];
 			lowest_position = 1000000000;
-			for (i = 0; i < classes.length; i += 1) {		
+			for (i = 0; i < classes.length; i += 1) {
 				positions[i] = null;
 				for (j = 0; j < classes[i].length; j += 1) {
-					if (classes[i][j] && positions[i] === null) {	
+					if (classes[i][j] && positions[i] === null) {
 						positions[i] = j;
 						if (j < lowest_position) {
 							lowest_position = j;
-						}											
+						}
 					}
 				}
 			}
@@ -3977,7 +3962,7 @@ var CL = (function () {
 				}
 			}
 			return [rule_type, positions];
-		},		
+		},
 
 		make_standoff_reading: function (type, reading_details, parent_id) {
 			var apparatus, unit, reading, fosilised_reading, parent, key, i, j, k, ids, new_reading, witness;
@@ -3985,12 +3970,12 @@ var CL = (function () {
 			unit = CL.find_unit_by_id(apparatus, reading_details.unit_id);
 			parent = CL.find_reading_by_id(unit, parent_id);
 			SR._lose_subreadings(); //must always lose subreadings first or find subreadings doesn't find them all!
-			SR._find_subreadings({'unit_id': unit._id}); //we need this to see if we have any!	
+			SR._find_subreadings({'unit_id': unit._id}); //we need this to see if we have any!
 			reading = CL.find_reading_by_id(unit, reading_details.reading_id);
 			fosilised_reading = JSON.parse(JSON.stringify(reading));
 			//do any existing subreadings
 			if (reading.hasOwnProperty('subreadings')) {
-				//now here is the tricky bit - if this subreading is a subreading because of work done in the regulariser we need to 
+				//now here is the tricky bit - if this subreading is a subreading because of work done in the regulariser we need to
 				//preserve those decisions in the reading_history of the standoff subreading we are about to create.
 				//To do this we need to pretend these are already standoff marked readings and add the data to the standoff marked readings datastructure
 				for (key in reading.subreadings) {
@@ -4001,18 +3986,18 @@ var CL = (function () {
 								witness = reading.subreadings[key][i].witnesses[k];
 								if (CL.find_standoff_regularisation(unit, witness, apparatus) === null) {
 									CL.make_reg_decisions_standoff(type, apparatus, unit, reading, parent, reading.subreadings[key][i], witness);
-									CL.make_main_reading(unit, reading, key, i, {'witnesses': [witness]}); 
+									CL.make_main_reading(unit, reading, key, i, {'witnesses': [witness]});
 								} else {
-									ids = CL.make_main_reading(unit, reading, key, i, {'witnesses': [witness]}); 
+									ids = CL.make_main_reading(unit, reading, key, i, {'witnesses': [witness]});
 									for (j = 0; j < ids.length; j += 1) {
 										new_reading = CL.find_reading_by_id(unit, ids[j]);
-										CL.do_make_standoff_reading(type, apparatus, unit, new_reading, parent);  
+										CL.do_make_standoff_reading(type, apparatus, unit, new_reading, parent);
 									}
 								}
 								SR._lose_subreadings();
 								SR._find_subreadings({'unit_id': unit._id});
 								k -= 1;
-							}							
+							}
 						}
 
 					}
@@ -4024,10 +4009,10 @@ var CL = (function () {
 			} else {
 				SR._lose_subreadings();
 			}
-			//console.log('++++++++++++++++++++++++ about to find subreadings')            
+			//console.log('++++++++++++++++++++++++ about to find subreadings')
 			/*
-			 * NB: running SR._find_subreadings actually makes the standoff marked reading a real subreading in 
-			 * the display and is a required step even if it is to be hidden again immediately afterwards 
+			 * NB: running SR._find_subreadings actually makes the standoff marked reading a real subreading in
+			 * the display and is a required step even if it is to be hidden again immediately afterwards
 			 */
 			SR._find_subreadings({'unit_id': unit._id});
 			//console.log('RESULT OF _FIND_SUBREADINGS BELOW')
@@ -4043,7 +4028,7 @@ var CL = (function () {
 			SV.unsplit_unit_witnesses(reading_details.unit_pos, 'apparatus');
 //			console.log('now we have unsplit')
 //			console.log(JSON.parse(JSON.stringify(CL._data)))
-			SV.unprepare_for_operation();         
+			SV.unprepare_for_operation();
 //			console.log('now we have sorted out shared readings')
 //			console.log(JSON.parse(JSON.stringify(CL._data)))
 
@@ -4060,16 +4045,16 @@ var CL = (function () {
 				reading_text = CL.extract_witness_text(reading, {'witness': reading.witnesses[i], 'reading_type': 'subreading'}); //adding true to extract_witness_text call will print debugging to console
 				/* subreadings accumulate decision classes so...
 				 *  if we already have this witness in our marked with the same type label and unit start and end then replace the stored data
-				 *  if we have it with a different type label but the same start and end then merge the data 
+				 *  if we have it with a different type label but the same start and end then merge the data
 				 *  */
 				existing_standoff = CL.find_standoff_witness(reading.witnesses[i], unit.start, unit.end);
 				if (existing_standoff !== null) {
 //					if (type === existing_standoff[1]) {
-//					details = {'start': unit.start, 
-//					'end': unit.end,  
+//					details = {'start': unit.start,
+//					'end': unit.end,
 //					'unit_id': unit._id,
 //					'witness': reading.witnesses[i],
-//					'apparatus': apparatus, 
+//					'apparatus': apparatus,
 //					'parent_text': CL.extract_witness_text(parent, {'app_id': apparatus, 'unit_id': unit._id}),
 //					'identifier': [rule_details[Object.keys(rule_details)[0]][1]],
 //					'suffixed_sigla': [rule_details[Object.keys(rule_details)[0]][0]],
@@ -4098,12 +4083,12 @@ var CL = (function () {
 						details.reading_history.push(details.parent_text);
 					} else { // if we don't have a reading history (this will be for legacy data only) we will need to hash one together!
 						details.reading_history = [details.reading_text, details.parent_text];
-					}						
+					}
 					type_string = existing_standoff[1] + '|' + type;
 					details.parent_text = CL.extract_witness_text(parent, {'app_id': apparatus, 'unit_id': unit._id});
 					details.identifier.push(rule_details[Object.keys(rule_details)[0]][1]);
 					details.suffixed_sigla.push(rule_details[Object.keys(rule_details)[0]][0]);
-					details.suffixed_label.push(rule_details[Object.keys(rule_details)[0]][4]);						
+					details.suffixed_label.push(rule_details[Object.keys(rule_details)[0]][4]);
 					details.subreading.push(rule_details[Object.keys(rule_details)[0]][3]);
 					details.name.push(rule_details[Object.keys(rule_details)[0]][2]);
 					details.value = type_string;
@@ -4130,11 +4115,11 @@ var CL = (function () {
 					if (!CL._data.marked_readings.hasOwnProperty(type)) {
 						CL._data.marked_readings[type] = [];
 					}
-					details = {'start': unit.start, 
-							'end': unit.end,  
+					details = {'start': unit.start,
+							'end': unit.end,
 							'unit_id': unit._id,
 							'witness': reading.witnesses[i],
-							'apparatus': apparatus, 
+							'apparatus': apparatus,
 							'reading_text': reading_text,
 							'parent_text': CL.extract_witness_text(parent, {'app_id': apparatus, 'unit_id': unit._id}),
 							'identifier': [rule_details[Object.keys(rule_details)[0]][1]],
@@ -4176,7 +4161,7 @@ var CL = (function () {
 			if (typeof options === 'undefined') {
 				options = {};
 			}
-			parent_pos = CL.find_reading_pos_by_id(unit, parent._id); 
+			parent_pos = CL.find_reading_pos_by_id(unit, parent._id);
 			subreading = parent.subreadings[subtype][subreading_pos];
 
 			if (typeof options.witnesses !== 'undefined') {
@@ -4185,7 +4170,7 @@ var CL = (function () {
 				witnesses = subreading.witnesses;
 			}
 			text = JSON.parse(JSON.stringify(subreading.text)); //copy because we need them independent
-			if (witnesses.length !== subreading.witnesses.length) {        	
+			if (witnesses.length !== subreading.witnesses.length) {
 				//we are now working on the subreading we are leaving behind
 				//we are making fewer witnesses into a main reading than there are witnesses (if they are the same we can leave them)
 				//so we need to remove witnesses from subreading.text (and not delete the subreading at the end)
@@ -4200,7 +4185,7 @@ var CL = (function () {
 					}
 				}
 			} else {
-				//we are dealing with all witnesses to this subreading so we want to delete the subreading when 
+				//we are dealing with all witnesses to this subreading so we want to delete the subreading when
 				//we get to the end
 				delete_subreading = true;
 			}
@@ -4227,7 +4212,7 @@ var CL = (function () {
 							new_reading.text[i]['interface'] = new_reading.text[i][witnesses[j]]['interface'];
 						} else {
 							new_reading.text[i]['interface'] = new_reading.text[i]['interface'];
-						}    	    
+						}
 					}
 					//delete decisions if there are any
 					if (new_reading.text[i].hasOwnProperty(witnesses[j])) {
@@ -4244,7 +4229,7 @@ var CL = (function () {
 					}
 					CL.remove_null_items(new_reading.text[i].reading);
 				}
-				//note that the information is stored in different places depending on whether this is a standoff subreading or one created in the regulariser (this is not 
+				//note that the information is stored in different places depending on whether this is a standoff subreading or one created in the regulariser (this is not
 				//especially sensible but it is how it is at present and working with it is easier and less dangerous than trying to change it!) In version 2 I would fix this!
 				if (parent.text.length > 0 && parent.text[0].hasOwnProperty('combined_gap_before') && parent.text[0].combined_gap_before.indexOf(witnesses[j] !== -1)) {
 					new_reading.text[0].combined_gap_before = [witnesses[j]];
@@ -4253,7 +4238,7 @@ var CL = (function () {
 					parent.text[0].combined_gap_before.splice(parent.text[0].combined_gap_before.indexOf(witnesses[j]), 1);
 					//we do not need to remove the details here because it is a simple string (because this only happens when they all read the same)
 				}
-				if (parent.hasOwnProperty('combined_gap_before_subreadings') && parent.combined_gap_before_subreadings.indexOf(witnesses[j] !== -1)) {                   
+				if (parent.hasOwnProperty('combined_gap_before_subreadings') && parent.combined_gap_before_subreadings.indexOf(witnesses[j] !== -1)) {
 					new_reading.text[0].combined_gap_before = [witnesses[j]];
 					new_reading.text[0].combined_gap_before_details = parent.combined_gap_before_subreadings_details[witnesses[j]];
 					//now remove the details for this witness from the parent
@@ -4261,7 +4246,7 @@ var CL = (function () {
 					delete parent.combined_gap_before_subreadings_details[witnesses[j]];
 				}
 				//repeat for combined gap after - note that there are not details stored for this because they are always available from the reading details of the particular MS
-				//also note that the information is stored in different places depending on whether this is a standoff subreading or one created in the regulariser (this is not 
+				//also note that the information is stored in different places depending on whether this is a standoff subreading or one created in the regulariser (this is not
 				//especially sensible but it is how it is at present and working with it is easier and less dangerous than trying to change it!) In version 2 I would fix this!
 				if (parent.text.length > 0 && parent.text[parent.text.length-1].hasOwnProperty('combined_gap_after') && parent.text[parent.text.length-1].combined_gap_after.indexOf(witnesses[j] !== -1)) {
 					new_reading.text[text.length-1].combined_gap_after = [witnesses[j]];
@@ -4273,7 +4258,7 @@ var CL = (function () {
 					parent.combined_gap_after_subreadings.splice(parent.combined_gap_after_subreadings.indexOf(witnesses[j]), 1);
 				}
 				//remove witnesses from SR_text in parent (if present)
-				if (parent.hasOwnProperty('SR_text') && parent.SR_text.hasOwnProperty(witnesses[j])) {                   
+				if (parent.hasOwnProperty('SR_text') && parent.SR_text.hasOwnProperty(witnesses[j])) {
 					delete parent.SR_text[witnesses[j]];
 				}
 				//remove witnesses from standoff_subreadings in parent (if present)
@@ -4310,8 +4295,8 @@ var CL = (function () {
 				unit.readings.splice(parent_pos + 1, 0, new_readings[i]);
 				ids.push(CL.add_reading_id(unit.readings[parent_pos + 1], unit.start, unit.end));
 			}
-			if (delete_subreading) {        	
-				parent.subreadings[subtype].splice(subreading_pos, 1);      	
+			if (delete_subreading) {
+				parent.subreadings[subtype].splice(subreading_pos, 1);
 			}
 
 			if (parent.subreadings[subtype].length === 0) {
@@ -4321,8 +4306,8 @@ var CL = (function () {
 				delete parent.subreadings;
 			}
 
-			//now check the parent is still required and if not remove it 
-			if (parent.witnesses.length === 0 && !parent.hasOwnProperty('subreadings')) { 
+			//now check the parent is still required and if not remove it
+			if (parent.witnesses.length === 0 && !parent.hasOwnProperty('subreadings')) {
 				unit.readings.splice(parent_pos, 1);
 			}
 			//now if this was a standoff marked reading delete the entry in marked_readings unless this is part of prepare_for_operation
@@ -4343,7 +4328,7 @@ var CL = (function () {
 						}
 					}
 				}
-			}   
+			}
 			return ids;
 		},
 
@@ -4372,7 +4357,7 @@ var CL = (function () {
 			if (typeof application === 'undefined') {
 				application = 'collation';
 			}
-			//load any project specified js files 
+			//load any project specified js files
 			local_js = [];
 			if (project.hasOwnProperty('local_js_file')) {
 				for (i = 0; i < project.local_js_file.length; i += 1) {
@@ -4385,7 +4370,7 @@ var CL = (function () {
 				//set up the menu
 				var footer;
 				//must do footer first otherwise we override footer set in local files
-				footer = []; 
+				footer = [];
 				if (application === 'collation') {
 					if (CL._services.hasOwnProperty('switch_project')) {
 						footer.push('<input class="left_foot" type="button" id="switch_project_button" value="Switch project" />');
@@ -4404,9 +4389,9 @@ var CL = (function () {
 				document.getElementById('footer').innerHTML = footer.join('');
 				CL.add_index_footer_handlers();
 				//set all the details we need in memory
-				CL._project = {'name' : project.project, 
+				CL._project = {'name' : project.project,
 						'_id' : project._id,
-						'rule_classes' : project.regularisation_classes,       		
+						'rule_classes' : project.regularisation_classes,
 						'book_name' : project.book_name,
 				};
 				if (project.hasOwnProperty('witness_sort')) {
@@ -4455,7 +4440,7 @@ var CL = (function () {
 					if (document.getElementById('collate')) {
 						$('#collate').off('click.run_collation');
 						$('#collate').on('click.run_collation', function () {
-							RG.prepare_collation(CL._display_mode);	
+							RG.prepare_collation(CL._display_mode);
 						});
 					}
 					if (document.getElementById('load_saved')) {
@@ -4522,7 +4507,7 @@ var CL = (function () {
 				for (i = 0; i < CL._services.display_settings.configs.length; i += 1) {
 					CL._default_display_settings[CL._services.display_settings.configs[i].id] = CL._services.display_settings.configs[i].check_by_default;
 					CL._display_settings[CL._services.display_settings.configs[i].id] = CL._services.display_settings.configs[i].check_by_default;
-				}        	
+				}
 			} else {
 				//else use the basic defaults
 				CL._display_settings_details = JSON.parse(JSON.stringify(DEF.display_settings));
@@ -4542,7 +4527,7 @@ var CL = (function () {
 				$('#collation_settings').on('click.show_collation_settings', CL.show_collation_settings);
 			}
 			if (document.getElementById('project_summary')) {
-				CL._services.view_project_summary();      	
+				CL._services.view_project_summary();
 			}
 		},
 
@@ -4595,7 +4580,7 @@ extract_witness_text_orig: function (reading, options, test) {
 			console.log('I have been overlapped and ' + reading.overlap_status);
 		}
 		return 'system_gen_' + reading.overlap_status;
-	}	    
+	}
 	//now look at options and set flag accordingly
 	if (typeof options !== 'undefined') {
 		if (options.hasOwnProperty('witness')) {
@@ -4603,7 +4588,7 @@ extract_witness_text_orig: function (reading, options, test) {
 			if (test === true) {
 				console.log('I was given the witnesses ' + witness);
 			}
-		} 
+		}
 		if (options.hasOwnProperty('reading_type')) {
 			reading_type = options.reading_type;
 			if (test === true) {
@@ -4627,7 +4612,7 @@ extract_witness_text_orig: function (reading, options, test) {
 		}
 	}
 	//if no witness was supplied try to find a main reading witness and if not just return interface reading of all words or lac/om stuff
-	if (typeof witness === 'undefined' && !reading.hasOwnProperty('created')) {	//don't do this for created readings as you are overwriting the genuine witness text in these cases	
+	if (typeof witness === 'undefined' && !reading.hasOwnProperty('created')) {	//don't do this for created readings as you are overwriting the genuine witness text in these cases
 		for (i = 0; i < reading.witnesses.length; i += 1) {
 			if (reading.text.length > 0 && reading.text[0].hasOwnProperty(reading.witnesses[i])) {
 				witness = reading.witnesses[i];
@@ -4644,14 +4629,14 @@ extract_witness_text_orig: function (reading, options, test) {
 //	console.log('I found the witness ' + witness + ' because it was the only one in the main reading');
 //	}
 //	}
-	if (typeof witness === 'undefined' && reading.hasOwnProperty('witnesses') 		 
+	if (typeof witness === 'undefined' && reading.hasOwnProperty('witnesses')
 			&& CL.get_all_reading_witnesses(reading).length === 1  && !reading.hasOwnProperty('created')) {
 		witness = CL.get_all_reading_witnesses(reading)[0];
 		if (test === true) {
 			console.log('I found the witness ' + witness + ' because it was the only one in the reading at all');
 		}
 	}
-	//we didn't find a main reading witnesses so return interface reading of all words or lac/om stuff 
+	//we didn't find a main reading witnesses so return interface reading of all words or lac/om stuff
 	//TODO: ? this does not check for gap after or any other gap details - should it?
 	if (typeof witness === 'undefined') {
 		if (test === true) {
@@ -4665,7 +4650,7 @@ extract_witness_text_orig: function (reading, options, test) {
 				text.push(reading.text[i]['interface']);
 			}
 			return text.join(' ').replace(/_/g, '&#803;');
-		} 	
+		}
 		if (reading.hasOwnProperty('details')) {
 			return '&lt;' + reading.details + '&gt;';
 			if (test === true) {
@@ -4677,7 +4662,7 @@ extract_witness_text_orig: function (reading, options, test) {
 			if (test === true) {
 				console.log('the reading is om');
 			}
-		} 
+		}
 		if (test === true) {
 			console.log('I didn\'t find a reading so here is an empty string by way of compensation!');
 		}
@@ -4742,16 +4727,16 @@ extract_witness_text_orig: function (reading, options, test) {
 	if (reading_type === 'mainreading' && typeof app_id !== 'undefined' && typeof unit_id !== 'undefined' && typeof witness !== 'undefined') {
 		//if we have a standoff regularisation return its parent text
 		text = CL.find_standoff_regularisation_text(app_id, unit_id, witness);
-		if (text !== null) {		    
+		if (text !== null) {
 			if (test === true) {
 				console.log('This reading has been resularised using standoff so here it what it should read');
 			}
 			return text;
 		}
-	} 
+	}
 	text = [];
 	//deal with combined gap before
-	if (reading.hasOwnProperty('combined_gap_before_subreadings') 
+	if (reading.hasOwnProperty('combined_gap_before_subreadings')
 			&& reading.combined_gap_before_subreadings.indexOf(witness) !== -1
 			&& reading.hasOwnProperty('combined_gap_before_subreadings_details')
 			&& reading.combined_gap_before_subreadings_details.hasOwnProperty(witness)) {
@@ -4770,9 +4755,9 @@ extract_witness_text_orig: function (reading, options, test) {
 			if (test === true) {
 				console.log('There was a combined gap before this first token in this reading');
 			}
-		} 
+		}
 	}
-	//deal with text and internal gaps    
+	//deal with text and internal gaps
 	for (i = 0; i < witness_text.length; i += 1) {
 		if (test === true) {
 			console.log(i);
@@ -4820,6 +4805,5 @@ extract_witness_text_orig: function (reading, options, test) {
 
 		}
 	}
-	return text.join(' ').replace(/_/g, '&#803;');	    
+	return text.join(' ').replace(/_/g, '&#803;');
 },*/
-

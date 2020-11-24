@@ -12,13 +12,13 @@ def eprint(*args, **kwargs):
 
 
 class PreProcessor(Regulariser):
-    
+
     def __init__(self, display_settings_config=None, local_python_functions=None, rule_conditions_config=None):
         self.display_settings_config = display_settings_config
         self.local_python_functions = local_python_functions
         self.rule_conds_config = rule_conditions_config
         Regulariser.__init__(self, rule_conditions_config, local_python_functions)
-     
+
     def process_witness_list(self, data_input, requested_witnesses, rules, basetext_transcription, project, settings, collation_settings, accept):
         self.settings = settings
         data = data_input['data']
@@ -46,7 +46,7 @@ class PreProcessor(Regulariser):
                 if verse == None and ('duplicate_position' not in transcription_verse or transcription_verse['duplicate_position'] == 1):
                     verse = transcription_verse
                     basetext_siglum = verse['siglum']
-                         
+
             #start to make the hand_id_map and also find our om witnesses and remove them
             try:
                 trans_verse = transcription_verse['witnesses']
@@ -61,13 +61,13 @@ class PreProcessor(Regulariser):
                             trans_verse[i] = None
                 for reading in reversed(trans_verse):
                     if reading is None:
-                        trans_verse.remove(reading)     
+                        trans_verse.remove(reading)
             except KeyError:
                 om_witnesses.append(transcription_verse['siglum'])
                 hand_to_transcript_map[transcription_verse['siglum']] = transcription_verse['transcription_id'];
             else:
                 collatable_witnesses.extend(trans_verse)
-        
+
         witnesses['collatable'] = collatable_witnesses
         witnesses['lac'] = data_input['lac_witnesses'].keys()
         witnesses['lac'].extend(lac_hands)
@@ -80,7 +80,7 @@ class PreProcessor(Regulariser):
                 hand_to_transcript_map[data_input['lac_witnesses'][i]] = docID
         else:
             hand_to_transcript_map.update(data_input['lac_witnesses'])
-        
+
         witnesses['hand_id_map'] = hand_to_transcript_map
         if verse == None:
             if not basetext_siglum or basetext_siglum in witnesses['lac']:
@@ -89,13 +89,13 @@ class PreProcessor(Regulariser):
                 missing_reason = 'om'
             else:
                 missing_reason = 'unknown'
-            verse = {'siglum': basetext_siglum, 
+            verse = {'siglum': basetext_siglum,
                      'missing_reason': missing_reason,
                      'index': 1
-                     } 
+                     }
         return self.regularise(rules, witnesses, verse, settings, collation_settings, project, accept)
-    
-    
+
+
     def regularise(self, decisions, witnesses, verse, settings, collation_settings, project, accept):
         """Regularise the witness."""
         eprint('There are %s decisions' % len(decisions))
@@ -104,7 +104,7 @@ class PreProcessor(Regulariser):
                 hit, normalised, details = self.regularise_token(token, decisions, 'pre-collate')
                 if hit:
                     token['n'] = normalised
-                    if details != 'None':
+                    if details is not None:
                         try:
                             token['decision_class'].extend([c['class'] for c in details])
                         except:
@@ -114,9 +114,9 @@ class PreProcessor(Regulariser):
                         except:
                             token['decision_details'] = details
         return self.get_collation(witnesses, verse, decisions, settings, collation_settings, project, accept)
-    
-    
-    
+
+
+
 
     def get_collation(self, witnesses, verse, decisions, settings, collation_settings, project, accept):
         """
@@ -135,7 +135,7 @@ class PreProcessor(Regulariser):
                 tokenComparator['distance'] = 2
         else:
             tokenComparator['type'] = 'equality'
-        
+
         if len(witnesses['collatable']) > 0:
             witness_list = {'witnesses': witnesses['collatable']}
             if (algorithm == 'auto'):
@@ -153,14 +153,14 @@ class PreProcessor(Regulariser):
                 self.write(collatex_response)
                 self.finish()
                 return
-    
+
             # Next is raw JSON
             elif accept == 'json':
                 self.set_header("Content-Type", "application/json; charset=UTF-8")
                 self.write(collatex_response)
                 self.finish()
                 return
-    
+
             try:
                 alignment_table = json.loads(collatex_response)
             except ValueError:
@@ -170,7 +170,7 @@ class PreProcessor(Regulariser):
             overtext_details = self.get_overtext(verse)
             eprint('collation done')
             return self.do_post_processing(alignment_table, decisions, overtext_details[0], overtext_details[1], witnesses['om'], witnesses['lac'], witnesses['hand_id_map'], settings)
-           
+
     def do_post_processing(self, alignment_table, decisions, overtext_name, overtext, om_readings, lac_readings, hand_id_map, settings):
         pp = PostProcessor(
             alignment_table=alignment_table,
@@ -222,11 +222,11 @@ class PreProcessor(Regulariser):
         headers = {'content-type': 'application/json',
                    'Accept': accept_header}
         req = urllib2.Request(target, json_witnesses, headers)
-        response = urllib2.urlopen(req)    
+        response = urllib2.urlopen(req)
         return response.read()
-    
-    
-    
+
+
+
     def convert_header_argument(self, accept):
         """Convert shortname to MIME type."""
         if accept == 'json' or accept == 'lcs':
@@ -239,5 +239,3 @@ class PreProcessor(Regulariser):
             return 'text/plain'
         elif accept == 'svg':
             return 'image/svg+xml'
-
-

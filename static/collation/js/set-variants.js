@@ -27,14 +27,14 @@ var SV = (function () {
 
 
 		/**create and show the set variants display
-		 * 
+		 *
 		 * optional:
 		 * options - a dict containing other options
 		 * 		 possibilities are:
-		 * 			container - the HTML element to put the html result in 
+		 * 			container - the HTML element to put the html result in
 		 *              		(defaults to body if not supplied or can't find it)
-		 * 			message - a string containing a message to display in the header bar 
-		 *              		(used for warnings and errors) 
+		 * 			message - a string containing a message to display in the header bar
+		 *              		(used for warnings and errors)
 		 *              	highlighted_wit - the witness to highlight in display
 		 *              	highlighted_unit - the unit which needs to be highlighted as an error*/
 		show_set_variants: function (options) {
@@ -45,7 +45,7 @@ var SV = (function () {
 				options = {};
 			}
 			//make sure we have a container to put things in
-			if (options.hasOwnProperty('container')) {                
+			if (options.hasOwnProperty('container')) {
 				if (container !== options.container) container = options.container;
 			} else {
 				container = document.getElementsByTagName('body')[0];
@@ -61,16 +61,16 @@ var SV = (function () {
 			SimpleContextMenu.attach('overlap_split_unit', function () {return SV.make_menu('overlap_split_unit')});
 			SimpleContextMenu.attach('split_omlac_unit', function () {return SV.make_menu('split_omlac_unit')});
 			SimpleContextMenu.attach('split_duplicate_unit', function () {return SV.make_menu('split_duplicate_unit')});
-			SimpleContextMenu.attach('subreading', function () {return SV.make_menu('subreading')});		
-			
+			SimpleContextMenu.attach('subreading', function () {return SV.make_menu('subreading')});
+
 			//sort out header and main page
-			
+
 			document.getElementById('header').innerHTML = CL.get_header_html('Set Variants', CL._context);
 			document.getElementById('header').className = 'set_variants_header';
 			CL._services.show_login_status();
-			
-			SV._add_CM_Handlers(); 
-			
+
+			SV._add_CM_Handlers();
+
 			//sort out footer stuff
 			CL.expandFillPageClients();
 //			if (SV._undo_stack.length > 0) {
@@ -79,7 +79,7 @@ var SV = (function () {
 //				undo_button = '';
 //			}
 			footer_html = [];
-			footer_html.push('<input id="expand_collapse_button" type="button" value="expand all"/>');  
+			footer_html.push('<input id="expand_collapse_button" type="button" value="expand all"/>');
 			footer_html.push('<input id="show_hide_subreadings_button" type=button value="show subreadings"/>');
 			footer_html.push('<span id="stage_links"></span>');
 			footer_html.push('<input type="button" id="undo_button" value="undo" style="display:none"/>');
@@ -89,17 +89,17 @@ var SV = (function () {
 			footer_html.push('<input id="move_to_reorder_button" type=button value="Move to Reorder Variants"/>');
 			document.getElementById('footer').innerHTML = footer_html.join('');
 			CL.add_stage_links();
-			
+
 			//get the data itself
 			container.innerHTML = '<div id="drag"><div id="scroller" class="fillPage"></div><div id="single_witness_reading"></div></div>';
 			document.getElementById('single_witness_reading').style.bottom = document.getElementById('footer').offsetHeight + 'px';
 			SV.show_set_variants_data(options);
-			
+
 			//add functions and populate dropdowns etc.
 			CL.add_subreading_events('set_variants');
-			
+
 			U.FORMS.populate_select(SV.get_hands_and_sigla(), document.getElementById('highlighted'), 'document', 'hand', options.highlighted_wit);
-			
+
 			if (document.getElementById('show_hide_shared_units')) {
 				$('#show_hide_shared_units').on('click', function (event) {
 					if (SV._show_shared_units === true) {
@@ -114,16 +114,16 @@ var SV = (function () {
 						SV.show_set_variants_data();
 					}
 				});
-			}	
-			
+			}
+
 			$('#move_to_reorder_button').on('click', function (event) {SV.move_to_reorder();});
-			
+
 			$('#save').on('click', function (event) {
 				SV.check_bug_status('saved', 'state');
 				SR._lose_subreadings();
 				CL.save_collation('set');
 			});
-			
+
 			$('#highlighted').on('change', function (event) {SV.highlight_witness(event.target.value);});
 			if (document.getElementById('undo_button')) {
 				$('#undo_button').on('click', function (event) {
@@ -134,7 +134,7 @@ var SV = (function () {
 
 			CL.make_verse_links();
 		},
-		
+
 		show_set_variants_data: function (options) {
 			var temp, header, html, i, app_ids, num, overlaps, overlap_options, new_overlap_options, error_panel_html, event_rows, row;
 			//sort out options and get layout
@@ -145,17 +145,17 @@ var SV = (function () {
 				options.highlighted_wit = CL._highlighted;
 			}
 			options.sort = true;
-			
+
 			SV.prepare_for_operation();
 			CL.lac_om_fix(); //also does extra gaps
 			SV.unprepare_for_operation();
-			
+
 			temp = CL.get_unit_layout(CL._data.apparatus, 1, 'set_variants', options);
 			header = CL.get_collation_header(CL._data, temp[1], true);
 			html = header[0];
 			html.push.apply(html, temp[0]);
-			
-			overlap_options = {'column_lengths': temp[1]};			
+
+			overlap_options = {'column_lengths': temp[1]};
 			if (options.hasOwnProperty('highlighted_wit')) {
 				overlap_options.highlighted_wit = options.highlighted_wit;
 			}
@@ -173,24 +173,24 @@ var SV = (function () {
 			html.push('<ul id="context_menu" class="SimpleContextMenu"></ul>');
 			error_panel_html = '<div id="error_panel" class="dragdiv warning" style="display:none"><span id="message_summary">Messages</span><span id="error_coll_ex">&#9660;</span><div id="error_message_panel"><span id="error_message">message</span></div></div>';
 			document.getElementById('scroller').innerHTML = '<table class="collation_overview">' + html.join('') + '</table>' + error_panel_html;
-			
+
 			event_rows = temp[2];
 			for (i = 0; i < event_rows.length; i += 1) {
 				row = document.getElementById(event_rows[i]);
 				CL._add_hover_events(row);
-			}			
+			}
 			SPN.remove_loading_overlay();
 			//initialise DnD
 			SV.redips_init_sv(CL._data.apparatus.length);
-			
+
 			if (SV._undo_stack.length > 0) {
 				document.getElementById("undo_button").style.display = 'inline';
 			} else {
 				document.getElementById("undo_button").style.display = 'none';
 			}
-			
+
 			CL.add_triangle_functions('list');
-			
+
 			// decide if we need to display any messages and display them if we do
 			for (i = 0; i < SV._watch_list.length; i += 1) {
 				if (SV.check_witness_integrity(SV._watch_list[i])) {
@@ -217,13 +217,13 @@ var SV = (function () {
 			all_in_order = SV.check_all_witnesses_integrity();
 			standoff_problems = SV.check_standoff_reading_problems();
 
-			if (all_complete && all_in_order && !standoff_problems[0]) {       	
+			if (all_complete && all_in_order && !standoff_problems[0]) {
 				extra_results = CL.apply_pre_stage_checks('order_readings');
 				if (extra_results[0] === true) {
 					CL._show_subreadings = false;
 					//we have some legacy data which has not had all of the matching readings in each unit combined
 					//so to ensure they are fixed now we need to call the following 3 functions
-					//would be nicer to just change the data on the database but it would mean rewriting in python 
+					//would be nicer to just change the data on the database but it would mean rewriting in python
 					SV.prepare_for_operation();
 					SV.remove_splits();
 					SV.unprepare_for_operation();
@@ -248,7 +248,7 @@ var SV = (function () {
 					}
 					alert(extra_results[1]);
 					SPN.remove_loading_overlay();
-				}        	
+				}
 			} else if (!all_complete) {
 				if (CL._show_subreadings === true) {
 					SR._find_subreadings()
@@ -274,7 +274,7 @@ var SV = (function () {
 
 		//
 		calculate_unit_lengths: function (app_id, options) {
-			var i, j, app, top_line, id, start, first_hit, gap_before, last_end, length, gap_counts, highest_gap, gap_after, 
+			var i, j, app, top_line, id, start, first_hit, gap_before, last_end, length, gap_counts, highest_gap, gap_after,
 			previous_unit_gap_after, previous_unit_start, previous_unit_end, original_column_lengths;
 			top_line = CL._data.apparatus;
 			app = CL._data[app_id];
@@ -288,7 +288,7 @@ var SV = (function () {
 				//first find real start value
 				start = -1;
 				for (j = 0; j < top_line.length; j += 1) {
-					if (top_line[j].hasOwnProperty('overlap_units') 
+					if (top_line[j].hasOwnProperty('overlap_units')
 							&& top_line[j].overlap_units.hasOwnProperty(id) && start === -1) {
 						start = top_line[j].start;
 						app[i].start = start;
@@ -301,7 +301,7 @@ var SV = (function () {
 				first_hit = -1;
 				for (j = 0; j < top_line.length; j += 1) {
 					if (top_line[j].start === start) {
-						if (top_line[j].hasOwnProperty('overlap_units') 
+						if (top_line[j].hasOwnProperty('overlap_units')
 								&& top_line[j].overlap_units.hasOwnProperty(id)) {
 							if (first_hit === -1) {
 								first_hit = j;
@@ -309,7 +309,7 @@ var SV = (function () {
 						} else {
 							if (first_hit === -1) {
 								gap_before += 1;
-							} 
+							}
 						}
 					}
 				}
@@ -323,7 +323,7 @@ var SV = (function () {
 				highest_gap = 0;
 				gap_after = 0;
 				while (j < top_line.length) {
-					if (top_line[j].hasOwnProperty('overlap_units') 
+					if (top_line[j].hasOwnProperty('overlap_units')
 							&& top_line[j].overlap_units.hasOwnProperty(id)) {
 						length += top_line[j].end - top_line[j].start + 1;
 						if (last_end !== null && last_end + 2 === top_line[j].start) {
@@ -362,7 +362,7 @@ var SV = (function () {
 					}
 				}
 				options.overlap_details[id] = {'col_length': length, 'gap_before': gap_before, 'gap_after': gap_after};
-			}           
+			}
 			return options;
 		},
 
@@ -505,8 +505,8 @@ var SV = (function () {
 					if (i === 0) {
 						if (options.hasOwnProperty('overlap') && options.overlap === true) {
 							html.push('<div id="' + 'drag_unit_' + id + '" class="drag overlap_unit' + highlighted + '">');
-						} else if (options.hasOwnProperty('gap_unit') && options.gap_unit === true) {	
-							html.push('<div id="' + 'drag_unit_' + id + '" class="drag gap_unit' + highlighted + '">');         
+						} else if (options.hasOwnProperty('gap_unit') && options.gap_unit === true) {
+							html.push('<div id="' + 'drag_unit_' + id + '" class="drag gap_unit' + highlighted + '">');
 						} else {
 							html.push('<div id="' + 'drag_unit_' + id + '" class="drag unit' + highlighted + '">');
 						}
@@ -535,7 +535,7 @@ var SV = (function () {
 					html.push.apply(html, temp[0]);
 					row_list.push.apply(row_list, temp[1]);
 					html.push('</li>');
-				}                
+				}
 			}
 			html.push('</ul>');
 			html.push('</div>');
@@ -561,7 +561,7 @@ var SV = (function () {
 		},
 
 		get_empty_spacer_cell: function (start, end) {
-			if (typeof start === 'undefined' || typeof end === 'undefined') {		        
+			if (typeof start === 'undefined' || typeof end === 'undefined') {
 				return '<td class="mark"></td>';
 			} else {
 				return '<td class="mark" colspan="' + (end - start + 1) + '"></td>';
@@ -570,7 +570,7 @@ var SV = (function () {
 
 
 		/** highlight a witness, called from select box in page footer*/
-		highlight_witness: function (witness) {  
+		highlight_witness: function (witness) {
 			var scroll_offset;
 			scroll_offset = [document.getElementById('scroller').scrollLeft,
 			                 document.getElementById('scroller').scrollTop];
@@ -641,8 +641,8 @@ var SV = (function () {
 							} else {
 								text_string = reading.subreadings[type][j].text_string;
 							}
-							html.push('<li class="subreading' + highlighted + '" id="' + subrow_id + '"><div class="spanlike"><div class="spanlike">' 
-									+ CL.get_alpha_id(i) + suffix 
+							html.push('<li class="subreading' + highlighted + '" id="' + subrow_id + '"><div class="spanlike"><div class="spanlike">'
+									+ CL.get_alpha_id(i) + suffix
 									+ '. ' + text_string + '</div></div></li>');
 						}
 					}
@@ -653,7 +653,7 @@ var SV = (function () {
 		},
 
 
-		/** initiate the drag and drop 
+		/** initiate the drag and drop
 		 * also some functions and tests for behaviours are included in here*/
 		redips_init_sv: function (app_length) {
 			var rd, i, unit_num, apparatus_number, source_col, target_col, source_row, target_row, error_mess, triangles,
@@ -666,14 +666,14 @@ var SV = (function () {
 					document.getElementById(rd.obj.id.replace('drag_unit', 'spacer')).style.width = width + 'px';
 				}
 			};
-			rd.event.dropped = function () {        
+			rd.event.dropped = function () {
 				scroll_offset = [document.getElementById('scroller').scrollLeft,
 				                 document.getElementById('scroller').scrollTop];
 				if (rd.td.target.parentElement.id === 'number_row') { //if you drag onto a number
 					SV.move_unit(rd);
 				} else {
 					SV._selected_variant_units = [];
-					//get children of target cell (TD) and push to selected list for combining 
+					//get children of target cell (TD) and push to selected list for combining
 					for (i = 0; i < rd.td.target.childNodes.length; i += 1) {
 						SV._selected_variant_units.push(CL.get_unit_app_reading(rd.td.target.childNodes[i].childNodes[0].id));
 					}
@@ -735,11 +735,11 @@ var SV = (function () {
 //		reindexing code
 
 		/**This will only ever be used for moving a single reading which will never happen in overlapping variants.
-		 * It is also only called if the resulting unit doesn't have the same start and end number which in the main apparatus will only 
-		 * happen with an even start and an even end as units are not allowed to start or end on an odd number if the next even number 
+		 * It is also only called if the resulting unit doesn't have the same start and end number which in the main apparatus will only
+		 * happen with an even start and an even end as units are not allowed to start or end on an odd number if the next even number
 		 * is part of the unit so we can assume that we will always start and end on a even number
-		 * the reading that is moved has no index numbers (they are stripped as part of the move) so we just need to ensure any moved words get their ids back 
-		 * we also need to make sure we are always incrementing left to right (problems sometimes caused by readings being moved into the unit out of sequence) 
+		 * the reading that is moved has no index numbers (they are stripped as part of the move) so we just need to ensure any moved words get their ids back
+		 * we also need to make sure we are always incrementing left to right (problems sometimes caused by readings being moved into the unit out of sequence)
 		 * so we check that too*/
 		reindex_moved_reading: function (location, witnesses) {
 			var first_word_index, i, j, k, l, index, start, end, unit, reading, found;
@@ -760,12 +760,12 @@ var SV = (function () {
 							if (unit.readings[k].witnesses.indexOf(witnesses[j]) !== -1) {
 								found = true;
 								for (l = 0; l < unit.readings[k].text.length; l += 1) {
-									if (!unit.readings[k].text[l].hasOwnProperty('index') 
+									if (!unit.readings[k].text[l].hasOwnProperty('index')
 											|| typeof unit.readings[k].text[l].index === 'undefined'
 												|| (l > 0 && SV.less_than_or_equal_to(unit.readings[k].text[l].index, unit.readings[k].text[l-1].index))) {
 										if (l === 0) {
 											unit.readings[k].text[l].index = location + '.' + first_word_index;
-										} else { 
+										} else {
 											unit.readings[k].text[l].index = SV.increment_sub_index(unit.readings[k].text[l-1].index, first_word_index);
 										}
 									}
@@ -775,7 +775,7 @@ var SV = (function () {
 						}
 					}
 				}
-			}          
+			}
 		},
 
 		less_than: function (index1, index2) {
@@ -910,7 +910,7 @@ var SV = (function () {
 				}
 				if (counter > next_allocation) {
 					next_allocation = counter;
-				}  
+				}
 			}
 			if (counter === next_allocation) {
 				next_allocation += 1;
@@ -940,12 +940,12 @@ var SV = (function () {
 			}
 		},
 
-//		split and unsplit readings        
+//		split and unsplit readings
 
 /** split the display of a unit's readings so they can be manipulated separately */
 split_readings: function (details) {
 	var scroll_offset;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	CL._data[details[1]][details[0]].split_readings = true;
 	SV.show_set_variants_data();
@@ -956,7 +956,7 @@ split_readings: function (details) {
 /** recombine the display of a unit's readings */
 unsplit_readings: function (details) {
 	var scroll_offset, warning_mess;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	SV.prepare_for_operation(); //we do this because we have to sort out split witnesses as well
 	delete CL._data[details[1]][details[0]].split_readings;
@@ -992,7 +992,7 @@ create_new_reading: function (unit, reading_type, extra_details) {
 		}
 		if (CL.extract_witness_text(unit.readings[i]) === extra_details) {
 			return unit.readings[i]._id
-		} 
+		}
 		if (CL.extract_witness_text(unit.readings[i]) === '&lt;' + extra_details + '&gt;') {
 			return unit.readings[i]._id
 		}
@@ -1048,8 +1048,8 @@ create_new_reading: function (unit, reading_type, extra_details) {
 },
 
 /** remove references to the given witness from  a list of tokens
- * 
- * 
+ *
+ *
  * */
 remove_witness_from_tokens: function (tokens, witness) {
 	var i, index;
@@ -1095,7 +1095,7 @@ remove_witness_from_reading: function (reading, witness) {
 		if ($.isEmptyObject(reading.subreadings)) {
 			delete reading.subreadings;
 		}
-	}  
+	}
 	//now check all the other places we could be hiding references to a witness
 	if (reading.hasOwnProperty('SR_text')) {
 		for (key in reading.SR_text) {
@@ -1165,7 +1165,7 @@ do_split_reading_witnesses: function (unit_num, reading_pos, witness_list, appar
 	reading = original_unit.readings[reading_pos];
 	//copy the original reading to make a the new one
 	new_reading = JSON.parse(JSON.stringify(reading));
-	//remove readings on witness_list from the original reading 
+	//remove readings on witness_list from the original reading
 	for (i = 0; i < witness_list.length; i += 1) {
 		SV.remove_witness_from_reading(reading, witness_list[i]);
 	}
@@ -1216,13 +1216,13 @@ remove_separated_witness_data: function (app_id, unit_id) {
 				CL._data.separated_witnesses[i] = null;
 			}
 		}
-		CL._data.separated_witnesses = CL.remove_null_items(CL._data.separated_witnesses);            
+		CL._data.separated_witnesses = CL.remove_null_items(CL._data.separated_witnesses);
 	}
 },
 
 
-/** recombine the witnesses of any identical readings 
- * 
+/** recombine the witnesses of any identical readings
+ *
  * should always have called prepare_for_operation before calling this
  * so subreadings are always hidden and standoff readings are always main readings
  * after this unprepare_for_operation will run find subreadings
@@ -1235,11 +1235,11 @@ unsplit_unit_witnesses: function (unit_num, app_id) {
 	unit = CL._data[app_id][unit_num];
 
 	SV.remove_separated_witness_data(app_id, unit._id);
-	
+
 	for (i = 0; i < unit.readings.length; i += 1) {
 		reading = unit.readings[i];
 		//get the text and add '_a' if it is the first reading of an overlapped unit (although I don't think we ever call this on overlapped units anymore)
-		text = CL.extract_witness_text(reading, {'app_id': app_id, 'unit_id': unit._id}); 
+		text = CL.extract_witness_text(reading, {'app_id': app_id, 'unit_id': unit._id});
 		if (i === 0 && app_id !== 'apparatus') {
 			text = text + '_a';
 		}
@@ -1252,7 +1252,7 @@ unsplit_unit_witnesses: function (unit_num, app_id) {
 		}
 		//find out if this is a standoff reading
 		//at this point all witnesses to the reading should be standoff if it is a standoff reading made into a main reading so just check first witness (and keep fingers crossed!)
-		is_standoff = true;                
+		is_standoff = true;
 		standoff_record = CL.find_standoff_regularisation(unit, reading.witnesses[0], app_id);
 		if (standoff_record === null) {
 			is_standoff = false;
@@ -1274,7 +1274,7 @@ unsplit_unit_witnesses: function (unit_num, app_id) {
 					witness = reading.witnesses[j];
 					for (k = 0; k < reading.text.length; k += 1) {
 						if (reading.text[k].hasOwnProperty(witness)) {
-							unit.readings[index].text[k][witness] = reading.text[k][witness];                                  
+							unit.readings[index].text[k][witness] = reading.text[k][witness];
 						}
 						//check if any readings need the regularised flag (because some witnesses have decisions to apply)
 						if (unit.readings[index].text[k][witness].hasOwnProperty('decision_class')) {
@@ -1296,14 +1296,14 @@ unsplit_unit_witnesses: function (unit_num, app_id) {
 				if (unit.readings[index].type === 'om') {
 					unit.readings[index].witnesses.push.apply(unit.readings[index].witnesses, reading.witnesses);
 					reading = null;
-				} 
+				}
 			} else {
 				reading_list.push(text);
 			}
 		}
 
 	}
-	CL.remove_null_items(unit.readings); 
+	CL.remove_null_items(unit.readings);
 },
 
 
@@ -1339,13 +1339,13 @@ separate_overlap_witnesses: function (unit_num, gap_location) {
 	if (overlapped_witnesses.length > 0) {
 		unit = CL._data.apparatus[unit_num];
 		for (i = unit.readings.length-1; i >= 0; i -= 1) {
-			if (!unit.readings[i].hasOwnProperty('overlap_status') 
-					|| (unit.readings[i].hasOwnProperty('overlap_status') 
+			if (!unit.readings[i].hasOwnProperty('overlap_status')
+					|| (unit.readings[i].hasOwnProperty('overlap_status')
 							&& unit.readings[i].overlap_status === 'duplicate')) {
 				to_split = [];
 				for (j = 0; j < unit.readings[i].witnesses.length; j += 1) {
 					if (overlapped_witnesses.indexOf(unit.readings[i].witnesses[j]) !== -1) {
-						to_split.push(unit.readings[i].witnesses[j]);    	    		    
+						to_split.push(unit.readings[i].witnesses[j]);
 					}
 				}
 				if (to_split.length > 0) {
@@ -1380,9 +1380,9 @@ do_move_whole_unit: function (target_location, original_location, unit_num) {
 	//check that the unit is not currently associated with an overlapped unit
 	//AND that the location its moving to is either not part of an overlapped unit or is but with om or lac readings for overlapped witnesses
 	//OR it has overlapping units and the new gap has the same ones
-	if ((!CL._data.apparatus[unit_num].hasOwnProperty('overlap_units') 
+	if ((!CL._data.apparatus[unit_num].hasOwnProperty('overlap_units')
 			&& !SV.target_has_overlap_conflict(target_location, unit_num))
-			|| (CL._data.apparatus[unit_num].hasOwnProperty('overlap_units') 
+			|| (CL._data.apparatus[unit_num].hasOwnProperty('overlap_units')
 					&& JSON.stringify(CL._data.apparatus[unit_num].overlap_units) === JSON.stringify(SV.get_overlap_details_for_gap(target_location)))) {
 		SV.prepare_for_operation();
 		SV.add_to_undo_stack(CL._data);
@@ -1392,7 +1392,7 @@ do_move_whole_unit: function (target_location, original_location, unit_num) {
 		if (SV.get_overlapped_witnesses_for_gap(target_location).length > 0) {
 			CL._data.apparatus[unit_num].overlap_units = SV.get_overlap_details_for_gap(target_location);
 			SV.separate_overlap_witnesses(unit_num, target_location);
-		}	
+		}
 		//sort the result
 		CL._data.apparatus.sort(CL.compare_first_word_indexes);
 		//reindex the moved unit
@@ -1407,7 +1407,7 @@ do_move_whole_unit: function (target_location, original_location, unit_num) {
 			SV.show_set_variants_data({'message': {'type': 'warning', 'message': warning_mess}});
 		} else {
 			SV.show_set_variants_data();
-		} 
+		}
 		document.getElementById('scroller').scrollLeft = scroll_offset[0];
 		document.getElementById('scroller').scrollTop = scroll_offset[1];
 	} else {
@@ -1444,7 +1444,7 @@ target_has_overlap_conflict: function (gap_location, unit_num, reading) {
 			}
 		}
 	}
-	return false;       	
+	return false;
 },
 
 /* only used when moving a single reading to a new odd numered index point
@@ -1459,7 +1459,7 @@ source_has_overlap_conflict: function (unit_num, reading) {
 	for (key in unit.overlap_units) {
 		if (unit.overlap_units.hasOwnProperty(key)) {
 			overlapped_witnesses.push.apply(overlapped_witnesses, unit.overlap_units[key]);
-		}   	
+		}
 	}
 	for (i = 0; i < reading.witnesses.length; i += 1) {
 		if (overlapped_witnesses.indexOf(reading.witnesses[i]) !== -1) {
@@ -1625,7 +1625,7 @@ do_move_single_reading: function (target_location, original_location, unit_num, 
 				SV.show_set_variants_data({'message': {'type': 'warning', 'message': warning_mess}});
 			} else {
 				SV.show_set_variants_data();
-			} 
+			}
 			document.getElementById('scroller').scrollLeft = scroll_offset[0];
 			document.getElementById('scroller').scrollTop = scroll_offset[1];
 		} else {
@@ -1697,7 +1697,7 @@ get_overlapped_witnesses_for_gap: function (gap_index) {
 						}
 					}
 				}
-			}  
+			}
 		}
 	}
 	return overlapped_witnesses;
@@ -1715,11 +1715,11 @@ move_unit: function (rd) {
 	target_location = parseInt(rd.td.target.id.replace('num_', ''), 10);
 	original_location = CL._data.apparatus[unit_num].start;
 	if (target_location%2 === 1) {
-		if ((unit.start === unit.end && unit.start%2 === 1 ) || typeof unit_details[2] !== 'undefined') { 
-			if (unit_details[1] === 'apparatus') { //check this is a main reading not an overlapping one                  
+		if ((unit.start === unit.end && unit.start%2 === 1 ) || typeof unit_details[2] !== 'undefined') {
+			if (unit_details[1] === 'apparatus') { //check this is a main reading not an overlapping one
 				if (!SV.unit_at_location(target_location)) {
-					if (!CL._data.apparatus[unit_num].hasOwnProperty('split_readings')) {  
-						SV.do_move_whole_unit(target_location, original_location, unit_num);                
+					if (!CL._data.apparatus[unit_num].hasOwnProperty('split_readings')) {
+						SV.do_move_whole_unit(target_location, original_location, unit_num);
 					} else {
 						SV.prepare_for_operation();
 						SV.add_to_undo_stack(CL._data);
@@ -1801,7 +1801,7 @@ do_combine_units: function (units, app_id, keep_id) {
 	var newunit, index, i, j, unit1, unit2, warning_mess, error_mess, problems, warning_unit, scroll_offset,
 	combined_gap_before_subreadings, combined_gap_after_subreadings, combined_gap_before_subreadings_details, key,
 	witness_equality, overlap_boundaries, overlap_status_agreement;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	//make sure unit 1 is leftmost and unit 2 is rightmost
 
@@ -1862,7 +1862,7 @@ do_combine_units: function (units, app_id, keep_id) {
 				}
 			}
 		}
-		newunit = SV.combine_readings(unit1.readings, unit2.readings, newunit, false);  
+		newunit = SV.combine_readings(unit1.readings, unit2.readings, newunit, false);
 		if (keep_id === true) {
 			newunit._id = unit1._id;
 		} else {
@@ -1939,7 +1939,7 @@ do_combine_units: function (units, app_id, keep_id) {
 				warning_mess = 'WARNING: The following witnesses have words missing in the highlighted unit: ' + problems.join(', ');
 				warning_unit = [app_id, index];
 			}
-		} 
+		}
 		SV.check_bug_status('combine', app_id + ' unit ' + Math.min(units[0][0], units[1][0]) + ' with unit ' + Math.max(units[0][0], units[1][0]) + '.');
 		if (warning_mess !== undefined) {
 			SV.show_set_variants_data({'message': {'type': 'warning', 'message': warning_mess}, 'highlighted_unit': warning_unit});
@@ -1970,7 +1970,7 @@ check_overlap_boundaries: function (unit1, unit2, app_id, all_gaps) {
 	}
 	if (!unit1.hasOwnProperty('overlap_units') && !unit2.hasOwnProperty('overlap_units')) {
 		return true;
-	} 
+	}
 	if (all_gaps === true) {
 		if (!CL.unit_has_text(unit1) && !unit1.hasOwnProperty('overlap_units')) {
 			return true;
@@ -2089,7 +2089,7 @@ get_gap_details: function (previous_unit, hit_witnesses) {
 },
 
 /** Given a reading (from a unit) and a witness
- * return true if witness is a subreading 
+ * return true if witness is a subreading
  * false if witness is not in the reading or is a main reading */
 is_subreading: function (reading, witness) {
 	var i;
@@ -2097,8 +2097,8 @@ is_subreading: function (reading, witness) {
 		return false;
 	}
 	for (i = 0; i < reading.text.length; i += 1) {
-		if (reading.text[i].hasOwnProperty(witness) 
-				&& reading.text[i][witness].hasOwnProperty('decision_class') 
+		if (reading.text[i].hasOwnProperty(witness)
+				&& reading.text[i][witness].hasOwnProperty('decision_class')
 				&& reading.text[i][witness]['decision_class'].length > 0) {
 			return true;
 		}
@@ -2136,7 +2136,7 @@ special_combine_readings: function (empty_unit, text_unit, text_unit_pos, gap_po
 			if (adjacent_unit.readings[i].type === 'lac') {
 				adjacent_witnesses.push.apply(adjacent_witnesses, adjacent_unit.readings[i].witnesses);
 			}
-		}        	
+		}
 	}
 	//now loop through the witnesses we might be interested in and remove any that have gaps in the adjacent unit
 	//go backwards so you can splice
@@ -2148,12 +2148,12 @@ special_combine_readings: function (empty_unit, text_unit, text_unit_pos, gap_po
 	//add special attribute to the readings of any remaining witnesses making new readings if necessary
 	for (i = 0; i < text_unit.readings.length; i += 1) {
 		hit_witnesses = [];
-		for (j = 0; j < text_unit.readings[i].witnesses.length; j += 1) {     	    
+		for (j = 0; j < text_unit.readings[i].witnesses.length; j += 1) {
 			if (target_witnesses.indexOf(text_unit.readings[i].witnesses[j]) != -1) {
 				hit_witnesses.push(text_unit.readings[i].witnesses[j]);
-			}        	    
+			}
 		}
-		if (text_unit.readings[i].text.length > 0  
+		if (text_unit.readings[i].text.length > 0
 				&& SV.is_subset_of(text_unit.readings[i].witnesses, hit_witnesses)) { //if the reading witnesses are a subset of hit_witnesses
 			//we are dealing with all witnesses in the reading
 			if (gap_position === 'before') {
@@ -2175,11 +2175,11 @@ special_combine_readings: function (empty_unit, text_unit, text_unit_pos, gap_po
 			}
 		} else if (text_unit.readings[i].text.length > 0 && hit_witnesses.length > 0) {
 			//we are only dealing with only some witnesses in the reading
-			for (j = 0; j < hit_witnesses.length; j += 1) { 
+			for (j = 0; j < hit_witnesses.length; j += 1) {
 				//we need to remember these and add it later (when we are not looping through the readings)
 				readings_to_add.push([text_unit_pos, i, [hit_witnesses[j]], app_id]);
-			} 
-		} 
+			}
+		}
 	}
 	for (i = readings_to_add.length - 1; i >= 0; i -= 1) { //go backwards so you don't screw up positions by adding readings
 		new_reading_id = SV.do_split_reading_witnesses(readings_to_add[i][0], readings_to_add[i][1], readings_to_add[i][2], readings_to_add[i][3], false);
@@ -2197,7 +2197,7 @@ special_combine_readings: function (empty_unit, text_unit, text_unit_pos, gap_po
 			}
 		} else {
 			reading.text[reading.text.length-1].combined_gap_after = readings_to_add[i][2];
-		} 
+		}
 	}
 	CL.add_unit_id(text_unit);
 	CL.add_reading_ids(text_unit);
@@ -2206,7 +2206,7 @@ special_combine_readings: function (empty_unit, text_unit, text_unit_pos, gap_po
 do_special_combine_units: function (units, app_id) {
 	var scroll_offset, unit1, unit2, unit1_pos, unit2_pos, previous_unit, next_unit,
 	witness_equality, overlap_boundaries, overlap_status_agreement, error_mess;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	SV.add_to_undo_stack(CL._data);
 	//make sure unit 1 is leftmost and unit 2 is rightmost
@@ -2224,7 +2224,7 @@ do_special_combine_units: function (units, app_id) {
 				SV.special_combine_readings(unit1, unit2, unit2_pos, 'before', app_id, CL._data[app_id][unit1_pos-1]);
 			} else {
 				SV.special_combine_readings(unit1, unit2, unit2_pos, 'before', app_id);
-			}	
+			}
 		}
 		if (!CL.unit_has_text(unit2)) {
 			//we need the unit after to get data from it
@@ -2244,8 +2244,8 @@ do_special_combine_units: function (units, app_id) {
 				warning_mess = 'WARNING: The following witnesses have words missing in the highlighted unit: ' + problems.join(', ');
 				warning_unit = [app_id, index];
 			}
-		} 
-		SV.check_bug_status('special combine', app_id + ' unit ' + Math.min(units[0][0], units[1][0]) + ' with unit ' + Math.max(units[0][0], units[1][0]) + '.');  
+		}
+		SV.check_bug_status('special combine', app_id + ' unit ' + Math.min(units[0][0], units[1][0]) + ' with unit ' + Math.max(units[0][0], units[1][0]) + '.');
 		SV.show_set_variants_data({});
 	} else {
 		//redraw without making any changes and error messages
@@ -2267,7 +2267,7 @@ do_special_combine_units: function (units, app_id) {
 //TODO: come up with a way of testing adjacency with overlapping rows
 combine_units: function (units, rd) {
 	var unit1, unit2, scroll_offset, added, real_readings, app_id, error_mess;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	SV.prepare_for_operation();
 	//at this point both units are from same apparatus
@@ -2275,25 +2275,25 @@ combine_units: function (units, rd) {
 	if (app_id === 'apparatus') {
 		if (Math.max(units[0][0], units[1][0]) - Math.min(units[0][0], units[1][0]) === 1) {
 			//the units are adjacent
-			if ((CL._data[app_id][units[0][0]].hasOwnProperty('created') && !CL.unit_has_text(CL._data[app_id][units[0][0]])) 
+			if ((CL._data[app_id][units[0][0]].hasOwnProperty('created') && !CL.unit_has_text(CL._data[app_id][units[0][0]]))
 					|| (CL._data[app_id][units[1][0]].hasOwnProperty('created') && !CL.unit_has_text(CL._data[app_id][units[1][0]]))) {
 				SV.do_special_combine_units(units, app_id);
 			} else {
 				SV.do_combine_units(units, app_id);
-			}               
+			}
 		} else {
 			//redraw without making any changes
 			error_mess = 'ERROR: non-adjacent units cannot be combined';
 			SV.unprepare_for_operation();
 			SV.show_set_variants_data({'message': {'type': 'error', 'message': error_mess}});
 		}
-	} else {               
+	} else {
 		//make sure unit 1 is leftmost and unit 2 is rightmost
 		unit1 = CL._data[app_id][Math.min(units[0][0], units[1][0])];
 		unit2 = CL._data[app_id][Math.max(units[0][0], units[1][0])];
 		//at the same time change the overlap unit id of the second one to match the first
-		if (SV.are_adjacent(unit1._id, unit2._id)) {                
-			SV.do_combine_units(units, app_id, true);               	
+		if (SV.are_adjacent(unit1._id, unit2._id)) {
+			SV.do_combine_units(units, app_id, true);
 		} else {
 			//redraw without making any changes
 			error_mess = 'ERROR: non-adjacent units cannot be combined';
@@ -2338,11 +2338,11 @@ are_adjacent: function (unit1_id, unit2_id) {
 	var unit_positions;
 	unit_positions = SV._find_apparatus_positions_by_overlap_id(unit1_id, unit2_id);
 	if (typeof unit_positions[0] !== 'undefined' && typeof unit_positions[1] !== 'undefined') {
-		if (unit_positions[0] + 1 === unit_positions[1]) {        	    
+		if (unit_positions[0] + 1 === unit_positions[1]) {
 			return true;
 		}
 	}
-	return false;        
+	return false;
 },
 
 has_unit: function(index) {
@@ -2360,7 +2360,7 @@ move_reading: function (units, rd) {
 	var i, app_id, unit1, unit2, unit2_reading_letters, unit2_reading_pos, problems, warning_mess,
 	reading, added, newunit, real_readings, scroll_offset, target_location, original_location,
 	witnesses, new_om_reading, key, do_move_out, do_move_in, replacement_readings;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	SV.prepare_for_operation();
 	//at this point both units are from same apparatus
@@ -2383,8 +2383,8 @@ move_reading: function (units, rd) {
 				if (unit2.overlap_units.hasOwnProperty(key) && do_move_out === true) {
 					for (i = 0; i < reading[0].witnesses.length; i += 1) {
 						if (unit2.overlap_units[key].indexOf(reading[0].witnesses[i]) !== -1) {
-							if (!unit1.hasOwnProperty('overlap_units') 
-									|| (unit1.hasOwnProperty('overlap_units') 
+							if (!unit1.hasOwnProperty('overlap_units')
+									|| (unit1.hasOwnProperty('overlap_units')
 											&& !unit1.overlap_units.hasOwnProperty(key))) {
 								do_move_out = false;
 								break;
@@ -2400,8 +2400,8 @@ move_reading: function (units, rd) {
 				if (unit1.overlap_units.hasOwnProperty(key) && do_move_in === true) {
 					for (i = 0; i < reading[0].witnesses.length; i += 1) {
 						if (unit1.overlap_units[key].indexOf(reading[0].witnesses[i]) !== -1) {
-							if (!unit2.hasOwnProperty('overlap_units') 
-									|| (unit2.hasOwnProperty('overlap_units') 
+							if (!unit2.hasOwnProperty('overlap_units')
+									|| (unit2.hasOwnProperty('overlap_units')
 											&& !unit2.overlap_units.hasOwnProperty(key))) {
 								do_move_in = false;
 								break;
@@ -2417,7 +2417,7 @@ move_reading: function (units, rd) {
 			//delete any combined gap details on subreadings
 			delete reading[0].combined_gap_before_subreadings;
 			delete reading[0].combined_gap_before_subreadings_details;
-			delete reading[0].combined_gap_after_subreadings;          
+			delete reading[0].combined_gap_after_subreadings;
 			//and remove its index numbers so it doesn't influence later reindexing
 			//and any combined gap details
 			for (i = 0; i < reading[0].text.length; i += 1) {
@@ -2436,7 +2436,7 @@ move_reading: function (units, rd) {
 			}
 
 			SV.unsplit_unit_witnesses(units[1][0], app_id);
-			//merge reading into target unit 
+			//merge reading into target unit
 			unit1 = SV.combine_readings(unit1.readings, reading, unit1, true);
 
 			if (unit1.start === unit1.end) {
@@ -2448,7 +2448,7 @@ move_reading: function (units, rd) {
 			problems = SV.check_word_order_integrity(unit2.start, unit1.start, reading[0].witnesses);
 			CL.add_reading_ids(unit1);
 			//now see if the remaining unit has any text left and if not check to see if it has overlapping readings
-			//if it doesn't have overlapping readings we can delete it. 
+			//if it doesn't have overlapping readings we can delete it.
 			//if it does its safer to leave it here for the editor to decide what to do.
 			if (!CL.unit_has_text(CL._data[app_id][units[1][0]])) {
 				if (!unit2.hasOwnProperty('overlap_units')) {
@@ -2456,7 +2456,7 @@ move_reading: function (units, rd) {
 				}
 			}
 			CL._data.apparatus = CL.remove_null_items(CL._data[app_id]);
-			//I added this for tidyness' sake in response to a bug logged by David, In the end I decided to fix it in a different way by allowing 
+			//I added this for tidyness' sake in response to a bug logged by David, In the end I decided to fix it in a different way by allowing
 			//any units left with no readings to be combined with neighbouring ones by only using special combine units
 			//when dealing with a unit I specifically say is created I think that it will be a 'safer' solution. But I like this logic so leaving here for now in case it is useful
 			//now if unit2 has no readings think about geting rid of it
@@ -2466,17 +2466,17 @@ move_reading: function (units, rd) {
 //			if (SV.neighbours_share_all_overlaps(app_id, units[1][0]) && CL.overlap_has_empty_reading(unit2.overlap_units)) {
 //			CL._data[app_id][units[1][0]] = null;
 //			}
-//			}        		
+//			}
 //			}
 //			CL._data.apparatus = CL.remove_null_items(CL._data[app_id]);
-			SV.unprepare_for_operation();            
-			SV.check_bug_status('move reading', unit2_reading_pos + ' with witnesses ' + witnesses + ' from unit ' + units[1][0] + ' to unit ' + units[0][0] + ' in ' + app_id + '.');           
+			SV.unprepare_for_operation();
+			SV.check_bug_status('move reading', unit2_reading_pos + ' with witnesses ' + witnesses + ' from unit ' + units[1][0] + ' to unit ' + units[0][0] + ' in ' + app_id + '.');
 			if (problems.length > 0) {
 				warning_mess = 'WARNING: Moving the reading has created word order problems in following witnesses: ' + problems.join(', ');
 				SV.show_set_variants_data({'message': {'type': 'warning', 'message': warning_mess}});
 			} else {
 				SV.show_set_variants_data({});
-			} 
+			}
 			document.getElementById('scroller').scrollLeft = scroll_offset[0];
 			document.getElementById('scroller').scrollTop = scroll_offset[1];
 		} else if (do_move_out === false) {
@@ -2546,7 +2546,7 @@ get_replacement_om_reading: function (unit, moved_reading) {
 	//otherwise this reading might have been made a main reading and combined with other readings
 	//so we need to check and split out any overlapped witnesses returning 2 om readings
 	//or we could just return a single om reading with no overlap status if no witneses are overlapped
-	ol_witnesses = []; 
+	ol_witnesses = [];
 	if (unit.hasOwnProperty('overlap_units')) {
 		for (key in unit.overlap_units) {
 			if (unit.overlap_units.hasOwnProperty(key)) {
@@ -2573,7 +2573,7 @@ get_replacement_om_reading: function (unit, moved_reading) {
 			witnesses.splice(witnesses.indexOf(ol_witnesses[i]), 1);
 		}
 	}
-	return [{'text' : [], 'type' : 'om', 'witnesses' : witnesses}, {'text' : [], 'type' : 'om', 'witnesses' : ol_witnesses, 'overlap_status' : 'duplicate'}];            
+	return [{'text' : [], 'type' : 'om', 'witnesses' : witnesses}, {'text' : [], 'type' : 'om', 'witnesses' : ol_witnesses, 'overlap_status' : 'duplicate'}];
 },
 
 
@@ -2596,21 +2596,21 @@ combine_readings: function (readings1, readings2, newunit, move_reading) {
 					read2 = k;
 				} else if (move_reading === true) {
 					//readings 2 could be a single reading from another unit and not have a reading for all witnesses
-					read2 = 'None';
+					read2 = null;
 				}
 			}
 			//need to make a fake new reading in order to extract the text
-			new_rdg = {'text': SV.order_unit_text(readings1, readings2, [read1, read2], witness)}; 
-			text = CL.extract_witness_text(new_rdg, {'witness': witness, 'reading_type': 'mainreading'});                    
+			new_rdg = {'text': SV.order_unit_text(readings1, readings2, [read1, read2], witness)};
+			text = CL.extract_witness_text(new_rdg, {'witness': witness, 'reading_type': 'mainreading'});
 			if (readings1[read1].hasOwnProperty('overlap_status')) {
 				text = text + '_' + readings1[read1].overlap_status;
 			}
-			if (read2 !== 'None' && readings2[read2].hasOwnProperty('overlap_status')) {
+			if (read2 !== null && readings2[read2].hasOwnProperty('overlap_status')) {
 				text = text + '_' + readings2[read2].overlap_status;
 			}
 			//now if we don't have any text which is possible use the reading positions in each unit as key (keeps all our different om/lac etc. reading separate)
 			if (text.length === 0) {
-				if (move_reading === true && read2 === 'None') {
+				if (move_reading === true && read2 === null) {
 					text = read1;
 				} else {
 					text = read1 + '-' + read2;
@@ -2625,7 +2625,7 @@ combine_readings: function (readings1, readings2, newunit, move_reading) {
 						'witnesses' : [witness],
 						'text' : SV.combine_reading_text(readings1, readings2,  [read1, read2], witness, [])
 				};
-				if (read2 !== 'None') { //we only need to worry about which one to chose if we have two readings
+				if (read2 !== null) { //we only need to worry about which one to chose if we have two readings
 					if (readings1[read1].hasOwnProperty('overlap_status') && readings2[read2].hasOwnProperty('overlap_status')) {
 						if (readings1[read1].overlap_status === readings2[read2].overlap_status) {
 							new_rdg.overlap_status = readings1[read1].overlap_status;
@@ -2637,14 +2637,14 @@ combine_readings: function (readings1, readings2, newunit, move_reading) {
 									new_rdg.overlap_status = CL._overlapped_options[k].reading_flag;
 								}
 							}
-						}                		
+						}
 					} else if (readings1[read1].hasOwnProperty('overlap_status') || readings2[read2].hasOwnProperty('overlap_status')) {
 						new_rdg.overlap_status = 'duplicate'; //make it duplicate because its the safest.
 					}
 				} else if (readings1[read1].hasOwnProperty('overlap_status')) { //otherwise we just use readings1 overlap status if there is one
 					new_rdg.overlap_status = readings1[read1].overlap_status;
 				}
-				newreadings[text] = new_rdg;                      
+				newreadings[text] = new_rdg;
 				SV.add_type_and_details(newreadings[text], readings1[read1], readings2[read2]);
 			}
 		}
@@ -2675,11 +2675,11 @@ order_unit_text: function (readings1, readings2, pattern, witness, change_indexe
 	words = [];
 	for (i = 0; i < pattern.length; i += 1) {
 		if (i === 0) {
-			if (pattern[i] !== 'None') {
+			if (pattern[i] !== null) {
 				words.push.apply(words, readings1[pattern[i]].text);
 			}
 		} else {
-			if (pattern[i] !== 'None') {
+			if (pattern[i] !== null) {
 				words.push.apply(words, readings2[pattern[i]].text);
 			}
 		}
@@ -2718,7 +2718,7 @@ combine_reading_text: function (readings1, readings2, pattern, witness, current_
 		current = current_text[k] || {};
 		current_text[k] = SV.combine_words(current, words[j], witness);
 		if (k > 0 && current_text[k].hasOwnProperty('combined_gap_before')) {
-			//if this gap is now embedded delete its reference 
+			//if this gap is now embedded delete its reference
 			delete current_text[k]['combined_gap_before'];
 			delete current_text[k]['combined_gap_before_details'];
 		}
@@ -2858,11 +2858,11 @@ separate_individual_overlap_witnesses: function (witness_list, overlaps) {
 	return new_adds;
 },
 
-/** split unit stuff*/ 
+/** split unit stuff*/
 do_split_unit: function (unit, app_id, index) {
 	var i, j, text, apps, witnesses, witnesses_copy, overlap_witnesses, ol_witnesses_copy, words, key, words_dict, scroll_offset, rdg, add,
 	split_adds, newunit, om_readings_copy, lac_readings_copy, new_reading;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	SV.add_to_undo_stack(CL._data);
 	CL.hide_tooltip();
@@ -2915,7 +2915,7 @@ do_split_unit: function (unit, app_id, index) {
 		for (i = 0; i < CL._data.lac_readings.length; i += 1) {
 			witnesses.splice(witnesses.indexOf(CL._data.lac_readings[i]), 1);
 		}
-	}            
+	}
 	//get all the words from all readings and mark those from overlapping readings
 	for (i = 0; i < unit.readings.length; i += 1) {
 		if (unit.readings[i].hasOwnProperty('overlap_status')) {
@@ -3031,7 +3031,7 @@ do_split_unit: function (unit, app_id, index) {
 			}
 			if (om_readings_copy.length > 0) {
 				newunit.readings.push({'witnesses': om_readings_copy, 'text': [], 'type': 'om_verse', 'details': 'om verse'});
-			}         
+			}
 		}
 		if (CL._data.hasOwnProperty('lac_readings') && CL._data.lac_readings.length > 0) {
 			lac_readings_copy = CL._data.lac_readings.slice(0)
@@ -3071,13 +3071,13 @@ do_split_unit: function (unit, app_id, index) {
 				if (unit.readings[j].witnesses.indexOf(CL._data_settings.base_text_siglum) !== -1) {
 					SV.do_split_reading_witnesses(index, 0, [CL._data_settings.base_text_siglum], app_id, false);
 					break;
-				}                    
+				}
 			}
-		}   
+		}
 	}
 	//now sort them by start index and then by index of first item in text
-	CL._data[app_id].sort(CL.compare_first_word_indexes);   
-	SV.tidy_units(app_id);            
+	CL._data[app_id].sort(CL.compare_first_word_indexes);
+	SV.tidy_units(app_id);
 	SV.unprepare_for_operation();
 	SV.check_bug_status('split', app_id + ' unit ' + index + '.');
 	SV.show_set_variants_data();
@@ -3088,7 +3088,7 @@ do_split_unit: function (unit, app_id, index) {
 /** split the unit into individual words */
 split_unit: function (index) {
 	var i, j, app_id, apparatus_num, scroll_offset, operation_needed;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	//find the correct apparatus
 	if (index.match(/_app_/g)) {
@@ -3104,8 +3104,8 @@ split_unit: function (index) {
 	for (i = 0; i < CL._data[app_id][index].readings.length; i += 1) {
 		if (CL._data[app_id][index].readings[i].text.length > 1) {
 			operation_needed = true;
-		} else if (CL._data[app_id][index].readings[i].text.length > 0 
-				&& (CL._data[app_id][index].readings[i].text[0].hasOwnProperty('combined_gap_before') 
+		} else if (CL._data[app_id][index].readings[i].text.length > 0
+				&& (CL._data[app_id][index].readings[i].text[0].hasOwnProperty('combined_gap_before')
 						|| CL._data[app_id][index].readings[i].text[0].hasOwnProperty('combined_gap_after') )) {
 			operation_needed = true;
 		} else if (CL._data[app_id][index].readings[i].hasOwnProperty('combined_gap_before_subreadings')
@@ -3141,11 +3141,11 @@ tidy_units: function (app_id) {
 
 
 
-/** Overlap related stuff */ 
+/** Overlap related stuff */
 
 /** checks that a single word/space index of the base text has a single unit of variation underneath it.
  * i.e. that a space only has one unit that starts and ends at that index.
- * This is used as a check before making an overlapping reading as it makes the overlap code easier 
+ * This is used as a check before making an overlapping reading as it makes the overlap code easier
  * it is only relevant for first line of apparatus so only need to supply unit_num */
 check_unit_uniqueness: function (unit_num, app_id) {
 	var start, end, prev_start, prev_end, next_start, next_end;
@@ -3208,7 +3208,7 @@ get_pos_in_unit_set: function (unit_num, app_id) {
 split_reading_witnesses: function (rdg_details, stage, menu_pos) {
 	var i, reading, scroll_offset, witness_list, data, key, duplicate,
 	window_height, menu_height, unit, id;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	reading = CL._data[rdg_details[1]][rdg_details[0]].readings[rdg_details[2]];
 	if (CL.get_all_reading_witnesses(reading).length > 1) {
@@ -3235,18 +3235,18 @@ split_reading_witnesses: function (rdg_details, stage, menu_pos) {
 			unit = CL._data[rdg_details[1]][rdg_details[0]];
 			CL._data.separated_witnesses.push({'app_id': rdg_details[1], 'unit_id': unit._id, 'witnesses': witness_list});
 			SV.do_split_reading_witnesses(rdg_details[0], rdg_details[2], witness_list, rdg_details[1], true);
-			document.getElementsByTagName('body')[0].removeChild(document.getElementById('wit_form')); 
+			document.getElementsByTagName('body')[0].removeChild(document.getElementById('wit_form'));
 			if (stage === 'set_variants') {
 				SV.check_bug_status('move', 'split witnesses ' + witness_list.join(', ') + ' out of reading ' + rdg_details[2] + ' in unit ' + rdg_details[0] + ' in apparatus.');
 				SV.show_set_variants_data();
-			} 
+			}
 			if (stage === 'order_readings') {
 				OR.relabel_readings(CL._data[rdg_details[1]][rdg_details[0]].readings);
 				OR.show_reorder_readings({'container': CL._container});
 			}
 			document.getElementById('scroller').scrollLeft = scroll_offset[0];
 			document.getElementById('scroller').scrollTop = scroll_offset[1];
-		});      	
+		});
 	} else {
 		SV.set_up_message('error', 'ERROR: Readings with a single witness cannot be split');
 	}
@@ -3300,11 +3300,11 @@ overlap_reading: function (unit_num, reading_num, menu_pos) {
 		document.getElementById('scroller').scrollLeft = scroll_offset[0];
 		document.getElementById('scroller').scrollTop = scroll_offset[1];
 	}
-},        
+},
 
 make_overlapping_reading: function (unit_num, reading_id, duplicate) {
 	var i, j, original_unit, a_reading, reading, newunit, found, key, scroll_offset, ol_id, new_word, temp, app_ids;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	SV.add_to_undo_stack(CL._data);
 	original_unit = CL._data.apparatus[unit_num];
@@ -3314,7 +3314,7 @@ make_overlapping_reading: function (unit_num, reading_id, duplicate) {
 	SV.prepare_for_operation(); //we do this because it makes sorting out the gaps easier. Any reading with standoff overlap has already been disallowed overlap status by this point
 	if (duplicate === true) {
 		reading.overlap_status = 'duplicate';
-	}           
+	}
 	//make the new unit for the overlapping reading
 	newunit = {};
 	newunit.start = CL._data.apparatus[unit_num].start;
@@ -3328,19 +3328,19 @@ make_overlapping_reading: function (unit_num, reading_id, duplicate) {
 		for (i = 0; i < app_ids.length; i += 1) {
 			found = false;
 			for (j = 0; j < CL._data[app_ids[i]].length; j += 1) {
-				if (CL._data[app_ids[i]][j].start <= newunit.start && CL._data[app_ids[i]][j].end >= newunit.end) {       		    
+				if (CL._data[app_ids[i]][j].start <= newunit.start && CL._data[app_ids[i]][j].end >= newunit.end) {
 					found = true;
 				}
 			}
 			if (!found) {
 				newunit.row = parseInt(app_ids[i].replace('apparatus', ''));
-				break; 
+				break;
 			}
 		}
 		if (typeof newunit.row === 'undefined') {
 			newunit.row = parseInt(app_ids[app_ids.length-1].replace('apparatus', '')) + 1;
 		}
-	}    
+	}
 	newunit.readings = [JSON.parse(JSON.stringify(a_reading)), JSON.parse(JSON.stringify(reading))];
 	delete newunit.readings[1].overlap_status;
 	newunit.readings[0].witnesses = [CL._data_settings.base_text_siglum];
@@ -3359,11 +3359,11 @@ make_overlapping_reading: function (unit_num, reading_id, duplicate) {
 	//now sort out any gaps which need to become full readings
 	//this must happen after we have copied the subreading (which now becomes the 'genuine' presentation of this reading)
 	for (i = reading.text.length-1; i >= 0; i -= 1) {
-		if (reading.text[i][reading.witnesses[0]].hasOwnProperty('gap_after') 
+		if (reading.text[i][reading.witnesses[0]].hasOwnProperty('gap_after')
 				&& (i + 1 >= reading.text.length || (i + 1 < reading.text.length && !reading.text[i+1].hasOwnProperty('was_gap')))) { //this was_gap use is safe as only triggered while making overlap and order will not have been changed at this point
 			if (i < reading.text.length - 1 || i === reading.text.length -1 && newunit.readings[1].text[newunit.readings[1].text.length-1].hasOwnProperty('combined_gap_after')) {
 				new_word = {
-						'index': SV.increment_sub_index(reading.text[i].index, 1), 
+						'index': SV.increment_sub_index(reading.text[i].index, 1),
 						'interface': '&lt;' + reading.text[i][reading.witnesses[0]].gap_details + '&gt;',
 						'was_gap': true,
 						'verse': reading.text[i].verse,
@@ -3393,7 +3393,7 @@ make_overlapping_reading: function (unit_num, reading_id, duplicate) {
 			} else {
 				new_word.index = SV.decrement_sub_index(reading.text[i].index, 1);
 				reading.text[i].index = SV.increment_sub_index(new_word.index, 1);
-			}    		
+			}
 			for (j = 0; j < reading.witnesses.length; j += 1) {
 				new_word.reading.push(reading.witnesses[j]);
 				new_word[reading.witnesses[j]] = {'index': String(reading.text[i][reading.witnesses[j]].index - 1), 'original': new_word['interface']};
@@ -3404,7 +3404,7 @@ make_overlapping_reading: function (unit_num, reading_id, duplicate) {
 			delete reading.text[0].combined_gap_before;
 			delete reading.text[0].combined_gap_before_details;
 			reading.text.splice(0, 0, new_word);
-		}       	
+		}
 		reading = SV.fix_index_numbers(reading);
 	}
 	//get the id and then add it to the original unit so we know the extent of this overlapping unit
@@ -3420,7 +3420,7 @@ make_overlapping_reading: function (unit_num, reading_id, duplicate) {
 		CL._data['apparatus' + newunit.row] = [newunit];
 	}
 	SV.unprepare_for_operation();
-	SV.check_bug_status('make overlapping reading', 'of witnesses ' + CL.get_all_reading_witnesses(newunit.readings[1]).join(', '));            
+	SV.check_bug_status('make overlapping reading', 'of witnesses ' + CL.get_all_reading_witnesses(newunit.readings[1]).join(', '));
 	SV.show_set_variants_data();
 	document.getElementById('scroller').scrollLeft = scroll_offset[0];
 	document.getElementById('scroller').scrollTop = scroll_offset[1];
@@ -3499,7 +3499,7 @@ merge_overlaps: function (units, rd) {
 },
 
 
-//Integrity checks 
+//Integrity checks
 
 //check order integrity in all witnesses
 check_all_witnesses_integrity: function () {
@@ -3523,11 +3523,11 @@ check_witness_integrity: function (witness) {
 		if (unit.hasOwnProperty('overlap_units') && !unit.overlap_units.hasOwnProperty(id)) {
 			for (key in unit.overlap_units) {
 				if (unit.overlap_units.hasOwnProperty(key) && unit.overlap_units[key].indexOf(witness) !== -1) {
-					id = key; //set id to the id of the overlapped unit (anything above this unit will now be ignored)      		   
+					id = key; //set id to the id of the overlapped unit (anything above this unit will now be ignored)
 					ol_unit = CL.find_overlap_unit_by_id(key);
 					for (j = 0; j < ol_unit.readings.length; j += 1) {
 						if (ol_unit.readings[j].witnesses.indexOf(witness) !== -1) {
-							if (ol_unit.readings[j].hasOwnProperty('standoff_subreadings') && ol_unit.readings[j].standoff_subreadings.indexOf(witness) !== -1) { 
+							if (ol_unit.readings[j].hasOwnProperty('standoff_subreadings') && ol_unit.readings[j].standoff_subreadings.indexOf(witness) !== -1) {
 								for (type in ol_unit.readings[j].subreadings) {
 									for (k = 0; k < ol_unit.readings[j][type].length; k += 1) {
 										if (ol_unit.readings[j][type][k].indexOf(witness) !== -1) {
@@ -3557,12 +3557,12 @@ check_witness_integrity: function (witness) {
 										return false;
 									}
 								}
-							}   
+							}
 						}
 					}
 				}
 			}
-		} 
+		}
 		//this needs to be a separate if and not in an else because the top loop ultimately only hits the units where the specified witness is overlapped - this one deals with all the rest
 		if (!unit.hasOwnProperty('overlap_units') || (unit.hasOwnProperty('overlap_units') && !unit.overlap_units.hasOwnProperty(id))) {
 			for (j = 0; j < unit.readings.length; j += 1) {
@@ -3575,7 +3575,7 @@ check_witness_integrity: function (witness) {
 							} else {
 								return false;
 							}
-						}    
+						}
 					}
 					//TODO:check the subreadings? this will be complex if you can away without it then do!
 					//so long as subreadings are always hidden then checking SR_text should be enough
@@ -3609,11 +3609,11 @@ get_first_index_for_witnesses: function (unit, witnesses) {
 						//this deals with main readings and visible subreadings
 						witness_index[wit] = parseInt(unit.readings[j].text[0][wit].index, 10);
 					} else {
-						//this deals with stuff in SR_text for unshown standoff subreadings 
+						//this deals with stuff in SR_text for unshown standoff subreadings
 						if (unit.readings[j].hasOwnProperty('SR_text') && unit.readings[j].SR_text.hasOwnProperty(wit)) {
 							witness_index[wit] = parseInt(unit.readings[j].SR_text[wit].text[0][wit].index, 10);
 						}
-					}                            
+					}
 				} else {
 					witness_index[wit] = 0;
 				}
@@ -3625,7 +3625,7 @@ get_first_index_for_witnesses: function (unit, witnesses) {
 
 compare_witness_queue: function (queue, problems) {
 	var key;
-	//if the overlapped witness unit covers the whole verse 
+	//if the overlapped witness unit covers the whole verse
 	if (queue.length !== 2) {
 		return problems;
 	}
@@ -3660,7 +3660,7 @@ check_word_order_integrity: function (original_unit, new_unit, witnesses) {
 		unit = CL._data.apparatus[i];
 		//capture the unit that is the final location (where words may have been added) for later testing we will send it to check_unit_integrity
 		if (unit.end === new_unit || unit.start === new_unit) {
-			//this should always be the top line unit not an overlapped one (we will never have altered the overlap one) 
+			//this should always be the top line unit not an overlapped one (we will never have altered the overlap one)
 			indexes.push(i);
 		}
 		//check each pair of units in turn between the start unit and the end unit
@@ -3747,25 +3747,25 @@ check_unit_integrity: function (app_id, index) {
  *  into their parents so we don't have to worry about them.
  */
 prepare_for_operation: function (unit_details) {
-	SV._remove_offset_subreadings(unit_details); //this runs find_subreadings 
+	SV._remove_offset_subreadings(unit_details); //this runs find_subreadings
 	SR._lose_subreadings();
 },
 
 /** Reverse the prepare operation by returning the necessary subreadings and offset readings
  */
 unprepare_for_operation: function () {
-	//first run find_subreadings so that the offset subreadings that were made 
+	//first run find_subreadings so that the offset subreadings that were made
 	//main readings in prepare are put back as subreadings (if they still match their offset record)
 	SR._lose_subreadings();
 	SR._find_subreadings(); //this looks like the breaking point
 	//then if we aren't looking at subreadings hide them again
 	if (CL._show_subreadings === false) {
 		SR._lose_subreadings();
-	}           
+	}
 },
 
 /** This is used in preparing for operations to put all offset subreadings back as main readings.
- * This is important because 
+ * This is important because
  * a) we do not want to have to faff with subreadings during combine and split operations
  * b) We cannot just subsume them into parents as with other subreadings because they need to become main readings if their unit extent changes.
  * */
@@ -3775,7 +3775,7 @@ _remove_offset_subreadings: function (unit_details) {
 	//need to lose subreadings first as for some reason running find subreadings when they are already found looses witnesses
 	//if you fix that bug you can stop running _lose_subreadings first. You always need to find them because the rest of the function works on the basis they are there
 	SR._lose_subreadings();
-	SR._find_subreadings();      
+	SR._find_subreadings();
 	data = CL._data;
 	for (key in data) {
 		if (data.hasOwnProperty(key)) {
@@ -3786,18 +3786,18 @@ _remove_offset_subreadings: function (unit_details) {
 						make_main_ids = {};
 						//loop through standoff readings
 						for (type in data.marked_readings) {
-							if (data.marked_readings.hasOwnProperty(type)) {      
+							if (data.marked_readings.hasOwnProperty(type)) {
 								for (k = 0; k < data.marked_readings[type].length; k += 1) {
 									if (data.marked_readings[type][k].apparatus === key) { //if in right apparatus row
 										if (typeof unit_details === 'undefined' || unit_details.unit_id === data.marked_readings[type][k].unit_id) {
-											if (data.marked_readings[type][k].start ===  apparatus[i].start 
+											if (data.marked_readings[type][k].start ===  apparatus[i].start
 													&& data.marked_readings[type][k].end ===  apparatus[i].end
 													&& data.marked_readings[type][k].unit_id === apparatus[i]._id) { //if unit extent is correct
 												temp = SV.get_pos_in_unit_set(i, key);
 
 												//we are in the matching unit and all is fine with extents
 												//so we can now make the marked reading a main reading again
-												//loop through readings until we find one that matches the marked parent    
+												//loop through readings until we find one that matches the marked parent
 												readings = apparatus[i].readings;
 												//find the parent
 												for (j = 0; j < readings.length; j += 1) {
@@ -3816,7 +3816,7 @@ _remove_offset_subreadings: function (unit_details) {
 																row_num = j;
 															}
 														}
-													} 	    
+													}
 												}
 												//Because we are calling _find_subreadings at the start we will always have our readings available as subreadings
 												if (parent.hasOwnProperty('subreadings')) {
@@ -3854,7 +3854,7 @@ _remove_offset_subreadings: function (unit_details) {
 						}
 						if (!$.isEmptyObject(make_main_ids)) {
 							make_main_ids_list = [];
-							for (id_key in make_main_ids) { 
+							for (id_key in make_main_ids) {
 								make_main_ids_list.push(id_key);
 							}
 							SV.make_main_reading(make_main_ids_list, make_main_ids);
@@ -3899,7 +3899,7 @@ _remove_from_subreading: function (reading, witness) {
 								delete reading.subreadings[key][i].text[j][witness];
 								reading.subreadings[key][i].text[j].reading.splice(reading.subreadings[key][i].text[j].reading.indexOf(witnesses), 1);
 							}
-						}       			
+						}
 					}
 				}
 			}
@@ -3939,16 +3939,16 @@ has_combined_gap: function (subreading) {
 make_main_reading: function (id_string, details) {
 	var scroll_offset, i, unit_number, app_id, unit, parent_pos, subtype, subreading_pos, parent_reading, subreading, options;
 	if ($.isArray(id_string)) {
-		//this section deals with making things a main reading in the context of removing the offset marked subreadings from the 
+		//this section deals with making things a main reading in the context of removing the offset marked subreadings from the
 		//field of play in prepare_for_operation()
 		//sort by row then type then subrow always working from the bottom to the top
 		id_string.sort(SV.subreading_id_sort);
-		//send each item on list in turn to CL.make_main_reading(id_string, false); 
+		//send each item on list in turn to CL.make_main_reading(id_string, false);
 		//false stops the standoff record from being deleted
 		for (i = 0; i < id_string.length; i += 1) {
 			if (id_string[i].indexOf('_app_') === -1) {
 				app_id = 'apparatus';
-				unit_number = parseInt(id_string[i].substring(id_string[i].indexOf('unit_') + 5, id_string[i].indexOf('_row_'))); 
+				unit_number = parseInt(id_string[i].substring(id_string[i].indexOf('unit_') + 5, id_string[i].indexOf('_row_')));
 			} else {
 				unit_number = parseInt(id_string[i].substring(id_string[i].indexOf('unit_') + 5, id_string[i].indexOf('_app_')));
 				app_id = 'apparatus' + id_string[i].substring(id_string[i].indexOf('_app_') + 5, id_string[i].indexOf('_row_'));
@@ -3964,13 +3964,13 @@ make_main_reading: function (id_string, details) {
 		}
 	} else {
 		//this section is a top level action called from the context menu so must be prepared to a certain extent
-		scroll_offset = [document.getElementById('scroller').scrollLeft, 
+		scroll_offset = [document.getElementById('scroller').scrollLeft,
 		                 document.getElementById('scroller').scrollTop];
 		SV.add_to_undo_stack(CL._data);
 
 		if (id_string.indexOf('_app_') === -1) {
 			app_id = 'apparatus';
-			unit_number = parseInt(id_string.substring(id_string.indexOf('unit_') + 5, id_string.indexOf('_row_'))); 
+			unit_number = parseInt(id_string.substring(id_string.indexOf('unit_') + 5, id_string.indexOf('_row_')));
 		} else {
 			unit_number = parseInt(id_string.substring(id_string.indexOf('unit_') + 5, id_string.indexOf('_app_')));
 			app_id = 'apparatus' + id_string.substring(id_string.indexOf('_app_') + 5, id_string.indexOf('_row_'));
@@ -3999,7 +3999,7 @@ make_main_reading: function (id_string, details) {
 //TODO: this could be simpler if we just have a reading pointer!
 add_reading_flag: function (reading_details, flag) {
 	var scroll_offset;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	SV.add_to_undo_stack(CL._data);
 	//now add the flag and set to true
@@ -4020,7 +4020,7 @@ add_reading_flag: function (reading_details, flag) {
 
 remove_reading_flag: function (reading_details) {
 	var scroll_offset;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	SV.add_to_undo_stack(CL._data);
 	delete CL._data[reading_details[1]][reading_details[0]].readings[reading_details[2]].overlap_status;
@@ -4033,7 +4033,7 @@ remove_reading_flag: function (reading_details) {
 
 make_standoff_reading: function (type, reading_details, parent_reading) {
 	var scroll_offset;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	SV.add_to_undo_stack(CL._data);
 	CL.make_standoff_reading(type, reading_details, parent_reading);
@@ -4063,7 +4063,7 @@ subreading_id_sort: function (a, b) {
 	if (subrowa !== subrowb) {
 		return subrowb - subrowa;
 	}
-},    
+},
 
 
 /** The next three functions are concerned with the context menu and associated event handling */
@@ -4073,7 +4073,7 @@ subreading_id_sort: function (a, b) {
  * the others are determined from project configuration
  *  */
 make_menu: function (menu_name) {
-	var menu, i, key, subreadings, SV_rules;           
+	var menu, i, key, subreadings, SV_rules;
 	//menus for full units
 	if (menu_name === 'unit') {
 		document.getElementById('context_menu').innerHTML = '<li id="split_words"><span>Split words</span></li><li id="split_readings"><span>Split readings</span></li>';
@@ -4085,7 +4085,7 @@ make_menu: function (menu_name) {
 		menu = ['<li id="treat_as_main"><span>Make main reading</span></li>'];
 		for (i = 0; i < CL._overlapped_options.length; i += 1) {
 			menu.push('<li id="' + CL._overlapped_options[i].id + '"><span>' + CL._overlapped_options[i].label + '</span></li>')
-		}        	
+		}
 		document.getElementById('context_menu').innerHTML = menu.join('');
 	} else {
 		menu = [];
@@ -4151,7 +4151,7 @@ _add_CM_Handlers: function () {
 			rdg_details = CL.get_unit_app_reading(div.id);
 			SV.split_readings(rdg_details);
 		});
-		$('#split_readings').on('mouseover.sr_mo', function(event) {CL.hide_tooltip();});  
+		$('#split_readings').on('mouseover.sr_mo', function(event) {CL.hide_tooltip();});
 	}
 	if (document.getElementById('make_main_reading')) {
 		$('#make_main_reading').off('click.mmr_c');
@@ -4173,9 +4173,9 @@ _add_CM_Handlers: function () {
 			element = SimpleContextMenu._target_element;
 			div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
 			rdg_details = CL.get_unit_app_reading(div.id)
-			SV.unsplit_readings(rdg_details);	
+			SV.unsplit_readings(rdg_details);
 		});
-		$('#recombine_readings').on('mouseover.rr_mo', function(event) {CL.hide_tooltip();});        	
+		$('#recombine_readings').on('mouseover.rr_mo', function(event) {CL.hide_tooltip();});
 	}
 	if (document.getElementById('overlap')) {
 		$('#overlap').off('click.or_c');
@@ -4184,7 +4184,7 @@ _add_CM_Handlers: function () {
 			var element, div, reading_details;
 			element = SimpleContextMenu._target_element;
 			div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
-			reading_details = CL.get_unit_app_reading(div.id);                           
+			reading_details = CL.get_unit_app_reading(div.id);
 			SV.overlap_reading(reading_details[0], reading_details[2], {'top': SimpleContextMenu._menuElement.style.top, 'left': SimpleContextMenu._menuElement.style.left});
 		});
 		$('#overlap').on('mouseover.or_mo', function(event) {CL.hide_tooltip();});
@@ -4210,9 +4210,9 @@ _add_CM_Handlers: function () {
 			element = SimpleContextMenu._target_element;
 			div = CL._get_specified_ancestor(element, 'DIV', function (e) { if ($(e).hasClass('spanlike')) {return false;} return true;});
 			reading_details = CL.get_unit_app_reading(div.id);
-			SV.remove_reading_flag(reading_details);               		
+			SV.remove_reading_flag(reading_details);
 		});
-		$('#treat_as_main').on('mouseover.tam_mo', function(event) {CL.hide_tooltip();});        	
+		$('#treat_as_main').on('mouseover.tam_mo', function(event) {CL.hide_tooltip();});
 	}
 	for (i = 0; i < CL._overlapped_options.length; i += 1) {
 		if (document.getElementById(CL._overlapped_options[i].id)) {
@@ -4222,9 +4222,9 @@ _add_CM_Handlers: function () {
 	//special added for SV
 	SV_rules = CL._get_rule_classes('create_in_SV', true, 'name', ['subreading', 'value', 'identifier', 'keep_as_main_reading']);
 	//this deals with all non-genuine subreadings which will always have their own entry in the context menu (!SV_rules[key][0])
-	for (key in SV_rules) {       	
+	for (key in SV_rules) {
 		if (SV_rules.hasOwnProperty(key)) {
-			if (!SV_rules[key][0]) { 
+			if (!SV_rules[key][0]) {
 				if (document.getElementById('mark_as_' + SV_rules[key][1])) {
 					//add event decides if its a keep as main reading or not and adds correct handler
 					SV.add_event(SV_rules, key);
@@ -4252,7 +4252,7 @@ _add_CM_Handlers: function () {
 			reading_details = {'app_id': app_id, 'unit_id': unit._id, 'unit_pos': unit_pos, 'reading_pos': reading_pos, 'reading_id': reading._id};
 			CL.mark_standoff_reading(key, 'Subreading', reading_details, 'set_variants', {'top': SimpleContextMenu._menuElement.style.top, 'left': SimpleContextMenu._menuElement.style.left});
 		});
-		$('#mark_as_' + key).on('mouseover.' + key + '_mo', function(event) {CL.hide_tooltip();});      	
+		$('#mark_as_' + key).on('mouseover.' + key + '_mo', function(event) {CL.hide_tooltip();});
 	} else {
 		for (key in SV_rules) {
 			if (SV_rules.hasOwnProperty(key)) {
@@ -4260,7 +4260,7 @@ _add_CM_Handlers: function () {
 					if (document.getElementById('mark_as_' + SV_rules[key][1])) {
 						SV.add_event(SV_rules, key);
 					}
-				} 
+				}
 			}
 		}
 	}
@@ -4276,7 +4276,7 @@ add_overlapped_event: function (id, flag) {
 		reading_details = CL.get_unit_app_reading(div.id);
 		SV.add_reading_flag(reading_details, flag);
 	});
-	$('#' + id).on('mouseover.' + id + '_mo', function(event) {CL.hide_tooltip();}); 
+	$('#' + id).on('mouseover.' + id + '_mo', function(event) {CL.hide_tooltip();});
 },
 
 /**adds the correct handler depending on subreading and keep_as_main_reading settings in the project rule configurations */
@@ -4295,8 +4295,8 @@ add_event: function (SV_rules, key) {
 			reading_pos = rdg_details[2];
 			unit = CL._data[app_id][unit_pos]
 			reading = unit.readings[reading_pos];
-			reading_details = {'app_id': app_id, 'unit_id': unit._id, 'unit_pos': unit_pos, 'reading_pos': reading_pos, 'reading_id': reading._id};     	    
-			CL.mark_standoff_reading(SV_rules[key][1], key, reading_details, 'set_variants', {'top': SimpleContextMenu._menuElement.style.top, 'left': SimpleContextMenu._menuElement.style.left});       	    
+			reading_details = {'app_id': app_id, 'unit_id': unit._id, 'unit_pos': unit_pos, 'reading_pos': reading_pos, 'reading_id': reading._id};
+			CL.mark_standoff_reading(SV_rules[key][1], key, reading_details, 'set_variants', {'top': SimpleContextMenu._menuElement.style.top, 'left': SimpleContextMenu._menuElement.style.left});
 		});
 		$('#mark_as_' + SV_rules[key][1]).on('mouseover.' + key + '_mo', function(event) {CL.hide_tooltip();});
 	} else {
@@ -4320,7 +4320,7 @@ add_event: function (SV_rules, key) {
 
 mark_reading: function (value, reading) {
 	var scroll_offset;
-	scroll_offset = [document.getElementById('scroller').scrollLeft, 
+	scroll_offset = [document.getElementById('scroller').scrollLeft,
 	                 document.getElementById('scroller').scrollTop];
 	CL.mark_reading(value, reading);
 	SV.show_set_variants_data();
@@ -4333,9 +4333,9 @@ mark_reading: function (value, reading) {
 
 
 /** Length of undo stack is determined by SV.undo_stack_length variable.
- * Not all operations lead to a new entry on the stack only those that really 
+ * Not all operations lead to a new entry on the stack only those that really
  * change the object so split readings and recombine readings for example
- * don't get added to the stack. Functions that are considered important enough to 
+ * don't get added to the stack. Functions that are considered important enough to
  * be undone call SV.add_to_undo_stack before making the object changes.*/
 add_to_undo_stack: function (data) {
 	if (SV._undo_stack.length === SV._undo_stack_length) {
@@ -4347,7 +4347,7 @@ add_to_undo_stack: function (data) {
 undo: function () {
 	var i, event_list, scroll_offset;
 	if (SV._undo_stack.length > 0) {
-		scroll_offset = [document.getElementById('scroller').scrollLeft, 
+		scroll_offset = [document.getElementById('scroller').scrollLeft,
 		                 document.getElementById('scroller').scrollTop];
 		event_list = CL._data.event_list;
 		CL._data = JSON.parse(SV._undo_stack.pop());
@@ -4374,7 +4374,7 @@ remove_splits: function () {
 				}
 			}
 		}
-	} 
+	}
 },
 
 check_tn_presence: function () {
@@ -4387,10 +4387,10 @@ check_tn_presence: function () {
 						for (l = 0; l < CL._data.apparatus[i].readings[j]['subreadings'][key][l]; l += 1) {
 							for (m = 0; m < CL._data.apparatus[i].readings[j]['subreadings'][key][l].text.length; m += 1) {
 								if (CL._data.apparatus[i].readings[j]['subreadings'][key][l].text[m].hasOwnProperty('t')) {
-									return [true, 'there is a rogue t in word ' + m + ' in subreading ' + l + ' of the ' + key + ' subreadings of reading ' + j +  ' of apparatus unit ' + i]; 
+									return [true, 'there is a rogue t in word ' + m + ' in subreading ' + l + ' of the ' + key + ' subreadings of reading ' + j +  ' of apparatus unit ' + i];
 								}
 								if (CL._data.apparatus[i].readings[j]['subreadings'][key][l].text[m].hasOwnProperty('n')) {
-									return [true, 'there is a rogue n in word ' + m + ' in subreading ' + l + ' of the ' + key + ' subreadings of reading ' + j +  ' of apparatus unit ' + i]; 
+									return [true, 'there is a rogue n in word ' + m + ' in subreading ' + l + ' of the ' + key + ' subreadings of reading ' + j +  ' of apparatus unit ' + i];
 								}
 							}
 						}
@@ -4404,7 +4404,7 @@ check_tn_presence: function () {
 				if (CL._data.apparatus[i].readings[j].text[k].hasOwnProperty('n')) {
 					return [true, 'there is a rogue n in word ' + k + ' in reading ' + j + ' of apparatus unit ' + i];
 				}
-			}  
+			}
 		}
 	}
 	return [false];
@@ -4431,7 +4431,7 @@ check_ids: function () {
 
 /** My bug self reporting system attempt! */
 check_bug_status: function (action, details) {
-	var index_problem, witness_problem, bug_report, i, newwindow1, tmp, sigla_problem, standoff_problem, 
+	var index_problem, witness_problem, bug_report, i, newwindow1, tmp, sigla_problem, standoff_problem,
 	tn_check, id_problem;
 	if (!CL._data.hasOwnProperty('event_list')) {
 		CL._data.event_list = [];
@@ -4479,7 +4479,7 @@ check_bug_status: function (action, details) {
 },
 
 
-//this function checks that each instance of SR_text or standoff_subreadings 
+//this function checks that each instance of SR_text or standoff_subreadings
 //has a corresponding entry in the marked_readings object
 check_standoff_reading_problems: function () {
 	var key, i, j, k, unit, reading, witness, result;
